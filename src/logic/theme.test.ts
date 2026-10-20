@@ -81,7 +81,7 @@ describe('buildResultTheme（結果用）', () => {
     expect(theme[CSS_VAR.radius]).toBe('4px');
     expect(theme[CSS_VAR.shadow]).toBe('none');
     expect(theme[CSS_VAR.surfaceGradient]).toBe('none');
-    expect(theme[CSS_VAR.border]).toContain('1px solid');
+    expect(theme[CSS_VAR.border]).toContain('solid var(--color-border)');
     expect(theme[CSS_VAR.fontFamily]).toBe(GOTHIC_FONT);
     expect(theme[CSS_VAR.colorPrimary]).toBe(COOL_PALETTE.colorPrimary);
   });
@@ -93,7 +93,7 @@ describe('buildResultTheme（結果用）', () => {
     expect(theme[CSS_VAR.lineHeight]).toBe('1.9');
     expect(theme[CSS_VAR.radius]).toBe('20px');
     expect(theme[CSS_VAR.shadow]).toContain('rgba');
-    expect(theme[CSS_VAR.surfaceGradient]).toContain('linear-gradient');
+    expect(theme[CSS_VAR.surfaceGradient]).toMatch(/gradient\(/);
     expect(theme[CSS_VAR.border]).toBe('none');
     expect(theme[CSS_VAR.fontFamily]).toBe(MINCHO_FONT);
     expect(theme[CSS_VAR.colorPrimary]).toBe(POP_PALETTE.colorPrimary);
@@ -222,11 +222,23 @@ describe('buildAxisVariantTheme（質問用・A/B比較）', () => {
   });
 
   it('装飾の左右はフラット／リッチになる', () => {
-    expect(buildAxisVariantTheme('decoration', 'left')[CSS_VAR.shadow]).toBe('none');
+    const left = buildAxisVariantTheme('decoration', 'left');
     const right = buildAxisVariantTheme('decoration', 'right');
+
+    // フラット：線だけ。影もグラデーションもない
+    expect(left[CSS_VAR.shadow]).toBe('none');
+    expect(left[CSS_VAR.surfaceGradient]).toBe('none');
+    expect(left[CSS_VAR.border]).toContain('solid');
+
+    // リッチ：影とグラデーションがあり、枠線はない
     expect(right[CSS_VAR.shadow]).toContain('rgba');
-    expect(right[CSS_VAR.surfaceGradient]).toContain('linear-gradient');
+    expect(right[CSS_VAR.surfaceGradient]).toMatch(/gradient\(/);
     expect(right[CSS_VAR.border]).toBe('none');
+
+    // 3変数すべてで差が出ている（どれか1つだけの違いだと見分けにくい）
+    for (const name of [CSS_VAR.shadow, CSS_VAR.surfaceGradient, CSS_VAR.border]) {
+      expect(left[name], name).not.toBe(right[name]);
+    }
   });
 
   it('トーンの左右はクール／ポップと角丸になる', () => {

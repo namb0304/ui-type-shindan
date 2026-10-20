@@ -164,21 +164,32 @@ export interface DecorationPreset {
   border: string;
 }
 
-/** フラット：影もグラデーションもなく、境界は細い線で表す。 */
+/** フラット：影もグラデーションもなく、境界は細い線だけで表す。 */
 export const FLAT_DECORATION: DecorationPreset = {
   shadow: 'none',
   surfaceGradient: 'none',
-  border: `1px solid var(${CSS_VAR.colorBorder})`,
+  border: `2px solid var(${CSS_VAR.colorBorder})`,
 };
 
-/** リッチ：多層の柔らかい影と2色のグラデーション。枠線は使わない。 */
+/**
+ * リッチ：多層の柔らかい影、光沢のふち、面に回り込むグラデーション。枠線は使わない。
+ *
+ * フラットとの差が弱いと質問で選びにくくなる（要件 §11 のリスク）ため、
+ * 3つの変数すべてで差を付けている。
+ *   影  ：内側のハイライト + 3層の落ち影で、面が浮いて見えるようにする
+ *   地  ：放射状のグラデーションにして、光が当たっている面に見せる
+ *   枠線：なし（境界は影とグラデーションが担う）
+ * グラデーションの端の色は --color-surface / --color-surface-alt のままなので、
+ * 文字とのコントラスト比（4.5:1以上）は検証済みの値から変わらない。
+ */
 export const RICH_DECORATION: DecorationPreset = {
   shadow: [
-    '0 1px 2px rgba(17, 12, 8, 0.08)',
-    '0 6px 16px rgba(17, 12, 8, 0.14)',
-    '0 16px 36px rgba(17, 12, 8, 0.12)',
+    'inset 0 1px 0 rgba(255, 255, 255, 0.7)',
+    '0 1px 2px rgba(17, 12, 8, 0.10)',
+    '0 8px 20px rgba(17, 12, 8, 0.16)',
+    '0 22px 48px rgba(17, 12, 8, 0.16)',
   ].join(', '),
-  surfaceGradient: `linear-gradient(160deg, var(${CSS_VAR.colorSurface}), var(${CSS_VAR.colorSurfaceAlt}))`,
+  surfaceGradient: `radial-gradient(135% 95% at 12% -10%, var(${CSS_VAR.colorSurface}) 0%, var(${CSS_VAR.colorSurfaceAlt}) 100%)`,
   border: 'none',
 };
 

@@ -143,3 +143,411 @@ p {
   line-height: 1.6;
   color: var(--site-muted);
 }
+
+/* ==================================================================
+ * 画面（トップ・質問・結果）
+ * トップと質問はプレビューの邪魔をしない控えめな装い。
+ * 結果だけはテーマのCSS変数を自分に適用し、一気に見た目が変わる（要件 §5）。
+ * ================================================================== */
+
+.screen {
+  max-width: 760px;
+  padding: 0 var(--site-gutter) 56px;
+  margin: 0 auto;
+}
+
+/* --- ボタン --- */
+
+.btn {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px; /* タップ領域44px以上（要件 §7） */
+  padding: 12px 24px;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--site-accent);
+  outline-offset: 3px;
+}
+
+.btn--primary {
+  color: #fdfdfe;
+  background-color: var(--site-accent);
+}
+
+.btn--primary:hover {
+  background-color: #32506c;
+}
+
+.btn--primary:active {
+  transform: translateY(1px);
+}
+
+.btn--ghost {
+  color: var(--site-muted);
+  background-color: transparent;
+  border-color: var(--site-hairline);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  color: var(--site-text);
+  background-color: #eef0f3;
+}
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+/* --- トップ --- */
+
+.screen--top {
+  padding-top: 64px;
+  text-align: center;
+}
+
+.top__eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--site-accent);
+  letter-spacing: 0.22em;
+}
+
+.top__title {
+  margin-top: 10px;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.top__lead {
+  max-width: 24em;
+  margin: 14px auto 0;
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--site-muted);
+}
+
+.top__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 0;
+  margin: 28px 0 0;
+  list-style: none;
+}
+
+.top__meta-item {
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--site-muted);
+  background-color: var(--site-surface);
+  border: 1px solid var(--site-hairline);
+  border-radius: 999px;
+}
+
+.screen--top .btn {
+  margin-top: 32px;
+}
+
+.top__note {
+  max-width: 26em;
+  margin: 28px auto 0;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--site-muted);
+}
+
+/* --- 質問 --- */
+
+.screen--question {
+  padding-top: 24px;
+}
+
+.q__head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.q__bar {
+  flex: 1;
+  height: 4px;
+  overflow: hidden;
+  background-color: var(--site-hairline);
+  border-radius: 999px;
+}
+
+.q__bar-fill {
+  display: block;
+  height: 100%;
+  background-color: var(--site-accent);
+  border-radius: inherit;
+  transition: width 0.25s ease;
+}
+
+.q__count {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--site-muted);
+}
+
+.q__ask {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.q__title {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.q__subject {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--site-muted);
+}
+
+.q__fallback {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: #9a6b2f;
+}
+
+.q__options {
+  display: grid;
+  grid-template-columns: 1fr; /* スマホは上下 */
+  gap: 14px;
+  margin-top: 24px;
+}
+
+@media (min-width: 680px) {
+  .q__options {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* PCは左右 */
+  }
+}
+
+.q__option {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background-color: transparent;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.q__option:hover {
+  border-color: var(--site-hairline);
+  transform: translateY(-2px);
+}
+
+.q__option:focus-visible {
+  outline: 2px solid var(--site-accent);
+  outline-offset: 2px;
+}
+
+.q__option--selected {
+  border-color: var(--site-accent);
+}
+
+.q__foot {
+  margin-top: 24px;
+  text-align: center;
+}
+
+/* --- 結果（この要素にテーマのCSS変数が適用される） --- */
+
+.screen--result {
+  max-width: none;
+  min-height: 100dvh;
+  padding: 48px var(--site-gutter) 72px;
+  font-family: var(--font-family);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+.screen--result > * {
+  max-width: 760px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.result__head {
+  text-align: center;
+}
+
+.result__eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  letter-spacing: 0.2em;
+}
+
+.result__code {
+  margin-top: 8px;
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-primary-text);
+  letter-spacing: 0.08em;
+}
+
+.result__note {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+
+.result__block {
+  margin-top: 48px;
+}
+
+.result__heading {
+  padding-bottom: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.result__sub {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.axes {
+  padding: 0;
+  margin: 20px 0 0;
+  list-style: none;
+}
+
+.axis + .axis {
+  margin-top: 20px;
+}
+
+.axis__labels {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+
+.axis__name {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  opacity: 0.75;
+}
+
+.axis__side--on {
+  font-weight: 700;
+  color: var(--color-primary-text);
+}
+
+.axis__track {
+  display: flex;
+  height: 8px;
+  margin-top: 8px;
+  overflow: hidden;
+  background-color: var(--color-border);
+  border-radius: 999px;
+}
+
+.axis__fill {
+  display: block;
+  height: 100%;
+  margin-left: auto; /* 右側が優勢なら右から伸ばす */
+  background-color: var(--color-primary);
+  border-radius: inherit;
+}
+
+.axis__fill--left {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+.result__previews {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+@media (min-width: 680px) {
+  .result__previews {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.result__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 48px;
+}
+
+.screen--result .btn--primary {
+  color: var(--color-on-primary);
+  background-color: var(--color-primary);
+  border-radius: var(--radius);
+}
+
+.screen--result .btn--primary:hover {
+  background-color: var(--color-primary);
+  opacity: 0.88;
+}
+
+.screen--result .btn--ghost {
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  border-radius: var(--radius);
+}
+
+.screen--result .btn--ghost:hover:not(:disabled) {
+  color: var(--color-text);
+  background-color: transparent;
+  border-color: var(--color-text-muted);
+}
+
+.screen--result .btn:focus-visible {
+  outline-color: var(--color-primary-text);
+}
+
+/* --- 部品カタログ（?debug=1） --- */
+
+.gallery__status-line {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.gallery__todo {
+  padding: 0;
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.9;
+  color: var(--site-muted);
+  list-style: none;
+}
+
+.gallery__todo-item--done {
+  color: var(--site-text);
+}
