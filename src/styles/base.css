@@ -1,5 +1,22 @@
-/* 診断サイト自体のスタイル（トップ・質問画面用の控えめなベース）。
-   本格的な記述はステップ5以降で行う。 */
+/* 診断サイト自体のスタイル。
+ *
+ * 要件 §5：トップと質問画面はプレビューの邪魔をしない控えめなデザインにする。
+ * 性格は「静かで実務的」。ニュートラルはわずかに寒色を混ぜた色付きグレーにし、
+ * 純黒・純白は使わない。アクセントはクールパレットのprimaryに合わせて1色だけ。
+ *
+ * ここはサイト側の装いなので、テーマのCSS変数（--color-* など）は参照しない。
+ * あれは部品ごとに上書きされるものなので、混ぜると制御できなくなる。
+ */
+
+:root {
+  --site-bg: #f6f7f9;
+  --site-surface: #fdfdfe;
+  --site-text: #1d2127;
+  --site-muted: #656d78;
+  --site-hairline: #e2e5ea;
+  --site-accent: #3b5b7a;
+  --site-gutter: 16px;
+}
 
 *,
 *::before,
@@ -9,11 +26,120 @@
 
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  color: #1a1a1a;
-  background: #fafafa;
+  font-family: 'Noto Sans JP', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--site-text);
+  background-color: var(--site-bg);
+  -webkit-font-smoothing: antialiased;
 }
 
-.setup-check {
-  padding: 24px;
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+/* --- 仮ページ（ステップ4の確認用。ステップ5で差し替える） --- */
+
+.gallery__header {
+  max-width: 1080px;
+  padding: 40px var(--site-gutter) 28px;
+  margin: 0 auto;
+}
+
+.gallery__eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--site-accent);
+  letter-spacing: 0.16em;
+}
+
+.gallery__title {
+  margin-top: 6px;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+.gallery__lead {
+  max-width: 34em;
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--site-muted);
+}
+
+.gallery {
+  max-width: 1080px;
+  padding: 0 var(--site-gutter) 72px;
+  margin: 0 auto;
+}
+
+.gallery__section {
+  padding-top: 32px;
+  margin-top: 32px;
+  border-top: 1px solid var(--site-hairline);
+}
+
+.gallery__section-head {
+  margin-bottom: 20px;
+}
+
+/* 見出しの左に短い罫を置いて、節の始まりを分かりやすくする */
+.gallery__section-title {
+  padding-left: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+  border-left: 3px solid var(--site-accent);
+}
+
+.gallery__note {
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--site-muted);
+}
+
+.gallery__grid {
+  display: grid;
+  gap: 20px;
+}
+
+.gallery__grid--three {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+/* スマホでは上下、PCでは左右（要件 §5 の質問画面と同じ並べ方） */
+.gallery__grid--pair {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .gallery__grid--pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.gallery__cell {
+  min-width: 0;
+}
+
+.gallery__cell-title {
+  margin-bottom: 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--site-muted);
+  letter-spacing: 0.04em;
+}
+
+.gallery__caption {
+  margin-top: 8px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  color: var(--site-muted);
 }

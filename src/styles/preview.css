@@ -1,0 +1,368 @@
+/* プレビュー部品のスタイル。
+ *
+ * ルール（CLAUDE.md）：色・余白・角丸・影・フォントは必ずCSS変数を参照する。
+ * 生の色（#xxxxxx）やpx指定は書かない。
+ *   - 文字サイズは em（--font-size-base 基準）
+ *   - 余白は calc(var(--space-unit) * N)
+ *   - 図形の大きさも em にして、文字サイズに連動させる
+ * これを previews.test.ts で機械的に検証している。
+ */
+
+/* 部品を囲む要素。ここにCSS変数が上書きされる（createPreview） */
+.pv-host {
+  display: block;
+  width: 100%;
+}
+
+.pv {
+  width: 100%;
+  padding: calc(var(--space-unit) * 1.5);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  background-image: var(--surface-gradient);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.pv,
+.pv *,
+.pv *::before,
+.pv *::after {
+  box-sizing: border-box;
+}
+
+.pv h3,
+.pv p,
+.pv ul,
+.pv li {
+  margin: 0;
+  padding: 0;
+}
+
+.pv ul {
+  list-style: none;
+}
+
+/* 小さいラベル。字間を開けて、本文との役割の違いをはっきりさせる */
+.pv-label {
+  font-size: 0.75em;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.09em;
+  color: var(--color-primary-text);
+}
+
+/* ------------------------------------------------------------------
+ * カフェのメニュー（情報量）
+ * ------------------------------------------------------------------ */
+
+.pv-cafe__head {
+  margin-bottom: calc(var(--space-unit) * 1.25);
+}
+
+.pv-cafe__shop {
+  font-size: 0.75em;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  color: var(--color-primary-text);
+}
+
+.pv-cafe__title {
+  margin-top: calc(var(--space-unit) * 0.25);
+  font-size: 1.25em;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.pv-cafe__item {
+  display: flex;
+  gap: calc(var(--space-unit) * 1.5);
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: calc(var(--space-unit) * 0.75);
+  padding-bottom: calc(var(--space-unit) * 0.75);
+}
+
+/* 区切り線も装飾軸に連動させる（フラットなら線、リッチなら余白だけで分ける） */
+.pv-cafe__item + .pv-cafe__item {
+  border-top: var(--border);
+}
+
+.pv-cafe__body {
+  min-width: 0;
+}
+
+.pv-cafe__name {
+  font-weight: 500;
+}
+
+.pv-cafe__note {
+  margin-top: calc(var(--space-unit) * 0.25);
+  font-size: 0.8125em;
+  color: var(--color-text-muted);
+}
+
+.pv-cafe__price {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.pv-cafe__foot {
+  margin-top: calc(var(--space-unit) * 1.25);
+  font-size: 0.75em;
+  color: var(--color-text-muted);
+}
+
+/* ------------------------------------------------------------------
+ * 音楽プレイヤー（装飾）
+ * ------------------------------------------------------------------ */
+
+/* ジャケットはレコード盤に見立てた同心円。画像を使わずに主役を作る。
+ * 面の色は primary のみ（--surface-gradient を重ねると色が覆われて消えるため）。
+ * 幅は em で頭打ちにして、カードが縦に伸びすぎないようにする。 */
+.pv-player__art {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: 10em;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+  background-color: var(--color-primary);
+  border-radius: var(--radius);
+}
+
+.pv-player__disc {
+  position: relative;
+  display: block;
+  width: 58%;
+  aspect-ratio: 1 / 1;
+  background-color: var(--color-surface);
+  border-radius: 50%;
+}
+
+.pv-player__disc::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22%;
+  aspect-ratio: 1 / 1;
+  content: '';
+  background-color: var(--color-primary);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.pv-player__album {
+  margin-top: calc(var(--space-unit) * 1.5);
+  font-size: 0.75em;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.09em;
+  color: var(--color-primary-text);
+}
+
+.pv-player__track {
+  margin-top: calc(var(--space-unit) * 0.5);
+  font-size: 1.15em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.pv-player__artist {
+  font-size: 0.8125em;
+  color: var(--color-text-muted);
+}
+
+.pv-player__bar {
+  width: 100%;
+  height: 0.375em;
+  margin-top: calc(var(--space-unit) * 1.25);
+  overflow: hidden;
+  background-color: var(--color-border);
+  border-radius: calc(var(--radius) / 2);
+}
+
+.pv-player__fill {
+  display: block;
+  width: 38%;
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: inherit;
+}
+
+.pv-player__times {
+  display: flex;
+  justify-content: space-between;
+  margin-top: calc(var(--space-unit) * 0.5);
+  font-size: 0.6875em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.pv-player__controls {
+  display: flex;
+  gap: calc(var(--space-unit) * 1.25);
+  align-items: center;
+  justify-content: center;
+  margin-top: calc(var(--space-unit) * 1.25);
+}
+
+.pv-player__btn {
+  display: grid;
+  place-items: center;
+  width: 2em;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+}
+
+.pv-player__btn--main {
+  width: 2.75em;
+  background-color: var(--color-primary);
+  box-shadow: var(--shadow);
+}
+
+.pv-ico {
+  display: block;
+  width: 0.75em;
+  aspect-ratio: 1 / 1;
+  background-color: var(--color-text-muted);
+}
+
+.pv-player__btn--main .pv-ico {
+  width: 0.9em;
+  background-color: var(--color-on-primary);
+}
+
+/* 三角形は clip-path（割合指定）で描く。px を使わずに済む */
+.pv-ico--play {
+  clip-path: polygon(22% 10%, 22% 90%, 88% 50%);
+}
+
+.pv-ico--prev {
+  clip-path: polygon(78% 10%, 78% 90%, 12% 50%);
+}
+
+.pv-ico--next {
+  clip-path: polygon(22% 10%, 22% 90%, 88% 50%);
+}
+
+/* ------------------------------------------------------------------
+ * 天気アプリ（トーン）
+ * ------------------------------------------------------------------ */
+
+.pv-weather__head {
+  display: flex;
+  gap: calc(var(--space-unit) * 1.5);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.pv-weather__place {
+  font-size: 0.8125em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.pv-weather__now {
+  display: flex;
+  align-items: baseline;
+  margin-top: calc(var(--space-unit) * 0.25);
+}
+
+.pv-weather__temp {
+  font-size: 2.75em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.pv-weather__unit {
+  margin-left: calc(var(--space-unit) * 0.25);
+  font-size: 1em;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.pv-weather__state {
+  margin-top: calc(var(--space-unit) * 0.5);
+  font-size: 0.8125em;
+}
+
+.pv-weather__sun {
+  display: block;
+  flex-shrink: 0;
+  width: 2.5em;
+  aspect-ratio: 1 / 1;
+  background-color: var(--color-primary);
+  border-radius: 50%;
+}
+
+.pv-weather__hours {
+  display: flex;
+  gap: calc(var(--space-unit) * 0.5);
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: calc(var(--space-unit) * 1.5);
+  padding-top: calc(var(--space-unit) * 1.25);
+  border-top: var(--border);
+}
+
+.pv-weather__hour {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 0.375);
+  align-items: center;
+}
+
+.pv-weather__hour-temp {
+  font-size: 0.6875em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+/* 棒グラフの高さはクラスで段階指定（インラインstyleを使わないため） */
+.pv-weather__bar {
+  display: block;
+  width: 0.5em;
+  background-color: var(--color-primary);
+  border-radius: calc(var(--radius) / 2);
+}
+
+.pv-weather__bar--lv1 {
+  height: 0.9em;
+}
+
+.pv-weather__bar--lv2 {
+  height: 1.5em;
+}
+
+.pv-weather__bar--lv3 {
+  height: 2.1em;
+}
+
+.pv-weather__bar--lv4 {
+  height: 2.6em;
+}
+
+.pv-weather__bar--lv5 {
+  height: 3.1em;
+}
+
+.pv-weather__hour-label {
+  font-size: 0.6875em;
+  color: var(--color-text-muted);
+}
+
+.pv-weather__note {
+  margin-top: calc(var(--space-unit) * 1.25);
+  font-size: 0.75em;
+  color: var(--color-text-muted);
+}
