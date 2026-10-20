@@ -1,0 +1,19 @@
+/* 診断サイト自体のスタイル（トップ・質問画面用の控えめなベース）。
+   本格的な記述はステップ5以降で行う。 */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  color: #1a1a1a;
+  background: #fafafa;
+}
+
+.setup-check {
+  padding: 24px;
+}
