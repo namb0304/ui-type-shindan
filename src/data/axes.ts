@@ -4,7 +4,7 @@ import type { AxisId, AxisLetter } from './types';
 export interface AxisSideDefinition {
   /** タイプコードに使う文字 */
   letter: AxisLetter;
-  /** 日本語の呼び名（例: 'ゆったり'） */
+  /** 日本語の呼び名（例: 'ユッタリ'） */
   name: string;
   /** 英語の呼び名（例: 'Airy'） */
   englishName: string;
@@ -48,8 +48,8 @@ export const AXES = [
   {
     id: 'density',
     label: '情報量',
-    left: { letter: 'D', name: '詰め込み', englishName: 'Dense' },
-    right: { letter: 'A', name: 'ゆったり', englishName: 'Airy' },
+    left: { letter: 'D', name: 'ギッシリ', englishName: 'Dense' },
+    right: { letter: 'A', name: 'ユッタリ', englishName: 'Airy' },
   },
   {
     id: 'decoration',

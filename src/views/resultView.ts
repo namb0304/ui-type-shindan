@@ -47,11 +47,21 @@ export function renderResult(result: DiagnosisResult, handlers: ResultHandlers):
 
     const row = el('li', 'axis');
     const labels = el('div', 'axis__labels');
-    labels.append(
-      el('span', `axis__side${isRight ? '' : ' axis__side--on'}`, `${axis.left.name}（${leftPercent}%）`),
-      el('span', 'axis__name', axis.label),
-      el('span', `axis__side${isRight ? ' axis__side--on' : ''}`, `${axis.right.name}（${rightPercent}%）`),
+
+    // タイプコードの文字は、バー側（内側）を向くように添える
+    const leftLabel = el('span', `axis__side${isRight ? '' : ' axis__side--on'}`);
+    leftLabel.append(
+      el('span', 'axis__side-name', `${axis.left.name}（${leftPercent}%）`),
+      el('span', 'axis__letter', axis.left.letter),
     );
+
+    const rightLabel = el('span', `axis__side${isRight ? ' axis__side--on' : ''}`);
+    rightLabel.append(
+      el('span', 'axis__letter', axis.right.letter),
+      el('span', 'axis__side-name', `${axis.right.name}（${rightPercent}%）`),
+    );
+
+    labels.append(leftLabel, el('span', 'axis__name', axis.label), rightLabel);
 
     const track = el('div', 'axis__track');
     const fill = el('span', 'axis__fill');

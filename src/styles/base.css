@@ -457,9 +457,23 @@ p {
   opacity: 0.75;
 }
 
+.axis__side {
+  display: inline-flex;
+  gap: 5px;
+  align-items: baseline;
+}
+
 .axis__side--on {
   font-weight: 700;
   color: var(--color-primary-text);
+}
+
+/* タイプコードの文字。名前と混ざらないよう、小さく薄く添える */
+.axis__letter {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.55;
 }
 
 .axis__track {

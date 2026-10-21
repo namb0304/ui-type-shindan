@@ -1,3 +1,7 @@
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import { AXES, AXIS_IDS, MAX_POINTS, QUESTIONS_PER_AXIS, SIDE_THRESHOLD } from '../data/axes';
@@ -317,5 +321,47 @@ describe('補助関数', () => {
   it('軸の定義が左右の文字を正しく持っている', () => {
     expect(AXES.map((axis) => axis.left.letter).join('')).toBe('DFCG');
     expect(AXES.map((axis) => axis.right.letter).join('')).toBe('ARPM');
+  });
+});
+
+describe('軸の表示名の管理', () => {
+  it('情報量の軸は ギッシリ／ユッタリ（文字は D/A のまま）', () => {
+    const density = AXES[0];
+    expect(density.id).toBe('density');
+    expect([density.left.name, density.right.name]).toEqual(['ギッシリ', 'ユッタリ']);
+    expect([density.left.letter, density.right.letter]).toEqual(['D', 'A']);
+    // 英語名は変えない（プロンプト生成で使う）
+    expect([density.left.englishName, density.right.englishName]).toEqual(['Dense', 'Airy']);
+  });
+
+  it('表示名が axes.ts 以外にベタ書きされていない（テストを除く）', () => {
+    const srcDir = fileURLToPath(new URL('../', import.meta.url));
+
+    const files: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir)) {
+        const path = join(dir, entry);
+        if (statSync(path).isDirectory()) {
+          walk(path);
+        } else if (path.endsWith('.ts') && !path.endsWith('axes.ts') && !path.endsWith('.test.ts')) {
+          files.push(path);
+        }
+      }
+    };
+    walk(srcDir);
+
+    expect(files.length).toBeGreaterThan(5);
+
+    const names = AXES.flatMap((axis) => [axis.left.name, axis.right.name]);
+    for (const file of files) {
+      // コメントは説明のために名前を書いてよいので、除いてから調べる
+      const code = readFileSync(file, 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n]*/g, '');
+
+      for (const name of names) {
+        expect(code.includes(name), `${file} に「${name}」がベタ書きされている`).toBe(false);
+      }
+    }
   });
 });
