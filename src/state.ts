@@ -1,5 +1,5 @@
 import { QUESTIONS, TOTAL_QUESTIONS } from './data/questions';
-import type { Answers, AxisSide, Question } from './data/types';
+import type { Answers, AnswerValue, AxisSide, Question } from './data/types';
 
 /**
  * 診断の状態（要件定義書 §5：1枚のHTMLで画面を切り替えるSPA構成）。
@@ -63,10 +63,12 @@ export function sidesInDisplayOrder(
 /**
  * いまの問題に回答して次へ進む。最後の問題なら結果画面へ。
  * すでに回答済みの問題でも上書きできる（戻って選び直せる）。
+ *
+ * value は「軸の左側」「軸の右側」「どちらでもない」のいずれか。
  */
-export function answer(state: DiagnosisState, side: AxisSide): DiagnosisState {
+export function answer(state: DiagnosisState, value: AnswerValue): DiagnosisState {
   const question = currentQuestion(state);
-  const answers: Answers = { ...state.answers, [question.id]: side };
+  const answers: Answers = { ...state.answers, [question.id]: value };
   const isLast = state.index >= TOTAL_QUESTIONS - 1;
 
   return {

@@ -1,13 +1,13 @@
 import { createPreview } from '../components/previews';
 import { resolveSubject } from '../components/previews/fallback';
-import type { AxisSide } from '../data/types';
+import type { AnswerValue } from '../data/types';
 import { buildAxisVariantTheme } from '../logic/theme';
 import type { DiagnosisState } from '../state';
 import { canGoBack, currentQuestion, progress, sidesInDisplayOrder } from '../state';
 import { button, el } from './dom';
 
 export interface QuestionHandlers {
-  onAnswer: (side: AxisSide) => void;
+  onAnswer: (value: AnswerValue) => void;
   onBack: () => void;
 }
 
@@ -50,7 +50,7 @@ export function renderQuestion(
     const isSelected = state.answers[question.id] === side;
     const option = el('button', `q__option${isSelected ? ' q__option--selected' : ''}`);
     option.type = 'button';
-    option.setAttribute('aria-label', `${side === first ? 'A' : 'B'}のデザインを選ぶ`);
+    option.setAttribute('aria-label', `${side === first ? '1つめ' : '2つめ'}のデザインを選ぶ`);
     if (isSelected) option.setAttribute('aria-pressed', 'true');
     option.append(createPreview(resolved.subject, buildAxisVariantTheme(question.axis, side)));
     option.addEventListener('click', () => handlers.onAnswer(side));
@@ -58,6 +58,16 @@ export function renderQuestion(
   }
 
   screen.append(head, ask, options);
+
+  // --- どちらでもない ---
+  // 2択と同じ大きさにはしない。差が分かる人にはそちらを選んでほしいため、
+  // あくまで逃げ道として小さく置く。
+  const either = button('q__either', 'どっちも同じに見える', () => handlers.onAnswer('either'));
+  if (state.answers[question.id] === 'either') {
+    either.classList.add('q__either--selected');
+    either.setAttribute('aria-pressed', 'true');
+  }
+  screen.append(either);
 
   // --- 戻る ---
   const foot = el('div', 'q__foot');

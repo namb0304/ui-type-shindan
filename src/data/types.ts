@@ -15,14 +15,28 @@ export type AxisId = 'density' | 'decoration' | 'tone' | 'font';
  */
 export type AxisSide = 'left' | 'right';
 
+/**
+ * 回答の値。左右のどちらでもないときは 'either'。
+ *
+ * 2つのUIの差が分からない人に無理やり選ばせると、
+ * 回答が実質ランダムになって判定が濁るため、逃げ道を用意している。
+ */
+export type AnswerValue = AxisSide | 'either';
+
 /** タイプコードに使う文字。左側・右側の順で D/A・F/R・C/P・G/M。 */
 export type AxisLetter = 'D' | 'A' | 'F' | 'R' | 'C' | 'P' | 'G' | 'M';
 
-/** 1つの軸で右側を選んだ数。1軸あたり3問なので0〜3。 */
-export type RightCount = 0 | 1 | 2 | 3;
+/**
+ * 1つの軸で右側に傾いた量。
+ *
+ * 1問あたり 左=0 / どちらでもない=1 / 右=2 として合計する。
+ * 「0.5問ぶん」のような小数を避けるため、実際の点数を2倍した整数で持つ。
+ * 1軸3問なので 0〜6 の範囲になる。
+ */
+export type AxisPoints = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-/** 軸ごとの「右側を選んだ数」。共有URL（?r=2302）はこの4つの数字を並べたもの。 */
-export type RightCounts = Record<AxisId, RightCount>;
+/** 軸ごとの点数。共有URL（?r=4026）はこの4つの数字を並べたもの。 */
+export type RightPoints = Record<AxisId, AxisPoints>;
 
 export interface Question {
   id: string; // 'q1'
@@ -31,13 +45,14 @@ export interface Question {
   label: string; // 'カフェのメニュー'
 }
 
-/** { q1: 'right', q2: 'left', ... } */
-export type Answers = Record<string, AxisSide>;
+/** { q1: 'right', q2: 'left', q3: 'either', ... } */
+export type Answers = Record<string, AnswerValue>;
 
 export interface AxisScore {
   axis: AxisId;
-  rightCount: RightCount;
-  rightRatio: number; // 0〜1
+  rightPoints: AxisPoints;
+  /** 右側の割合（0〜1）。rightPoints ÷ 6 */
+  rightRatio: number;
 }
 
 export interface TypeInfo {
@@ -49,6 +64,6 @@ export interface TypeInfo {
 /** 診断結果。回答からも、共有URLの4桁からも同じ形で作れる。 */
 export interface DiagnosisResult {
   code: string; // 'ARCG'
-  counts: RightCounts;
+  points: RightPoints;
   scores: AxisScore[]; // 軸の順（density → decoration → tone → font）
 }

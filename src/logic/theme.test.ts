@@ -15,8 +15,8 @@ import {
   RICH_DECORATION,
 } from '../data/tokens';
 import type { ColorPalette, CssVarName, ThemeVars } from '../data/tokens';
-import type { AxisId, AxisScore, RightCount, RightCounts } from '../data/types';
-import { toAxisScores } from './score';
+import type { AxisId, AxisPoints, AxisScore, RightPoints } from '../data/types';
+import { toAxisScores, toTypeCode } from './score';
 import {
   applyTheme,
   buildAxisVariantTheme,
@@ -27,13 +27,13 @@ import {
   varNamesOfAxis,
 } from './theme';
 
-/** 全軸同じ rightCount のスコアを作る。 */
-function scoresOf(rightCount: RightCount): AxisScore[] {
+/** 全軸同じ点数（0〜6）のスコアを作る。 */
+function scoresOf(rightPoints: AxisPoints): AxisScore[] {
   return toAxisScores({
-    density: rightCount,
-    decoration: rightCount,
-    tone: rightCount,
-    font: rightCount,
+    density: rightPoints,
+    decoration: rightPoints,
+    tone: rightPoints,
+    font: rightPoints,
   });
 }
 
@@ -89,8 +89,8 @@ describe('buildResultTheme（結果用）', () => {
     expect(theme[CSS_VAR.colorPrimary]).toBe(COOL_PALETTE.colorPrimary);
   });
 
-  it('全軸3なら右端の値になる', () => {
-    const theme = buildResultTheme(scoresOf(3));
+  it('全軸6（満点）なら右端の値になる', () => {
+    const theme = buildResultTheme(scoresOf(6));
     expect(theme[CSS_VAR.spaceUnit]).toBe('16px');
     expect(theme[CSS_VAR.fontSizeBase]).toBe('17px');
     expect(theme[CSS_VAR.lineHeight]).toBe('1.9');
@@ -102,14 +102,22 @@ describe('buildResultTheme（結果用）', () => {
     expect(theme[CSS_VAR.colorPrimary]).toBe(POP_PALETTE.colorPrimary);
   });
 
-  it('数値は rightRatio で補間される', () => {
-    const oneThird = buildResultTheme(scoresOf(1));
+  it('数値は rightRatio で補間される（7段階）', () => {
+    // 点数2 = 33%
+    const oneThird = buildResultTheme(scoresOf(2));
     expect(oneThird[CSS_VAR.spaceUnit]).toBe('9.3px'); // 6 + 10 * 1/3
     expect(oneThird[CSS_VAR.fontSizeBase]).toBe('15px'); // 14 + 1
     expect(oneThird[CSS_VAR.lineHeight]).toBe('1.63');
     expect(oneThird[CSS_VAR.radius]).toBe('9.3px');
 
-    const twoThirds = buildResultTheme(scoresOf(2));
+    // 点数3 = 50%（ちょうど中間）
+    const half = buildResultTheme(scoresOf(3));
+    expect(half[CSS_VAR.spaceUnit]).toBe('11px');
+    expect(half[CSS_VAR.fontSizeBase]).toBe('15.5px');
+    expect(half[CSS_VAR.lineHeight]).toBe('1.7');
+
+    // 点数4 = 67%
+    const twoThirds = buildResultTheme(scoresOf(4));
     expect(twoThirds[CSS_VAR.spaceUnit]).toBe('12.7px');
     expect(twoThirds[CSS_VAR.fontSizeBase]).toBe('16px');
     expect(twoThirds[CSS_VAR.lineHeight]).toBe('1.77');
@@ -117,25 +125,57 @@ describe('buildResultTheme（結果用）', () => {
   });
 
   it('プリセットは割合50%を境に切り替わる（33%は左、67%は右）', () => {
-    const left = buildResultTheme(scoresOf(1));
+    const left = buildResultTheme(scoresOf(2));
     expect(left[CSS_VAR.shadow]).toBe('none');
     expect(left[CSS_VAR.fontFamily]).toBe(GOTHIC_FONT);
     expect(left[CSS_VAR.colorBg]).toBe(COOL_PALETTE.colorBg);
 
-    const right = buildResultTheme(scoresOf(2));
+    const right = buildResultTheme(scoresOf(4));
     expect(right[CSS_VAR.shadow]).toContain('rgba');
     expect(right[CSS_VAR.fontFamily]).toBe(MINCHO_FONT);
     expect(right[CSS_VAR.colorBg]).toBe(POP_PALETTE.colorBg);
   });
 
-  it('ちょうど50%なら右側のプリセットになる', () => {
-    const scores: AxisScore[] = AXIS_IDS.map((axis) => ({ axis, rightCount: 2, rightRatio: 0.5 }));
-    expect(buildResultTheme(scores)[CSS_VAR.fontFamily]).toBe(MINCHO_FONT);
+  it('ちょうど50%なら左側のプリセットになる（タイプコードと同じ判定）', () => {
+    const scores: AxisScore[] = AXIS_IDS.map((axis) => ({ axis, rightPoints: 3, rightRatio: 0.5 }));
+    const theme = buildResultTheme(scores);
+    expect(theme[CSS_VAR.fontFamily]).toBe(GOTHIC_FONT);
+    expect(theme[CSS_VAR.shadow]).toBe('none');
+    expect(theme[CSS_VAR.colorBg]).toBe(COOL_PALETTE.colorBg);
+  });
+
+  it('タイプコードの文字とテーマのプリセットが、全点数で一致する', () => {
+    for (const points of [0, 1, 2, 3, 4, 5, 6] as const) {
+      const all: RightPoints = {
+        density: points,
+        decoration: points,
+        tone: points,
+        font: points,
+      };
+      const theme = buildResultTheme(toAxisScores(all));
+      const code = toTypeCode(all);
+
+      // 文字軸：M（明朝）なら明朝フォント、G（ゴシック）ならゴシック
+      const expectsMincho = code[3] === 'M';
+      expect(theme[CSS_VAR.fontFamily], `点数 ${points} / ${code}`).toBe(
+        expectsMincho ? MINCHO_FONT : GOTHIC_FONT,
+      );
+
+      // 装飾軸：R（リッチ）なら影がある
+      const expectsRich = code[1] === 'R';
+      expect(theme[CSS_VAR.shadow] !== 'none', `点数 ${points} / ${code}`).toBe(expectsRich);
+
+      // トーン軸：P（ポップ）ならポップ配色
+      const expectsPop = code[2] === 'P';
+      expect(theme[CSS_VAR.colorBg], `点数 ${points} / ${code}`).toBe(
+        expectsPop ? POP_PALETTE.colorBg : COOL_PALETTE.colorBg,
+      );
+    }
   });
 
   it('軸ごとに独立して反映される（情報量だけ右、他は左）', () => {
-    const counts: RightCounts = { density: 3, decoration: 0, tone: 0, font: 0 };
-    const theme = buildResultTheme(toAxisScores(counts));
+    const points: RightPoints = { density: 6, decoration: 0, tone: 0, font: 0 };
+    const theme = buildResultTheme(toAxisScores(points));
     expect(theme[CSS_VAR.spaceUnit]).toBe('16px');
     expect(theme[CSS_VAR.shadow]).toBe('none');
     expect(theme[CSS_VAR.colorBg]).toBe(COOL_PALETTE.colorBg);
@@ -147,8 +187,8 @@ describe('buildResultTheme（結果用）', () => {
   });
 
   it('CSS変数がすべて揃っている', () => {
-    for (const rightCount of [0, 1, 2, 3] as const) {
-      const theme = buildResultTheme(scoresOf(rightCount));
+    for (const rightPoints of [0, 1, 2, 3, 4, 5, 6] as const) {
+      const theme = buildResultTheme(scoresOf(rightPoints));
       for (const name of CSS_VAR_NAMES) {
         expect(theme[name], name).toBeTruthy();
       }
@@ -367,7 +407,7 @@ describe('applyTheme（DOMへの反映）', () => {
 
   it('すべてのCSS変数を setProperty で設定する', () => {
     const target = createFakeTarget();
-    const theme = buildResultTheme(scoresOf(3));
+    const theme = buildResultTheme(scoresOf(6));
 
     applyTheme(target, theme);
 
@@ -380,7 +420,7 @@ describe('applyTheme（DOMへの反映）', () => {
   it('あとから別のテーマを反映すると値が上書きされる', () => {
     const target = createFakeTarget();
     applyTheme(target, buildResultTheme(scoresOf(0)));
-    applyTheme(target, buildResultTheme(scoresOf(3)));
+    applyTheme(target, buildResultTheme(scoresOf(6)));
     expect(target.applied.get(CSS_VAR.spaceUnit)).toBe('16px');
     expect(target.applied.get(CSS_VAR.fontFamily)).toBe(MINCHO_FONT);
   });

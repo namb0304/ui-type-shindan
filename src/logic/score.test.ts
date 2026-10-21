@@ -1,36 +1,61 @@
 import { describe, expect, it } from 'vitest';
 
-import { AXES, AXIS_IDS, QUESTIONS_PER_AXIS } from '../data/axes';
+import { AXES, AXIS_IDS, MAX_POINTS, QUESTIONS_PER_AXIS, SIDE_THRESHOLD } from '../data/axes';
 import { QUESTIONS, TOTAL_QUESTIONS } from '../data/questions';
-import type { Answers, AxisId, AxisSide, RightCounts } from '../data/types';
+import { PRESET_THRESHOLD } from '../data/tokens';
+import type { AnswerValue, Answers, AxisId, AxisPoints, RightPoints } from '../data/types';
 import {
   calcResult,
-  countRightAnswers,
-  isRightCount,
-  resultFromCounts,
+  countRightPoints,
+  isAxisPoints,
+  isRightSide,
+  resultFromPoints,
   toAxisScores,
   toPercent,
   toRightRatio,
   toTypeCode,
 } from './score';
 
-/** 全問同じ側を選んだ回答を作る。 */
-function answerAll(side: AxisSide): Answers {
-  return Object.fromEntries(QUESTIONS.map((question) => [question.id, side]));
+const ALL_POINTS = [0, 1, 2, 3, 4, 5, 6] as const;
+
+/** 全問同じ回答にする。 */
+function answerAll(value: AnswerValue): Answers {
+  return Object.fromEntries(QUESTIONS.map((question) => [question.id, value]));
 }
 
-/** 軸ごとに「右側を選ぶ数」を指定して回答を作る。 */
-function answersWithRightCounts(counts: RightCounts): Answers {
-  const remaining: Record<AxisId, number> = { ...counts };
+/** 軸ごとに点数を指定して回答を作る（0〜6）。 */
+function answersWithPoints(points: RightPoints): Answers {
+  const remaining: Record<AxisId, number> = { ...points };
   return Object.fromEntries(
     QUESTIONS.map((question) => {
-      const side: AxisSide = remaining[question.axis] > 0 ? 'right' : 'left';
-      if (side === 'right') {
+      const left = remaining[question.axis];
+      // 残り点数を、1問あたり最大2点で割り当てていく
+      let value: AnswerValue = 'left';
+      if (left >= 2) {
+        value = 'right';
+        remaining[question.axis] -= 2;
+      } else if (left === 1) {
+        value = 'either';
         remaining[question.axis] -= 1;
       }
-      return [question.id, side];
+      return [question.id, value];
     }),
   );
+}
+
+/** 全点数の組み合わせ（7^4 = 2401通り）。 */
+function allPointCombinations(): RightPoints[] {
+  const list: RightPoints[] = [];
+  for (const density of ALL_POINTS) {
+    for (const decoration of ALL_POINTS) {
+      for (const tone of ALL_POINTS) {
+        for (const font of ALL_POINTS) {
+          list.push({ density, decoration, tone, font });
+        }
+      }
+    }
+  }
+  return list;
 }
 
 describe('質問データ', () => {
@@ -58,9 +83,9 @@ describe('質問データ', () => {
   });
 });
 
-describe('countRightAnswers（回答 → 軸ごとのrightCount）', () => {
+describe('countRightPoints（回答 → 軸ごとの点数）', () => {
   it('全問左なら全軸0', () => {
-    expect(countRightAnswers(answerAll('left'))).toEqual({
+    expect(countRightPoints(answerAll('left'))).toEqual({
       density: 0,
       decoration: 0,
       tone: 0,
@@ -68,8 +93,17 @@ describe('countRightAnswers（回答 → 軸ごとのrightCount）', () => {
     });
   });
 
-  it('全問右なら全軸3', () => {
-    expect(countRightAnswers(answerAll('right'))).toEqual({
+  it('全問右なら全軸6（満点）', () => {
+    expect(countRightPoints(answerAll('right'))).toEqual({
+      density: MAX_POINTS,
+      decoration: MAX_POINTS,
+      tone: MAX_POINTS,
+      font: MAX_POINTS,
+    });
+  });
+
+  it('全問「どっちも同じ」なら全軸3（ちょうど半分）', () => {
+    expect(countRightPoints(answerAll('either'))).toEqual({
       density: 3,
       decoration: 3,
       tone: 3,
@@ -77,83 +111,91 @@ describe('countRightAnswers（回答 → 軸ごとのrightCount）', () => {
     });
   });
 
-  it('軸ごとに正しく数える', () => {
-    const counts: RightCounts = { density: 2, decoration: 3, tone: 0, font: 1 };
-    expect(countRightAnswers(answersWithRightCounts(counts))).toEqual(counts);
+  it('左・どちらでもない・右 が混ざっても正しく数える', () => {
+    const points: RightPoints = { density: 5, decoration: 6, tone: 0, font: 1 };
+    expect(countRightPoints(answersWithPoints(points))).toEqual(points);
   });
 
   it('未回答があればエラーになり、不足している問題IDを示す', () => {
     const answers = answerAll('left');
     delete answers.q3;
     delete answers.q7;
-    expect(() => countRightAnswers(answers)).toThrow(/q3, q7/);
+    expect(() => countRightPoints(answers)).toThrow(/q3, q7/);
+  });
+
+  it('知らない回答値はエラーになる', () => {
+    const answers = { ...answerAll('left'), q1: 'maybe' } as unknown as Answers;
+    expect(() => countRightPoints(answers)).toThrow(/q1/);
   });
 });
 
-describe('toAxisScores（rightCount → 割合）', () => {
+describe('toAxisScores（点数 → 割合）', () => {
   it.each([
-    [0, 0, 0],
-    [1, 1 / 3, 33],
-    [2, 2 / 3, 67],
-    [3, 1, 100],
-  ] as const)('rightCount %i → 割合 %f → 表示 %i パーセント', (rightCount, ratio, percent) => {
-    const counts = {
-      density: rightCount,
-      decoration: rightCount,
-      tone: rightCount,
-      font: rightCount,
-    } as RightCounts;
+    [0, 0],
+    [1, 17],
+    [2, 33],
+    [3, 50],
+    [4, 67],
+    [5, 83],
+    [6, 100],
+  ] as const)('点数 %i → 右側 %i パーセント', (rightPoints, percent) => {
+    const points = {
+      density: rightPoints,
+      decoration: rightPoints,
+      tone: rightPoints,
+      font: rightPoints,
+    } as RightPoints;
 
-    for (const score of toAxisScores(counts)) {
-      expect(score.rightCount).toBe(rightCount);
-      expect(score.rightRatio).toBeCloseTo(ratio, 10);
+    for (const score of toAxisScores(points)) {
+      expect(score.rightPoints).toBe(rightPoints);
+      expect(score.rightRatio).toBeCloseTo(rightPoints / MAX_POINTS, 10);
       expect(toPercent(score.rightRatio)).toBe(percent);
     }
   });
 
   it('軸の並び順はタイプコードの順（情報量 → 装飾 → トーン → 文字）', () => {
-    const scores = toAxisScores({ density: 0, decoration: 1, tone: 2, font: 3 });
-    expect(scores.map((score) => score.axis)).toEqual([
-      'density',
-      'decoration',
-      'tone',
-      'font',
-    ]);
-    expect(scores.map((score) => score.rightCount)).toEqual([0, 1, 2, 3]);
+    const scores = toAxisScores({ density: 0, decoration: 2, tone: 4, font: 6 });
+    expect(scores.map((score) => score.axis)).toEqual(['density', 'decoration', 'tone', 'font']);
+    expect(scores.map((score) => score.rightPoints)).toEqual([0, 2, 4, 6]);
   });
 
-  it('0〜3以外の値はエラーになる', () => {
-    expect(() => toAxisScores({ density: 4, decoration: 0, tone: 0, font: 0 } as unknown as RightCounts)).toThrow();
+  it('0〜6以外の値はエラーになる', () => {
+    for (const bad of [7, -1, 2.5]) {
+      const points = { density: bad, decoration: 0, tone: 0, font: 0 } as unknown as RightPoints;
+      expect(() => toAxisScores(points), String(bad)).toThrow();
+    }
   });
 });
 
-describe('toTypeCode（rightCount → タイプコード）', () => {
+describe('toTypeCode（点数 → タイプコード）', () => {
   it('全軸0なら DFCG', () => {
     expect(toTypeCode({ density: 0, decoration: 0, tone: 0, font: 0 })).toBe('DFCG');
   });
 
-  it('全軸3なら ARPM', () => {
-    expect(toTypeCode({ density: 3, decoration: 3, tone: 3, font: 3 })).toBe('ARPM');
+  it('全軸6なら ARPM', () => {
+    expect(toTypeCode({ density: 6, decoration: 6, tone: 6, font: 6 })).toBe('ARPM');
   });
 
-  it('n >= 2 で右側の文字、n <= 1 で左側の文字になる', () => {
-    // 1 → 左側、2 → 右側 の境界
-    expect(toTypeCode({ density: 1, decoration: 1, tone: 1, font: 1 })).toBe('DFCG');
-    expect(toTypeCode({ density: 2, decoration: 2, tone: 2, font: 2 })).toBe('ARPM');
+  it('ちょうど50%（3点）は左側の文字になる', () => {
+    expect(toTypeCode({ density: 3, decoration: 3, tone: 3, font: 3 })).toBe('DFCG');
+  });
+
+  it('50%を超えた時点（4点）で右側の文字に変わる', () => {
+    expect(toTypeCode({ density: 3, decoration: 3, tone: 3, font: 4 })).toBe('DFCM');
+    expect(toTypeCode({ density: 4, decoration: 4, tone: 4, font: 4 })).toBe('ARPM');
   });
 
   it('軸ごとに左右が混ざった場合も1文字ずつ決まる', () => {
-    // 情報量=右(A) / 装飾=右(R) / トーン=左(C) / 文字=左(G)
-    expect(toTypeCode({ density: 2, decoration: 3, tone: 1, font: 0 })).toBe('ARCG');
-    expect(toTypeCode({ density: 0, decoration: 3, tone: 0, font: 3 })).toBe('DRCM');
+    expect(toTypeCode({ density: 4, decoration: 6, tone: 2, font: 0 })).toBe('ARCG');
+    expect(toTypeCode({ density: 0, decoration: 5, tone: 1, font: 6 })).toBe('DRCM');
   });
 
   it('全16タイプが一意に作られる', () => {
     const codes = new Set<string>();
-    for (const density of [0, 3] as const) {
-      for (const decoration of [0, 3] as const) {
-        for (const tone of [0, 3] as const) {
-          for (const font of [0, 3] as const) {
+    for (const density of [0, 6] as const) {
+      for (const decoration of [0, 6] as const) {
+        for (const tone of [0, 6] as const) {
+          for (const font of [0, 6] as const) {
             codes.add(toTypeCode({ density, decoration, tone, font }));
           }
         }
@@ -170,7 +212,7 @@ describe('calcResult（回答 → 結果）', () => {
   it('全問左なら DFCG で、全軸の右側の割合が0%', () => {
     const result = calcResult(answerAll('left'));
     expect(result.code).toBe('DFCG');
-    expect(result.counts).toEqual({ density: 0, decoration: 0, tone: 0, font: 0 });
+    expect(result.points).toEqual({ density: 0, decoration: 0, tone: 0, font: 0 });
     for (const score of result.scores) {
       expect(toPercent(score.rightRatio)).toBe(0);
     }
@@ -179,53 +221,97 @@ describe('calcResult（回答 → 結果）', () => {
   it('全問右なら ARPM で、全軸の右側の割合が100%', () => {
     const result = calcResult(answerAll('right'));
     expect(result.code).toBe('ARPM');
-    expect(result.counts).toEqual({ density: 3, decoration: 3, tone: 3, font: 3 });
     for (const score of result.scores) {
       expect(toPercent(score.rightRatio)).toBe(100);
     }
   });
 
+  it('全問「どっちも同じ」なら DFCG で、全軸がちょうど50%', () => {
+    const result = calcResult(answerAll('either'));
+    expect(result.code).toBe('DFCG');
+    for (const score of result.scores) {
+      expect(toPercent(score.rightRatio)).toBe(50);
+    }
+  });
+
+  it('「どっちも同じ」は左右のちょうど中間として効く', () => {
+    // 文字軸（q4・q8・q12）だけ 右・右・どちらでもない → 5点 = 83%
+    const answers = answerAll('left');
+    answers.q4 = 'right';
+    answers.q8 = 'right';
+    answers.q12 = 'either';
+
+    const result = calcResult(answers);
+    expect(result.points.font).toBe(5);
+    expect(toPercent(result.scores[3].rightRatio)).toBe(83);
+    expect(result.code).toBe('DFCM');
+  });
+
   it('混在した回答から中間のタイプが出る', () => {
-    const result = calcResult(answersWithRightCounts({ density: 2, decoration: 3, tone: 1, font: 0 }));
+    const result = calcResult(answersWithPoints({ density: 4, decoration: 6, tone: 2, font: 0 }));
     expect(result.code).toBe('ARCG');
     expect(result.scores.map((score) => toPercent(score.rightRatio))).toEqual([67, 100, 33, 0]);
   });
 });
 
-describe('resultFromCounts（共有URL用の再利用）', () => {
-  it('同じrightCountなら回答経由と同じ結果になる', () => {
-    const counts: RightCounts = { density: 2, decoration: 3, tone: 0, font: 2 };
-    expect(resultFromCounts(counts)).toEqual(calcResult(answersWithRightCounts(counts)));
+describe('resultFromPoints（共有URL用の再利用）', () => {
+  it('同じ点数なら回答経由と同じ結果になる', () => {
+    const points: RightPoints = { density: 4, decoration: 6, tone: 0, font: 3 };
+    expect(resultFromPoints(points)).toEqual(calcResult(answersWithPoints(points)));
   });
 
-  it('0〜3の全組み合わせ（256通り）で回答経由と一致する', () => {
-    for (const density of [0, 1, 2, 3] as const) {
-      for (const decoration of [0, 1, 2, 3] as const) {
-        for (const tone of [0, 1, 2, 3] as const) {
-          for (const font of [0, 1, 2, 3] as const) {
-            const counts: RightCounts = { density, decoration, tone, font };
-            expect(resultFromCounts(counts)).toEqual(calcResult(answersWithRightCounts(counts)));
-          }
-        }
-      }
+  it('0〜6の全組み合わせ（7^4 = 2401通り）で回答経由と一致する', () => {
+    const combinations = allPointCombinations();
+    expect(combinations).toHaveLength(2401);
+
+    for (const points of combinations) {
+      expect(resultFromPoints(points), JSON.stringify(points)).toEqual(
+        calcResult(answersWithPoints(points)),
+      );
+    }
+  });
+
+  it('共有URLの4桁に相当する値はすべて0〜6', () => {
+    for (const points of allPointCombinations()) {
+      const digits = AXIS_IDS.map((axis) => points[axis]);
+      expect(digits.join('')).toMatch(/^[0-6]{4}$/);
+    }
+  });
+});
+
+describe('左右の判定の境界', () => {
+  it('タイプコードとテーマのプリセットが同じ境界を使っている', () => {
+    expect(PRESET_THRESHOLD).toBe(SIDE_THRESHOLD);
+  });
+
+  it('ちょうど境界なら左側、超えたら右側', () => {
+    expect(isRightSide(SIDE_THRESHOLD)).toBe(false);
+    expect(isRightSide(SIDE_THRESHOLD + 0.0001)).toBe(true);
+    expect(isRightSide(SIDE_THRESHOLD - 0.0001)).toBe(false);
+  });
+
+  it('点数3（50%）だけが境界ちょうどになる', () => {
+    for (const points of ALL_POINTS) {
+      const ratio = toRightRatio(points as AxisPoints);
+      expect(ratio === SIDE_THRESHOLD, `点数 ${points}`).toBe(points === 3);
     }
   });
 });
 
 describe('補助関数', () => {
-  it('isRightCount は0〜3の整数だけを通す', () => {
-    for (const value of [0, 1, 2, 3]) {
-      expect(isRightCount(value)).toBe(true);
+  it('isAxisPoints は0〜6の整数だけを通す', () => {
+    for (const value of ALL_POINTS) {
+      expect(isAxisPoints(value)).toBe(true);
     }
-    for (const value of [-1, 4, 1.5, '2', null, undefined, NaN]) {
-      expect(isRightCount(value)).toBe(false);
+    for (const value of [-1, 7, 1.5, '2', null, undefined, NaN]) {
+      expect(isAxisPoints(value), String(value)).toBe(false);
     }
   });
 
-  it('toRightRatio は rightCount を3で割る', () => {
+  it('toRightRatio は点数を6で割る', () => {
     expect(toRightRatio(0)).toBe(0);
-    expect(toRightRatio(3)).toBe(1);
-    expect(toRightRatio(1)).toBeCloseTo(1 / 3, 10);
+    expect(toRightRatio(3)).toBe(0.5);
+    expect(toRightRatio(6)).toBe(1);
   });
 
   it('軸の定義が左右の文字を正しく持っている', () => {

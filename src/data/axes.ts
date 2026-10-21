@@ -18,8 +18,27 @@ export interface AxisDefinition {
   right: AxisSideDefinition;
 }
 
-/** 1つの軸を測る問題数。1軸3問なので引き分けは起きない。 */
+/** 1つの軸を測る問題数。 */
 export const QUESTIONS_PER_AXIS = 3;
+
+/**
+ * 1問の満点。左=0 / どちらでもない=1 / 右=2 として数える。
+ * 小数を避けるため、実際の点数（0 / 0.5 / 1）を2倍した整数で扱う。
+ */
+export const POINTS_PER_QUESTION = 2;
+
+/** 1つの軸の満点（0〜6）。 */
+export const MAX_POINTS = QUESTIONS_PER_AXIS * POINTS_PER_QUESTION;
+
+/**
+ * 右側と判定する境界。この割合「より大きい」なら右側。
+ * ちょうど半分（50%）は左側になる。
+ *
+ * タイプコードの文字（score.ts）と、テーマのプリセット切り替え（theme.ts）は
+ * 必ずこの同じ値・同じ比較を使うこと。片方だけ >= にすると、
+ * ちょうど50%のときにタイプコードと見た目が食い違う。
+ */
+export const SIDE_THRESHOLD = 0.5;
 
 /**
  * 4つの軸の定義。この配列の順序がタイプコードの文字の並び順

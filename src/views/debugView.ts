@@ -4,7 +4,7 @@ import { AXES } from '../data/axes';
 import type { AxisDefinition } from '../data/axes';
 import { QUESTIONS } from '../data/questions';
 import type { ThemeVars } from '../data/tokens';
-import type { AxisId, AxisSide, RightCounts } from '../data/types';
+import type { AxisId, AxisSide, RightPoints } from '../data/types';
 import { toAxisScores } from '../logic/score';
 import { buildAxisVariantTheme, buildNeutralTheme, buildResultTheme } from '../logic/theme';
 import { el } from './dom';
@@ -71,8 +71,8 @@ function axisComparison(axis: AxisDefinition): HTMLElement {
   return grid;
 }
 
-function resultSection(counts: RightCounts, code: string, label: string): HTMLElement {
-  const vars = buildResultTheme(toAxisScores(counts));
+function resultSection(points: RightPoints, code: string, label: string): HTMLElement {
+  const vars = buildResultTheme(toAxisScores(points));
   return section(`結果テーマ：${code}`, label, allPreviews(vars));
 }
 
@@ -144,7 +144,7 @@ export function renderDebug(): HTMLElement {
 
   main.append(
     resultSection({ density: 0, decoration: 0, tone: 0, font: 0 }, 'DFCG', '全問左を選んだ人の結果テーマ'),
-    resultSection({ density: 3, decoration: 3, tone: 3, font: 3 }, 'ARPM', '全問右を選んだ人の結果テーマ'),
+    resultSection({ density: 6, decoration: 6, tone: 6, font: 6 }, 'ARPM', '全問右を選んだ人の結果テーマ'),
   );
 
   wrap.append(header, main);

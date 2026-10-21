@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { hasPreview } from './components/previews';
 import { FALLBACK_SUBJECT, missingSubjects, resolveSubject } from './components/previews/fallback';
 import { QUESTIONS, TOTAL_QUESTIONS } from './data/questions';
-import type { AxisSide } from './data/types';
+import type { AnswerValue } from './data/types';
 import { calcResult } from './logic/score';
 import type { DiagnosisState } from './state';
 import {
@@ -25,10 +25,10 @@ const alwaysSwap = () => 0.1;
 const neverSwap = () => 0.9;
 
 /** 全問同じ側を選んで最後まで進める。 */
-function answerAll(side: AxisSide, random = neverSwap): DiagnosisState {
+function answerAll(value: AnswerValue, random = neverSwap): DiagnosisState {
   let state = start(createInitialState(random));
   for (let i = 0; i < TOTAL_QUESTIONS; i += 1) {
-    state = answer(state, side);
+    state = answer(state, value);
   }
   return state;
 }
@@ -101,22 +101,35 @@ describe('戻るボタン', () => {
     expect(currentQuestion(state).axis).toBe('font');
     state = answer(state, 'right');
 
-    // 文字軸は 1/3 なので文字はG のまま（n>=2 で切り替わる）
+    // 文字軸は3問中1問だけ右なので2点（33%）。文字はGのまま
+    expect(calcResult(state.answers).points.font).toBe(2);
     expect(calcResult(state.answers).code).toBe('DFCG');
-    expect(calcResult(state.answers).counts.font).toBe(1);
   });
 
-  it('戻って回答を変えるとタイプコードが変わる（軸の多数派が入れ替わる場合）', () => {
+  it('戻って回答を変えるとタイプコードが変わる（50%を超えたとき）', () => {
     let state = answerAll('left');
 
-    // 文字軸の3問（q4・q8・q12）のうち2問を「右」に変える
+    // 文字軸の3問（q4・q8・q12）のうち2問を「右」に変える → 4点（67%）
     state = { ...state, screen: 'question', index: 3 };
     state = answer(state, 'right'); // q4
     state = { ...state, index: 7 };
     state = answer(state, 'right'); // q8
 
-    expect(calcResult(state.answers).counts.font).toBe(2);
+    expect(calcResult(state.answers).points.font).toBe(4);
     expect(calcResult(state.answers).code).toBe('DFCM');
+  });
+
+  it('「どっちも同じ」では50%止まりなので、文字は左側のまま', () => {
+    let state = answerAll('left');
+
+    // 文字軸の3問すべてを「どっちも同じ」にする → 3点（ちょうど50%）
+    for (const index of [3, 7, 11]) {
+      state = { ...state, screen: 'question', index };
+      state = answer(state, 'either');
+    }
+
+    expect(calcResult(state.answers).points.font).toBe(3);
+    expect(calcResult(state.answers).code).toBe('DFCG');
   });
 
   it('答え直しても回答数は増えない（上書きになる）', () => {
@@ -167,6 +180,22 @@ describe('通しで診断できる', () => {
   it('全問左なら DFCG、全問右なら ARPM', () => {
     expect(calcResult(answerAll('left').answers).code).toBe('DFCG');
     expect(calcResult(answerAll('right').answers).code).toBe('ARPM');
+  });
+
+  it('全問「どっちも同じ」でも最後まで進み、結果が出る', () => {
+    const state = answerAll('either');
+    expect(state.screen).toBe('result');
+    expect(calcResult(state.answers).code).toBe('DFCG');
+    for (const score of calcResult(state.answers).scores) {
+      expect(score.rightPoints).toBe(3);
+    }
+  });
+
+  it('「どっちも同じ」を選んでも次の問題へ進む', () => {
+    let state = start(createInitialState(neverSwap));
+    state = answer(state, 'either');
+    expect(currentQuestion(state).id).toBe('q2');
+    expect(state.answers.q1).toBe('either');
   });
 
   it('12問すべてに部品（または代用）があり、最後まで進める', () => {

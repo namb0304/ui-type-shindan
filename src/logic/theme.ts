@@ -35,9 +35,12 @@ export function formatValue(value: number, decimals: number, unit: string): stri
   return `${Number(value.toFixed(decimals))}${unit}`;
 }
 
-/** 割合からプリセットの左右を選ぶ。50%以上なら右側。 */
+/**
+ * 割合からプリセットの左右を選ぶ。境界より大きければ右側（ちょうど半分は左側）。
+ * タイプコードの判定（score.ts の isRightSide）と同じ比較にそろえている。
+ */
 function pickSide(ratio: number): 'left' | 'right' {
-  return ratio >= PRESET_THRESHOLD ? 'right' : 'left';
+  return ratio > PRESET_THRESHOLD ? 'right' : 'left';
 }
 
 function paletteToVars(palette: ColorPalette): PartialThemeVars {

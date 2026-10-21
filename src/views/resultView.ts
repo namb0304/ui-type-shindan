@@ -1,7 +1,7 @@
 import { createPreview, PREVIEWS } from '../components/previews';
 import { AXES } from '../data/axes';
 import type { DiagnosisResult } from '../data/types';
-import { toPercent } from '../logic/score';
+import { isRightSide, toPercent } from '../logic/score';
 import { applyTheme, buildResultTheme } from '../logic/theme';
 import { button, el } from './dom';
 
@@ -42,7 +42,8 @@ export function renderResult(result: DiagnosisResult, handlers: ResultHandlers):
 
     const rightPercent = toPercent(score.rightRatio);
     const leftPercent = 100 - rightPercent;
-    const isRight = rightPercent >= 50;
+    // ちょうど50%は左側（タイプコードの判定と同じ）
+    const isRight = isRightSide(score.rightRatio);
 
     const row = el('li', 'axis');
     const labels = el('div', 'axis__labels');

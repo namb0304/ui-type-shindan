@@ -1,3 +1,4 @@
+import { SIDE_THRESHOLD } from './axes';
 import type { AxisId } from './types';
 
 /**
@@ -47,8 +48,11 @@ export type ThemeVars = Record<CssVarName, string>;
 /** CSS変数名の一覧。 */
 export const CSS_VAR_NAMES = Object.values(CSS_VAR) as readonly CssVarName[];
 
-/** プリセットを左右どちらに切り替えるかの境界（これ以上なら右側）。 */
-export const PRESET_THRESHOLD = 0.5;
+/**
+ * プリセットを左右どちらに切り替えるかの境界。この割合「より大きい」なら右側。
+ * タイプコードの判定（score.ts の isRightSide）と必ず同じ値・同じ比較にする。
+ */
+export const PRESET_THRESHOLD = SIDE_THRESHOLD;
 
 /** ニュートラル（4軸とも中間）を表す割合。 */
 export const NEUTRAL_RATIO = 0.5;
