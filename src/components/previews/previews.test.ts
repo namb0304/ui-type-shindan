@@ -95,7 +95,7 @@ describe('preview.css が CSS変数だけを参照している', () => {
 
   it('色・背景・影・フォントの指定が var() を経由している', () => {
     const declarations = CSS_WITHOUT_COMMENTS.match(
-      /(?:^|[\s;{])(?:color|background-color|background-image|box-shadow|font-family)\s*:[^;}]+/g,
+      /(?:^|[\s;{])(?:color|background|background-color|background-image|box-shadow|font-family)\s*:[^;}]+/g,
     );
     expect(declarations?.length ?? 0).toBeGreaterThan(0);
     for (const declaration of declarations ?? []) {

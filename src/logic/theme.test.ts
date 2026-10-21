@@ -4,6 +4,9 @@ import { AXIS_IDS } from '../data/axes';
 import {
   AXIS_VARS,
   COOL_PALETTE,
+  FLAT_DECORATION,
+  getRichCandidate,
+  RICH_CANDIDATES,
   CSS_VAR,
   CSS_VAR_NAMES,
   GOTHIC_FONT,
@@ -17,6 +20,7 @@ import { toAxisScores } from './score';
 import {
   applyTheme,
   buildAxisVariantTheme,
+  buildDecorationSampleTheme,
   buildNeutralTheme,
   buildResultTheme,
   formatValue,
@@ -266,6 +270,9 @@ describe('配色のコントラスト比（4.5:1 以上）', () => {
   ];
 
   const pairs: Array<[keyof ColorPalette, keyof ColorPalette]> = [
+    // グラデーションの明暗どちらの上でも、on-primary の文字が読めること
+    ['colorOnPrimary', 'colorPrimarySoft'],
+    ['colorOnPrimary', 'colorPrimaryDeep'],
     ['colorText', 'colorBg'],
     ['colorText', 'colorSurface'],
     ['colorText', 'colorSurfaceAlt'],
@@ -285,16 +292,62 @@ describe('配色のコントラスト比（4.5:1 以上）', () => {
     }
   });
 
+  /** 半透明の色を重ねたあとの色を求める（ツヤや模様の上の読みやすさを見るため）。 */
+  function overlay(baseHex: string, topHex: string, alpha: number): string {
+    const toParts = (hex: string) =>
+      [0, 2, 4].map((i) => parseInt(hex.replace('#', '').slice(i, i + 2), 16));
+    const base = toParts(baseHex);
+    const top = toParts(topHex);
+    const mixed = base.map((value, i) => Math.round(value + (top[i] - value) * alpha));
+    return `#${mixed.map((v) => v.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+  }
+
+  /**
+   * ハイライトが面を明るくする量の上限。
+   * ボタンの内側ハイライトなどで面が明るくなっても文字が読めるよう、
+   * この量を重ねた状態で 4.5:1 を保てる配色にしてある。
+   */
+  const GLOSS_ALPHA = 0.12;
+
+  it('白い光沢を重ねても on-primary が読める余裕がある', () => {
+    for (const [name, palette] of palettes) {
+      for (const key of ['colorPrimarySoft', 'colorPrimary', 'colorPrimaryDeep'] as const) {
+        const glossed = overlay(palette[key], '#FFFFFF', GLOSS_ALPHA);
+        const ratio = contrastRatio(palette.colorOnPrimary, glossed);
+        expect(ratio, `${name} ${key} + ツヤ`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
   it('計算式そのものの検算（白と黒は21:1、同色は1:1）', () => {
     expect(contrastRatio('#FFFFFF', '#000000')).toBeCloseTo(21, 1);
     expect(contrastRatio('#3B5B7A', '#3B5B7A')).toBeCloseTo(1, 5);
   });
 
-  it('色の値は6桁の16進表記で書かれている', () => {
+  it('色の値は6桁の16進表記で書かれている（影の色だけ半透明）', () => {
     for (const [, palette] of palettes) {
-      for (const value of Object.values(palette)) {
-        expect(value).toMatch(/^#[0-9A-F]{6}$/);
+      for (const [key, value] of Object.entries(palette)) {
+        if (key === 'colorShadowTint') continue;
+        expect(value, key).toMatch(/^#[0-9A-F]{6}$/);
       }
+    }
+  });
+
+  it('3パレットすべてに グラデーション用の2色と影の色が定義されている', () => {
+    for (const [name, palette] of palettes) {
+      expect(palette.colorPrimarySoft, name).toMatch(/^#[0-9A-F]{6}$/);
+      expect(palette.colorPrimaryDeep, name).toMatch(/^#[0-9A-F]{6}$/);
+      expect(palette.colorShadowTint, name).toMatch(/^rgba\(/);
+    }
+  });
+
+  it('明るい側 → primary → 暗い側 の順に暗くなっている', () => {
+    for (const [name, palette] of palettes) {
+      const soft = relativeLuminance(palette.colorPrimarySoft);
+      const base = relativeLuminance(palette.colorPrimary);
+      const deep = relativeLuminance(palette.colorPrimaryDeep);
+      expect(soft, `${name} soft > primary`).toBeGreaterThan(base);
+      expect(base, `${name} primary > deep`).toBeGreaterThan(deep);
     }
   });
 });
@@ -364,6 +417,125 @@ describe('トークン定義の整合性', () => {
       tone: AXIS_VARS.tone.length,
       font: AXIS_VARS.font.length,
     };
-    expect(counts).toEqual({ density: 3, decoration: 3, tone: 10, font: 1 });
+    expect(counts).toEqual({ density: 3, decoration: 5, tone: 13, font: 1 });
+  });
+});
+
+describe('リッチの案（選定用。選んだら削除する）', () => {
+  const DECORATION_KEYS = [
+    'shadow',
+    'surfaceGradient',
+    'border',
+    'accentSurface',
+    'accentShadow',
+  ] as const;
+
+  it('2案ある（案B と 調整版）', () => {
+    expect(RICH_CANDIDATES.map((candidate) => candidate.id)).toEqual(['b', 'b2']);
+  });
+
+  it('調整版は、光が上から当たる構成になっている', () => {
+    const refined = getRichCandidate('b2').preset;
+    expect(refined.surfaceGradient).toContain('linear-gradient(180deg');
+    // 落ち影が3層ある（接地・中距離・遠く）
+    const dropShadows = refined.shadow.split(',').filter((part) => !part.includes('inset'));
+    expect(dropShadows.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('調整版は、案Bに要素を足していない（レイヤー数を増やしていない）', () => {
+    const base = getRichCandidate('b').preset;
+    const refined = getRichCandidate('b2').preset;
+    const layers = (value: string) => value.split('gradient(').length;
+
+    expect(layers(refined.surfaceGradient)).toBeLessThanOrEqual(layers(base.surfaceGradient));
+    expect(layers(refined.accentSurface)).toBe(layers(base.accentSurface));
+  });
+
+  it('フラットと調整版で枠線の太さが同じ（寸法が変わらない）', () => {
+    const widthOf = (border: string) => border.split(' ')[0];
+    expect(widthOf(getRichCandidate('b2').preset.border)).toBe(widthOf(FLAT_DECORATION.border));
+  });
+
+  it('装飾の値は、要素の大きさや配置を変えない', () => {
+    const presets = [FLAT_DECORATION, ...RICH_CANDIDATES.map((candidate) => candidate.preset)];
+    const layoutProperties = /display|position|margin|padding|width|height|gap|flex|grid/;
+
+    for (const preset of presets) {
+      for (const [key, value] of Object.entries(preset)) {
+        expect(value, key).not.toMatch(layoutProperties);
+      }
+    }
+  });
+
+  it('どの案も装飾の5項目すべてを定義している', () => {
+    for (const candidate of RICH_CANDIDATES) {
+      for (const key of DECORATION_KEYS) {
+        expect(candidate.preset[key], `${candidate.id}/${key}`).toBeTruthy();
+      }
+    }
+  });
+
+  it('どの案もフラットと全項目が違う', () => {
+    for (const candidate of RICH_CANDIDATES) {
+      for (const key of DECORATION_KEYS) {
+        expect(candidate.preset[key], `${candidate.id}/${key}`).not.toBe(FLAT_DECORATION[key]);
+      }
+    }
+  });
+
+  it('色の付いた面はベタ塗りではなくグラデーションになっている', () => {
+    for (const candidate of RICH_CANDIDATES) {
+      expect(candidate.preset.accentSurface, candidate.id).toMatch(/gradient\(/);
+      expect(candidate.preset.accentShadow, candidate.id).not.toBe('none');
+    }
+  });
+
+  it('グラデーションの色は配色パレットを参照している（トーンに追従する）', () => {
+    for (const candidate of RICH_CANDIDATES) {
+      expect(candidate.preset.accentSurface, candidate.id).toContain('var(--color-primary');
+      expect(candidate.preset.accentShadow, candidate.id).toMatch(
+        /var\(--color-(shadow-tint|primary-deep)\)/,
+      );
+    }
+  });
+
+  it('見本テーマは、情報量と文字がニュートラルのまま', () => {
+    const neutral = buildNeutralTheme();
+    for (const tone of ['neutral', 'cool', 'pop'] as const) {
+      for (const decoration of ['flat', 'b', 'b2'] as const) {
+        const theme = buildDecorationSampleTheme(tone, decoration);
+        for (const name of [...varNamesOfAxis('density'), ...varNamesOfAxis('font')]) {
+          expect(theme[name], `${tone}/${decoration} ${name}`).toBe(neutral[name]);
+        }
+      }
+    }
+  });
+
+  it('見本テーマは、配色だけ・装飾だけを差し替えている', () => {
+    const base = buildDecorationSampleTheme('neutral', 'flat');
+
+    // 配色を変えてもトーン軸の変数しか変わらない
+    const pop = buildDecorationSampleTheme('pop', 'flat');
+    const toneChanged = CSS_VAR_NAMES.filter((name) => base[name] !== pop[name]);
+    for (const name of toneChanged) {
+      expect(varNamesOfAxis('tone'), name).toContain(name);
+    }
+
+    // 装飾を変えても装飾軸の変数しか変わらない
+    const rich = buildDecorationSampleTheme('neutral', 'b2');
+    const decorationChanged = CSS_VAR_NAMES.filter((name) => base[name] !== rich[name]);
+    for (const name of decorationChanged) {
+      expect(varNamesOfAxis('decoration'), name).toContain(name);
+    }
+    expect(decorationChanged.length).toBeGreaterThan(0);
+  });
+
+  it('見本テーマもCSS変数がすべて揃っている', () => {
+    for (const tone of ['neutral', 'cool', 'pop'] as const) {
+      for (const decoration of ['flat', 'b', 'b2'] as const) {
+        const theme = buildDecorationSampleTheme(tone, decoration);
+        expect(Object.keys(theme).sort()).toEqual([...CSS_VAR_NAMES].sort());
+      }
+    }
   });
 });

@@ -20,6 +20,9 @@ export const CSS_VAR = {
   surfaceGradient: '--surface-gradient',
   border: '--border',
   fontFamily: '--font-family',
+  // 色の付いた要素（ボタン・ジャケット・アイコンなど）の装飾
+  accentSurface: '--accent-surface',
+  accentShadow: '--accent-shadow',
   // 配色プリセット
   colorBg: '--color-bg',
   colorSurface: '--color-surface',
@@ -27,8 +30,11 @@ export const CSS_VAR = {
   colorText: '--color-text',
   colorTextMuted: '--color-text-muted',
   colorPrimary: '--color-primary',
+  colorPrimarySoft: '--color-primary-soft',
+  colorPrimaryDeep: '--color-primary-deep',
   colorOnPrimary: '--color-on-primary',
   colorPrimaryText: '--color-primary-text',
+  colorShadowTint: '--color-shadow-tint',
   colorBorder: '--color-border',
 } as const;
 
@@ -50,7 +56,7 @@ export const NEUTRAL_RATIO = 0.5;
 /** どの軸がどのCSS変数を担当するか。軸バリアントの生成と、プロンプト生成で使う。 */
 export const AXIS_VARS = {
   density: ['spaceUnit', 'fontSizeBase', 'lineHeight'],
-  decoration: ['shadow', 'surfaceGradient', 'border'],
+  decoration: ['shadow', 'surfaceGradient', 'border', 'accentSurface', 'accentShadow'],
   tone: [
     'radius',
     'colorBg',
@@ -59,8 +65,11 @@ export const AXIS_VARS = {
     'colorText',
     'colorTextMuted',
     'colorPrimary',
+    'colorPrimarySoft',
+    'colorPrimaryDeep',
     'colorOnPrimary',
     'colorPrimaryText',
+    'colorShadowTint',
     'colorBorder',
   ],
   font: ['fontFamily'],
@@ -102,10 +111,16 @@ export interface ColorPalette {
   colorTextMuted: string;
   /** 面の塗り（ボタンなど）に使う色 */
   colorPrimary: string;
-  /** colorPrimary の上に乗せる文字色 */
+  /** グラデーションの明るい側。colorOnPrimary とのコントラストは 4.5:1 以上 */
+  colorPrimarySoft: string;
+  /** グラデーションの暗い側。colorOnPrimary とのコントラストは 4.5:1 以上 */
+  colorPrimaryDeep: string;
+  /** colorPrimary・Soft・Deep のどれに乗せても読める文字色 */
   colorOnPrimary: string;
   /** 背景の上で文字色として使う primary 系の色（リンク・強調テキスト） */
   colorPrimaryText: string;
+  /** 色付きの影に使う半透明色（文字には使わない） */
+  colorShadowTint: string;
   colorBorder: string;
 }
 
@@ -117,8 +132,11 @@ export const COOL_PALETTE: ColorPalette = {
   colorText: '#1B2733',
   colorTextMuted: '#55636F',
   colorPrimary: '#3B5B7A',
+  colorPrimarySoft: '#426180',
+  colorPrimaryDeep: '#2C4660',
   colorOnPrimary: '#FFFFFF',
   colorPrimaryText: '#335072',
+  colorShadowTint: 'rgba(32, 52, 72, 0.32)',
   colorBorder: '#D2DAE2',
 };
 
@@ -134,8 +152,11 @@ export const POP_PALETTE: ColorPalette = {
   colorText: '#2E1708',
   colorTextMuted: '#7A4A22',
   colorPrimary: '#F97316',
+  colorPrimarySoft: '#FFA052',
+  colorPrimaryDeep: '#E2630F',
   colorOnPrimary: '#2E1708',
   colorPrimaryText: '#B83C0A',
+  colorShadowTint: 'rgba(167, 70, 10, 0.34)',
   colorBorder: '#F5DCC6',
 };
 
@@ -147,8 +168,11 @@ export const NEUTRAL_PALETTE: ColorPalette = {
   colorText: '#1F2023',
   colorTextMuted: '#5C5F66',
   colorPrimary: '#4A4D55',
+  colorPrimarySoft: '#565A64',
+  colorPrimaryDeep: '#343740',
   colorOnPrimary: '#FFFFFF',
   colorPrimaryText: '#4A4D55',
+  colorShadowTint: 'rgba(26, 28, 32, 0.26)',
   colorBorder: '#DCDDE1',
 };
 
@@ -159,16 +183,32 @@ export const TONE_PALETTES = { left: COOL_PALETTE, right: POP_PALETTE } as const
 // ---------------------------------------------------------------------------
 
 export interface DecorationPreset {
+  /** カード全体の影 */
   shadow: string;
+  /** カード全体の地のグラデーション */
   surfaceGradient: string;
+  /** カードの枠線 */
   border: string;
+  /** 色の付いた要素（ボタン・ジャケット・アイコン）の塗り */
+  accentSurface: string;
+  /** 色の付いた要素の影・光沢 */
+  accentShadow: string;
 }
 
-/** フラット：影もグラデーションもなく、境界は細い線だけで表す。 */
+/**
+ * 装飾は「見た目」だけを変え、要素の大きさや配置は変えない。
+ * フラットとリッチで枠線の太さを同じにしてあるのはそのため
+ * （リッチ側は透明にして、線だけを消している）。
+ */
+export const DECORATION_BORDER_WIDTH = '2px';
+
+/** フラット：影もグラデーションもなく、色の面もベタ塗り。境界は線だけで表す。 */
 export const FLAT_DECORATION: DecorationPreset = {
   shadow: 'none',
   surfaceGradient: 'none',
-  border: `2px solid var(${CSS_VAR.colorBorder})`,
+  border: `${DECORATION_BORDER_WIDTH} solid var(${CSS_VAR.colorBorder})`,
+  accentSurface: `var(${CSS_VAR.colorPrimary})`,
+  accentShadow: 'none',
 };
 
 /**
@@ -191,13 +231,101 @@ export const RICH_DECORATION: DecorationPreset = {
   ].join(', '),
   surfaceGradient: `radial-gradient(135% 95% at 12% -10%, var(${CSS_VAR.colorSurface}) 0%, var(${CSS_VAR.colorSurfaceAlt}) 100%)`,
   border: 'none',
+  // 色の付いた要素の装飾は、RICH_CANDIDATES から案を選んでから確定する
+  accentSurface: `var(${CSS_VAR.colorPrimary})`,
+  accentShadow: 'none',
 };
+
+// ---------------------------------------------------------------------------
+// リッチの案（?debug=1 で見比べて選ぶ）
+//
+// 装飾の差が分かりにくかったのは、白い面にだけ効かせていたため。
+// 色の付いた要素（--accent-surface / --accent-shadow）にこそ効かせる。
+// グラデーションの色は配色パレット（トーン軸）を var() で参照するので、
+// トーンが変わればグラデーションの色も追従する。
+// 選定後：選ばれた案を RICH_DECORATION に移し、この定義と
+// buildDecorationSampleTheme() を削除する。
+// ---------------------------------------------------------------------------
+
+export type RichCandidateId = 'b' | 'b2';
+
+export interface RichCandidate {
+  id: RichCandidateId;
+  label: string;
+  note: string;
+  preset: DecorationPreset;
+}
+
+const SOFT = `var(${CSS_VAR.colorPrimarySoft})`;
+const PRIMARY = `var(${CSS_VAR.colorPrimary})`;
+const DEEP = `var(${CSS_VAR.colorPrimaryDeep})`;
+const TINT = `var(${CSS_VAR.colorShadowTint})`;
+
+export const RICH_CANDIDATES: readonly RichCandidate[] = [
+  {
+    id: 'b',
+    label: '案B（現状）',
+    note: '斜めのグラデーション＋上辺の光と下辺の陰＋やわらかい影。色の濃淡だけに頼る',
+    preset: {
+      shadow: [
+        'inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+        '0 10px 24px rgba(17, 12, 8, 0.14)',
+        '0 26px 56px rgba(17, 12, 8, 0.16)',
+      ].join(', '),
+      surfaceGradient: `radial-gradient(135% 95% at 12% -10%, var(${CSS_VAR.colorSurface}) 0%, var(${CSS_VAR.colorSurfaceAlt}) 100%)`,
+      border: 'none',
+      accentSurface: `linear-gradient(135deg, ${SOFT} 0%, ${PRIMARY} 55%, ${DEEP} 100%)`,
+      accentShadow: [
+        'inset 0 2px 3px rgba(255, 255, 255, 0.5)',
+        `inset 0 -3px 5px ${DEEP}`,
+        `0 10px 22px ${TINT}`,
+      ].join(', '),
+    },
+  },
+  {
+    id: 'b2',
+    label: '調整版',
+    note: '光源を1つにそろえる。上からの光・内側1pxの縁・3層の落ち影だけで、要素は何も足さない',
+    preset: {
+      shadow: [
+        // 内側の縁が光を受ける
+        'inset 0 0 0 1px rgba(255, 255, 255, 0.9)',
+        // 下辺をわずかに締めて、面の終わりを示す
+        'inset 0 -1px 0 rgba(17, 12, 8, 0.05)',
+        // 落ち影は、接地 → 中距離 → 遠く の3層。光源が1つに見える構成
+        '0 1px 1px rgba(17, 12, 8, 0.05)',
+        '0 8px 18px rgba(17, 12, 8, 0.10)',
+        '0 24px 48px rgba(17, 12, 8, 0.14)',
+      ].join(', '),
+      // 光は上から当たる。放射状のwashはやめ、上→下の穏やかな明暗にする
+      surfaceGradient: `linear-gradient(180deg, var(${CSS_VAR.colorSurface}) 0%, var(${CSS_VAR.colorSurface}) 42%, var(${CSS_VAR.colorSurfaceAlt}) 100%)`,
+      // 線は見せないが、太さはフラットと同じにして寸法をそろえる
+      border: `${DECORATION_BORDER_WIDTH} solid transparent`,
+      accentSurface: `linear-gradient(135deg, ${SOFT} 0%, ${PRIMARY} 55%, ${DEEP} 100%)`,
+      accentShadow: [
+        'inset 0 1px 1px rgba(255, 255, 255, 0.45)',
+        `inset 0 -2px 4px ${DEEP}`,
+        `0 8px 20px ${TINT}`,
+      ].join(', '),
+    },
+  },
+];
+
+export function getRichCandidate(id: RichCandidateId): RichCandidate {
+  const candidate = RICH_CANDIDATES.find((item) => item.id === id);
+  if (!candidate) {
+    throw new Error(`リッチの案がありません: ${id}`);
+  }
+  return candidate;
+}
 
 /** ニュートラル：なしとリッチの中間として、影は控えめな1層だけ。 */
 export const NEUTRAL_DECORATION: DecorationPreset = {
   shadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
   surfaceGradient: 'none',
   border: `1px solid var(${CSS_VAR.colorBorder})`,
+  accentSurface: `var(${CSS_VAR.colorPrimary})`,
+  accentShadow: 'none',
 };
 
 export const DECORATION_PRESETS = { left: FLAT_DECORATION, right: RICH_DECORATION } as const;

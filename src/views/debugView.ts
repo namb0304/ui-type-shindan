@@ -5,8 +5,15 @@ import type { AxisDefinition } from '../data/axes';
 import { QUESTIONS } from '../data/questions';
 import type { ThemeVars } from '../data/tokens';
 import type { AxisId, AxisSide, RightCounts } from '../data/types';
+import { RICH_CANDIDATES } from '../data/tokens';
 import { toAxisScores } from '../logic/score';
-import { buildAxisVariantTheme, buildNeutralTheme, buildResultTheme } from '../logic/theme';
+import type { SampleTone } from '../logic/theme';
+import {
+  buildAxisVariantTheme,
+  buildDecorationSampleTheme,
+  buildNeutralTheme,
+  buildResultTheme,
+} from '../logic/theme';
 import { el } from './dom';
 
 /**
@@ -107,6 +114,63 @@ function progressSection(): HTMLElement {
   return section('部品の進み具合', 'ステップ6で残りの題材を作る。作って登録すれば代用は自動で外れる', body);
 }
 
+/**
+ * リッチの案くらべ（選定用。案を決めたら、この関数ごと削除する）。
+ *
+ * 配色3段 × 装飾3列で並べる。
+ * 色の付いた要素（ジャケット・再生ボタン・太陽・棒グラフ）での差と、
+ * 文字中心の部品（カフェのメニュー）での差の両方を見比べられるようにする。
+ */
+function richCandidateSection(): HTMLElement {
+  const body = el('div', 'gallery__candidates');
+
+  const tones: ReadonlyArray<[SampleTone, string]> = [
+    ['neutral', 'ニュートラル配色（質問画面で見える姿）'],
+    ['cool', 'クール配色'],
+    ['pop', 'ポップ配色'],
+  ];
+
+  const columns = [
+    { decoration: 'flat' as const, label: 'フラット（F）', note: 'ベタ塗り・影なし・枠線あり・飾りなし' },
+    ...RICH_CANDIDATES.map((candidate) => ({
+      decoration: candidate.id,
+      label: candidate.label,
+      note: candidate.note,
+    })),
+  ];
+
+  // 列の説明
+  const legend = el('ul', 'gallery__legend');
+  for (const column of columns) {
+    const item = el('li', 'gallery__legend-item');
+    item.append(
+      el('span', 'gallery__legend-name', column.label),
+      el('span', 'gallery__legend-note', column.note),
+    );
+    legend.append(item);
+  }
+  body.append(legend);
+
+  for (const [tone, toneLabel] of tones) {
+    body.append(el('h3', 'gallery__subhead', toneLabel));
+
+    for (const subject of ['music-player', 'weather-app', 'cafe-menu']) {
+      const grid = el('div', 'gallery__grid gallery__grid--four');
+      for (const column of columns) {
+        const vars = buildDecorationSampleTheme(tone, column.decoration);
+        grid.append(previewCell(subject, vars, column.label));
+      }
+      body.append(grid);
+    }
+  }
+
+  return section(
+    'リッチの案くらべ（選定中）',
+    'ニュートラル配色（グレー）でも差が分かるか、目を細めて見比べる。1案を選ぶと本番のリッチに確定する',
+    body,
+  );
+}
+
 export function renderDebug(): HTMLElement {
   const wrap = el('div', 'gallery__wrap');
 
@@ -124,6 +188,7 @@ export function renderDebug(): HTMLElement {
 
   const main = el('main', 'gallery');
   main.append(
+    richCandidateSection(),
     progressSection(),
     section(
       'ニュートラル',

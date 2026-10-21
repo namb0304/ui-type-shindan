@@ -124,7 +124,8 @@
  * ------------------------------------------------------------------ */
 
 /* ジャケットはレコード盤に見立てた同心円。画像を使わずに主役を作る。
- * 面の色は primary のみ（--surface-gradient を重ねると色が覆われて消えるため）。
+ * 色の付いた面なので、装飾軸は --accent-surface / --accent-shadow で効かせる
+ * （白い面に掛けるグラデーションは見えにくいため）。
  * 幅は em で頭打ちにして、カードが縦に伸びすぎないようにする。 */
 .pv-player__art {
   display: grid;
@@ -133,8 +134,9 @@
   max-width: 10em;
   margin: 0 auto;
   aspect-ratio: 1 / 1;
-  background-color: var(--color-primary);
+  background: var(--accent-surface);
   border-radius: var(--radius);
+  box-shadow: var(--accent-shadow);
 }
 
 .pv-player__disc {
@@ -192,7 +194,7 @@
   display: block;
   width: 38%;
   height: 100%;
-  background-color: var(--color-primary);
+  background: var(--accent-surface);
   border-radius: inherit;
 }
 
@@ -223,8 +225,8 @@
 
 .pv-player__btn--main {
   width: 2.75em;
-  background-color: var(--color-primary);
-  box-shadow: var(--shadow);
+  background: var(--accent-surface);
+  box-shadow: var(--accent-shadow);
 }
 
 .pv-ico {
@@ -300,8 +302,9 @@
   flex-shrink: 0;
   width: 2.5em;
   aspect-ratio: 1 / 1;
-  background-color: var(--color-primary);
+  background: var(--accent-surface);
   border-radius: 50%;
+  box-shadow: var(--accent-shadow);
 }
 
 .pv-weather__hours {
@@ -332,7 +335,7 @@
 .pv-weather__bar {
   display: block;
   width: 0.5em;
-  background-color: var(--color-primary);
+  background: var(--accent-surface);
   border-radius: calc(var(--radius) / 2);
 }
 
