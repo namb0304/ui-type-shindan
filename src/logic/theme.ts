@@ -2,7 +2,6 @@ import { AXIS_IDS } from '../data/axes';
 import {
   AXIS_VARS,
   CSS_VAR,
-  getRichCandidate,
   CSS_VAR_NAMES,
   DECORATION_PRESETS,
   FONT_PRESETS,
@@ -14,13 +13,7 @@ import {
   PRESET_THRESHOLD,
   TONE_PALETTES,
 } from '../data/tokens';
-import type {
-  ColorPalette,
-  CssVarName,
-  DecorationPreset,
-  RichCandidateId,
-  ThemeVars,
-} from '../data/tokens';
+import type { ColorPalette, CssVarName, DecorationPreset, ThemeVars } from '../data/tokens';
 import type { AxisId, AxisScore, AxisSide } from '../data/types';
 
 /**
@@ -175,33 +168,4 @@ export function applyTheme(target: ThemeTarget, vars: ThemeVars): void {
 /** その軸が担当するCSS変数名の一覧（プロンプト生成やテストで使う）。 */
 export function varNamesOfAxis(axis: AxisId): readonly CssVarName[] {
   return AXIS_VARS[axis].map((key) => CSS_VAR[key]);
-}
-
-// ---------------------------------------------------------------------------
-// 以下は ?debug=1 の「リッチの案くらべ」専用。案を選んだら削除する。
-// ---------------------------------------------------------------------------
-
-/** 見本に使う配色。 */
-export type SampleTone = 'neutral' | 'cool' | 'pop';
-
-/** 見本に使う装飾。'flat' か、リッチの案のID。 */
-export type SampleDecoration = 'flat' | RichCandidateId;
-
-/**
- * 配色と装飾を指定して見本のテーマを作る（確認用）。
- * 情報量と文字はニュートラルのまま。装飾と配色の違いだけが見える。
- */
-export function buildDecorationSampleTheme(
-  tone: SampleTone,
-  decoration: SampleDecoration,
-): ThemeVars {
-  const base = buildNeutralTheme();
-
-  const toneVars =
-    tone === 'neutral' ? {} : axisVars('tone', tone === 'pop' ? 1 : 0);
-
-  const preset =
-    decoration === 'flat' ? DECORATION_PRESETS.left : getRichCandidate(decoration).preset;
-
-  return toThemeVars({ ...base, ...toneVars, ...decorationToVars(preset) });
 }

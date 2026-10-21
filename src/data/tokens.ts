@@ -212,112 +212,39 @@ export const FLAT_DECORATION: DecorationPreset = {
 };
 
 /**
- * リッチ：多層の柔らかい影、光沢のふち、面に回り込むグラデーション。枠線は使わない。
+ * リッチ：光源を1つにそろえた装飾。
  *
- * フラットとの差が弱いと質問で選びにくくなる（要件 §11 のリスク）ため、
- * 3つの変数すべてで差を付けている。
- *   影  ：内側のハイライト + 3層の落ち影で、面が浮いて見えるようにする
- *   地  ：放射状のグラデーションにして、光が当たっている面に見せる
- *   枠線：なし（境界は影とグラデーションが担う）
- * グラデーションの端の色は --color-surface / --color-surface-alt のままなので、
- * 文字とのコントラスト比（4.5:1以上）は検証済みの値から変わらない。
+ * 上から光が当たり、縁が光を受け、下に影が落ちる。それだけに絞っている。
+ * 飾りや模様を足すと「装飾」ではなく「情報量」や「レイアウト」の差になるため、
+ * 要素は一切増やさない。
+ *
+ * 枠線はフラットと同じ太さの透明な線にしてある。線だけを消して寸法はそろえる
+ * （太さが違うと、カードの中身の幅が変わってしまう）。
+ *
+ * グラデーションの色は配色パレット（トーン軸）を var() で参照するので、
+ * トーンが変わればグラデーションの色も追従する。
  */
 export const RICH_DECORATION: DecorationPreset = {
   shadow: [
-    'inset 0 1px 0 rgba(255, 255, 255, 0.7)',
-    '0 1px 2px rgba(17, 12, 8, 0.10)',
-    '0 8px 20px rgba(17, 12, 8, 0.16)',
-    '0 22px 48px rgba(17, 12, 8, 0.16)',
+    // 内側の縁が光を受ける
+    'inset 0 0 0 1px rgba(255, 255, 255, 0.9)',
+    // 下辺をわずかに締めて、面の終わりを示す
+    'inset 0 -1px 0 rgba(17, 12, 8, 0.05)',
+    // 落ち影は、接地 → 中距離 → 遠く の3層。光源が1つに見える構成
+    '0 1px 1px rgba(17, 12, 8, 0.05)',
+    '0 8px 18px rgba(17, 12, 8, 0.10)',
+    '0 24px 48px rgba(17, 12, 8, 0.14)',
   ].join(', '),
-  surfaceGradient: `radial-gradient(135% 95% at 12% -10%, var(${CSS_VAR.colorSurface}) 0%, var(${CSS_VAR.colorSurfaceAlt}) 100%)`,
-  border: 'none',
-  // 色の付いた要素の装飾は、RICH_CANDIDATES から案を選んでから確定する
-  accentSurface: `var(${CSS_VAR.colorPrimary})`,
-  accentShadow: 'none',
+  // 光は上から当たる
+  surfaceGradient: `linear-gradient(180deg, var(${CSS_VAR.colorSurface}) 0%, var(${CSS_VAR.colorSurface}) 42%, var(${CSS_VAR.colorSurfaceAlt}) 100%)`,
+  border: `${DECORATION_BORDER_WIDTH} solid transparent`,
+  accentSurface: `linear-gradient(135deg, var(${CSS_VAR.colorPrimarySoft}) 0%, var(${CSS_VAR.colorPrimary}) 55%, var(${CSS_VAR.colorPrimaryDeep}) 100%)`,
+  accentShadow: [
+    'inset 0 1px 1px rgba(255, 255, 255, 0.45)',
+    `inset 0 -2px 4px var(${CSS_VAR.colorPrimaryDeep})`,
+    `0 8px 20px var(${CSS_VAR.colorShadowTint})`,
+  ].join(', '),
 };
-
-// ---------------------------------------------------------------------------
-// リッチの案（?debug=1 で見比べて選ぶ）
-//
-// 装飾の差が分かりにくかったのは、白い面にだけ効かせていたため。
-// 色の付いた要素（--accent-surface / --accent-shadow）にこそ効かせる。
-// グラデーションの色は配色パレット（トーン軸）を var() で参照するので、
-// トーンが変わればグラデーションの色も追従する。
-// 選定後：選ばれた案を RICH_DECORATION に移し、この定義と
-// buildDecorationSampleTheme() を削除する。
-// ---------------------------------------------------------------------------
-
-export type RichCandidateId = 'b' | 'b2';
-
-export interface RichCandidate {
-  id: RichCandidateId;
-  label: string;
-  note: string;
-  preset: DecorationPreset;
-}
-
-const SOFT = `var(${CSS_VAR.colorPrimarySoft})`;
-const PRIMARY = `var(${CSS_VAR.colorPrimary})`;
-const DEEP = `var(${CSS_VAR.colorPrimaryDeep})`;
-const TINT = `var(${CSS_VAR.colorShadowTint})`;
-
-export const RICH_CANDIDATES: readonly RichCandidate[] = [
-  {
-    id: 'b',
-    label: '案B（現状）',
-    note: '斜めのグラデーション＋上辺の光と下辺の陰＋やわらかい影。色の濃淡だけに頼る',
-    preset: {
-      shadow: [
-        'inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-        '0 10px 24px rgba(17, 12, 8, 0.14)',
-        '0 26px 56px rgba(17, 12, 8, 0.16)',
-      ].join(', '),
-      surfaceGradient: `radial-gradient(135% 95% at 12% -10%, var(${CSS_VAR.colorSurface}) 0%, var(${CSS_VAR.colorSurfaceAlt}) 100%)`,
-      border: 'none',
-      accentSurface: `linear-gradient(135deg, ${SOFT} 0%, ${PRIMARY} 55%, ${DEEP} 100%)`,
-      accentShadow: [
-        'inset 0 2px 3px rgba(255, 255, 255, 0.5)',
-        `inset 0 -3px 5px ${DEEP}`,
-        `0 10px 22px ${TINT}`,
-      ].join(', '),
-    },
-  },
-  {
-    id: 'b2',
-    label: '調整版',
-    note: '光源を1つにそろえる。上からの光・内側1pxの縁・3層の落ち影だけで、要素は何も足さない',
-    preset: {
-      shadow: [
-        // 内側の縁が光を受ける
-        'inset 0 0 0 1px rgba(255, 255, 255, 0.9)',
-        // 下辺をわずかに締めて、面の終わりを示す
-        'inset 0 -1px 0 rgba(17, 12, 8, 0.05)',
-        // 落ち影は、接地 → 中距離 → 遠く の3層。光源が1つに見える構成
-        '0 1px 1px rgba(17, 12, 8, 0.05)',
-        '0 8px 18px rgba(17, 12, 8, 0.10)',
-        '0 24px 48px rgba(17, 12, 8, 0.14)',
-      ].join(', '),
-      // 光は上から当たる。放射状のwashはやめ、上→下の穏やかな明暗にする
-      surfaceGradient: `linear-gradient(180deg, var(${CSS_VAR.colorSurface}) 0%, var(${CSS_VAR.colorSurface}) 42%, var(${CSS_VAR.colorSurfaceAlt}) 100%)`,
-      // 線は見せないが、太さはフラットと同じにして寸法をそろえる
-      border: `${DECORATION_BORDER_WIDTH} solid transparent`,
-      accentSurface: `linear-gradient(135deg, ${SOFT} 0%, ${PRIMARY} 55%, ${DEEP} 100%)`,
-      accentShadow: [
-        'inset 0 1px 1px rgba(255, 255, 255, 0.45)',
-        `inset 0 -2px 4px ${DEEP}`,
-        `0 8px 20px ${TINT}`,
-      ].join(', '),
-    },
-  },
-];
-
-export function getRichCandidate(id: RichCandidateId): RichCandidate {
-  const candidate = RICH_CANDIDATES.find((item) => item.id === id);
-  if (!candidate) {
-    throw new Error(`リッチの案がありません: ${id}`);
-  }
-  return candidate;
-}
 
 /** ニュートラル：なしとリッチの中間として、影は控えめな1層だけ。 */
 export const NEUTRAL_DECORATION: DecorationPreset = {

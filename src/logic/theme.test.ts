@@ -4,15 +4,15 @@ import { AXIS_IDS } from '../data/axes';
 import {
   AXIS_VARS,
   COOL_PALETTE,
-  FLAT_DECORATION,
-  getRichCandidate,
-  RICH_CANDIDATES,
   CSS_VAR,
   CSS_VAR_NAMES,
+  FLAT_DECORATION,
   GOTHIC_FONT,
   MINCHO_FONT,
+  NEUTRAL_DECORATION,
   NEUTRAL_PALETTE,
   POP_PALETTE,
+  RICH_DECORATION,
 } from '../data/tokens';
 import type { ColorPalette, CssVarName, ThemeVars } from '../data/tokens';
 import type { AxisId, AxisScore, RightCount, RightCounts } from '../data/types';
@@ -20,7 +20,6 @@ import { toAxisScores } from './score';
 import {
   applyTheme,
   buildAxisVariantTheme,
-  buildDecorationSampleTheme,
   buildNeutralTheme,
   buildResultTheme,
   formatValue,
@@ -98,7 +97,7 @@ describe('buildResultTheme（結果用）', () => {
     expect(theme[CSS_VAR.radius]).toBe('20px');
     expect(theme[CSS_VAR.shadow]).toContain('rgba');
     expect(theme[CSS_VAR.surfaceGradient]).toMatch(/gradient\(/);
-    expect(theme[CSS_VAR.border]).toBe('none');
+    expect(theme[CSS_VAR.border]).toContain('transparent');
     expect(theme[CSS_VAR.fontFamily]).toBe(MINCHO_FONT);
     expect(theme[CSS_VAR.colorPrimary]).toBe(POP_PALETTE.colorPrimary);
   });
@@ -237,7 +236,7 @@ describe('buildAxisVariantTheme（質問用・A/B比較）', () => {
     // リッチ：影とグラデーションがあり、枠線はない
     expect(right[CSS_VAR.shadow]).toContain('rgba');
     expect(right[CSS_VAR.surfaceGradient]).toMatch(/gradient\(/);
-    expect(right[CSS_VAR.border]).toBe('none');
+    expect(right[CSS_VAR.border]).toContain('transparent');
 
     // 3変数すべてで差が出ている（どれか1つだけの違いだと見分けにくい）
     for (const name of [CSS_VAR.shadow, CSS_VAR.surfaceGradient, CSS_VAR.border]) {
@@ -421,121 +420,41 @@ describe('トークン定義の整合性', () => {
   });
 });
 
-describe('リッチの案（選定用。選んだら削除する）', () => {
-  const DECORATION_KEYS = [
-    'shadow',
-    'surfaceGradient',
-    'border',
-    'accentSurface',
-    'accentShadow',
-  ] as const;
-
-  it('2案ある（案B と 調整版）', () => {
-    expect(RICH_CANDIDATES.map((candidate) => candidate.id)).toEqual(['b', 'b2']);
-  });
-
-  it('調整版は、光が上から当たる構成になっている', () => {
-    const refined = getRichCandidate('b2').preset;
-    expect(refined.surfaceGradient).toContain('linear-gradient(180deg');
+describe('リッチの装飾（確定版）', () => {
+  it('光が上から当たる構成になっている', () => {
+    expect(RICH_DECORATION.surfaceGradient).toContain('linear-gradient(180deg');
     // 落ち影が3層ある（接地・中距離・遠く）
-    const dropShadows = refined.shadow.split(',').filter((part) => !part.includes('inset'));
+    const dropShadows = RICH_DECORATION.shadow
+      .split(',')
+      .filter((part: string) => !part.includes('inset'));
     expect(dropShadows.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('調整版は、案Bに要素を足していない（レイヤー数を増やしていない）', () => {
-    const base = getRichCandidate('b').preset;
-    const refined = getRichCandidate('b2').preset;
-    const layers = (value: string) => value.split('gradient(').length;
-
-    expect(layers(refined.surfaceGradient)).toBeLessThanOrEqual(layers(base.surfaceGradient));
-    expect(layers(refined.accentSurface)).toBe(layers(base.accentSurface));
-  });
-
-  it('フラットと調整版で枠線の太さが同じ（寸法が変わらない）', () => {
+  it('フラットと枠線の太さが同じ（寸法が変わらない）', () => {
     const widthOf = (border: string) => border.split(' ')[0];
-    expect(widthOf(getRichCandidate('b2').preset.border)).toBe(widthOf(FLAT_DECORATION.border));
+    expect(widthOf(RICH_DECORATION.border)).toBe(widthOf(FLAT_DECORATION.border));
+    // リッチ側は線を見せない
+    expect(RICH_DECORATION.border).toContain('transparent');
   });
 
   it('装飾の値は、要素の大きさや配置を変えない', () => {
-    const presets = [FLAT_DECORATION, ...RICH_CANDIDATES.map((candidate) => candidate.preset)];
     const layoutProperties = /display|position|margin|padding|width|height|gap|flex|grid/;
-
-    for (const preset of presets) {
+    for (const preset of [FLAT_DECORATION, RICH_DECORATION, NEUTRAL_DECORATION]) {
       for (const [key, value] of Object.entries(preset)) {
         expect(value, key).not.toMatch(layoutProperties);
       }
     }
   });
 
-  it('どの案も装飾の5項目すべてを定義している', () => {
-    for (const candidate of RICH_CANDIDATES) {
-      for (const key of DECORATION_KEYS) {
-        expect(candidate.preset[key], `${candidate.id}/${key}`).toBeTruthy();
-      }
-    }
+  it('色の付いた面はグラデーションで、配色パレットを参照している', () => {
+    expect(RICH_DECORATION.accentSurface).toMatch(/gradient\(/);
+    expect(RICH_DECORATION.accentSurface).toContain('var(--color-primary');
+    expect(RICH_DECORATION.accentShadow).toContain('var(--color-shadow-tint)');
   });
 
-  it('どの案もフラットと全項目が違う', () => {
-    for (const candidate of RICH_CANDIDATES) {
-      for (const key of DECORATION_KEYS) {
-        expect(candidate.preset[key], `${candidate.id}/${key}`).not.toBe(FLAT_DECORATION[key]);
-      }
-    }
-  });
-
-  it('色の付いた面はベタ塗りではなくグラデーションになっている', () => {
-    for (const candidate of RICH_CANDIDATES) {
-      expect(candidate.preset.accentSurface, candidate.id).toMatch(/gradient\(/);
-      expect(candidate.preset.accentShadow, candidate.id).not.toBe('none');
-    }
-  });
-
-  it('グラデーションの色は配色パレットを参照している（トーンに追従する）', () => {
-    for (const candidate of RICH_CANDIDATES) {
-      expect(candidate.preset.accentSurface, candidate.id).toContain('var(--color-primary');
-      expect(candidate.preset.accentShadow, candidate.id).toMatch(
-        /var\(--color-(shadow-tint|primary-deep)\)/,
-      );
-    }
-  });
-
-  it('見本テーマは、情報量と文字がニュートラルのまま', () => {
-    const neutral = buildNeutralTheme();
-    for (const tone of ['neutral', 'cool', 'pop'] as const) {
-      for (const decoration of ['flat', 'b', 'b2'] as const) {
-        const theme = buildDecorationSampleTheme(tone, decoration);
-        for (const name of [...varNamesOfAxis('density'), ...varNamesOfAxis('font')]) {
-          expect(theme[name], `${tone}/${decoration} ${name}`).toBe(neutral[name]);
-        }
-      }
-    }
-  });
-
-  it('見本テーマは、配色だけ・装飾だけを差し替えている', () => {
-    const base = buildDecorationSampleTheme('neutral', 'flat');
-
-    // 配色を変えてもトーン軸の変数しか変わらない
-    const pop = buildDecorationSampleTheme('pop', 'flat');
-    const toneChanged = CSS_VAR_NAMES.filter((name) => base[name] !== pop[name]);
-    for (const name of toneChanged) {
-      expect(varNamesOfAxis('tone'), name).toContain(name);
-    }
-
-    // 装飾を変えても装飾軸の変数しか変わらない
-    const rich = buildDecorationSampleTheme('neutral', 'b2');
-    const decorationChanged = CSS_VAR_NAMES.filter((name) => base[name] !== rich[name]);
-    for (const name of decorationChanged) {
-      expect(varNamesOfAxis('decoration'), name).toContain(name);
-    }
-    expect(decorationChanged.length).toBeGreaterThan(0);
-  });
-
-  it('見本テーマもCSS変数がすべて揃っている', () => {
-    for (const tone of ['neutral', 'cool', 'pop'] as const) {
-      for (const decoration of ['flat', 'b', 'b2'] as const) {
-        const theme = buildDecorationSampleTheme(tone, decoration);
-        expect(Object.keys(theme).sort()).toEqual([...CSS_VAR_NAMES].sort());
-      }
+  it('フラットとリッチは装飾の5項目すべてが違う', () => {
+    for (const key of ['shadow', 'surfaceGradient', 'border', 'accentSurface', 'accentShadow'] as const) {
+      expect(RICH_DECORATION[key], key).not.toBe(FLAT_DECORATION[key]);
     }
   });
 });
