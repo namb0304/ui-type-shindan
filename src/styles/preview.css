@@ -64,23 +64,14 @@
  * カフェのメニュー（情報量）
  * ------------------------------------------------------------------ */
 
-.pv-cafe__head {
-  margin-bottom: calc(var(--space-unit) * 1.25);
-}
-
-.pv-cafe__shop {
-  font-size: 0.75em;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0.12em;
-  color: var(--color-primary-text);
-}
-
 .pv-cafe__title {
-  margin-top: calc(var(--space-unit) * 0.25);
   font-size: 1.25em;
   font-weight: 700;
   line-height: 1.25;
+}
+
+.pv-cafe__list {
+  margin-top: calc(var(--space-unit) * 0.75);
 }
 
 .pv-cafe__item {
@@ -97,30 +88,15 @@
   border-top: var(--border);
 }
 
-.pv-cafe__body {
-  min-width: 0;
-}
-
 .pv-cafe__name {
+  min-width: 0;
   font-weight: 500;
-}
-
-.pv-cafe__note {
-  margin-top: calc(var(--space-unit) * 0.25);
-  font-size: 0.8125em;
-  color: var(--color-text-muted);
 }
 
 .pv-cafe__price {
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
-}
-
-.pv-cafe__foot {
-  margin-top: calc(var(--space-unit) * 1.25);
-  font-size: 0.75em;
-  color: var(--color-text-muted);
 }
 
 /* ------------------------------------------------------------------
@@ -135,7 +111,7 @@
   display: grid;
   place-items: center;
   width: 100%;
-  max-width: 10em;
+  max-width: 5em;
   margin: 0 auto;
   aspect-ratio: 1 / 1;
   background: var(--accent-surface);
@@ -164,17 +140,8 @@
   transform: translate(-50%, -50%);
 }
 
-.pv-player__album {
-  margin-top: calc(var(--space-unit) * 1.5);
-  font-size: 0.75em;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0.09em;
-  color: var(--color-primary-text);
-}
-
 .pv-player__track {
-  margin-top: calc(var(--space-unit) * 0.5);
+  margin-top: calc(var(--space-unit) * 1);
   font-size: 1.15em;
   font-weight: 700;
   line-height: 1.3;
@@ -188,7 +155,7 @@
 .pv-player__bar {
   width: 100%;
   height: 0.375em;
-  margin-top: calc(var(--space-unit) * 1.25);
+  margin-top: calc(var(--space-unit) * 1);
   overflow: hidden;
   background-color: var(--color-border);
   border-radius: calc(var(--radius) / 2);
@@ -202,21 +169,12 @@
   border-radius: inherit;
 }
 
-.pv-player__times {
-  display: flex;
-  justify-content: space-between;
-  margin-top: calc(var(--space-unit) * 0.5);
-  font-size: 0.6875em;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-muted);
-}
-
 .pv-player__controls {
   display: flex;
   gap: calc(var(--space-unit) * 1.25);
   align-items: center;
   justify-content: center;
-  margin-top: calc(var(--space-unit) * 1.25);
+  margin-top: calc(var(--space-unit) * 1);
 }
 
 .pv-player__btn {
@@ -283,7 +241,7 @@
 }
 
 .pv-weather__temp {
-  font-size: 2.75em;
+  font-size: 2.25em;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -316,8 +274,8 @@
   gap: calc(var(--space-unit) * 0.5);
   align-items: flex-end;
   justify-content: space-between;
-  margin-top: calc(var(--space-unit) * 1.5);
-  padding-top: calc(var(--space-unit) * 1.25);
+  margin-top: calc(var(--space-unit) * 1.25);
+  padding-top: calc(var(--space-unit) * 1);
   border-top: var(--border);
 }
 
@@ -344,33 +302,27 @@
 }
 
 .pv-weather__bar--lv1 {
-  height: 0.9em;
+  height: 0.8em;
 }
 
 .pv-weather__bar--lv2 {
-  height: 1.5em;
+  height: 1.25em;
 }
 
 .pv-weather__bar--lv3 {
-  height: 2.1em;
+  height: 1.7em;
 }
 
 .pv-weather__bar--lv4 {
-  height: 2.6em;
+  height: 2.1em;
 }
 
 .pv-weather__bar--lv5 {
-  height: 3.1em;
+  height: 2.5em;
 }
 
 .pv-weather__hour-label {
   font-size: 0.6875em;
-  color: var(--color-text-muted);
-}
-
-.pv-weather__note {
-  margin-top: calc(var(--space-unit) * 1.25);
-  font-size: 0.75em;
   color: var(--color-text-muted);
 }
 
@@ -402,7 +354,7 @@
 
 .pv-news__title {
   margin-top: calc(var(--space-unit) * 0.5);
-  font-size: 1.65em;
+  font-size: 1.5em;
   font-weight: 700;
   line-height: 1.35;
 }
@@ -424,12 +376,6 @@
 .pv-news__text {
   font-size: 0.875em;
   text-indent: 1em;
-}
-
-.pv-news__byline {
-  margin-top: calc(var(--space-unit) * 1.25);
-  font-size: 0.75em;
-  color: var(--color-text-muted);
 }
 
 /* ------------------------------------------------------------------
@@ -509,7 +455,7 @@
  * ------------------------------------------------------------------ */
 
 .pv-event__title {
-  font-size: 1.8em;
+  font-size: 1.65em;
   font-weight: 700;
   line-height: 1.3;
 }
@@ -523,8 +469,8 @@
 }
 
 .pv-event__details {
-  margin-top: calc(var(--space-unit) * 1.25);
-  padding-top: calc(var(--space-unit) * 1.25);
+  margin-top: calc(var(--space-unit) * 1);
+  padding-top: calc(var(--space-unit) * 1);
   border-top: var(--border);
 }
 
@@ -546,17 +492,6 @@
 
 .pv-event__row-value {
   min-width: 0;
-}
-
-.pv-event__text {
-  margin-top: calc(var(--space-unit) * 1.25);
-  font-size: 0.875em;
-}
-
-.pv-event__note {
-  margin-top: calc(var(--space-unit) * 1);
-  font-size: 0.75em;
-  color: var(--color-text-muted);
 }
 
 /* ------------------------------------------------------------------

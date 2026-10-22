@@ -241,12 +241,26 @@ const PHONE_WIDTH = 390;
 const PREVIEW_WIDTH = PHONE_WIDTH - 16 * 2 - 10 * 2 - 2 * 2;
 
 /**
- * 2枚ぶんに使える高さ。実測値から出した。
- *   画面の高さ844 − 上の進捗と問い − 下の「どっちも同じ」と戻る
- * 1問目だけ案内の枠が入るぶん狭い。
+ * 2枚ぶんに使える高さ。
+ *
+ * iPhoneのSafariは、上下のバーのぶん実際に見える高さが画面より小さい
+ * （390×844 の端末で、見えるのはおよそ700px）。そこから、
+ * 選択肢より上（進捗・問い）と、選択肢の枠の余白を引いた残り。
+ *
+ *   ふつうの問題：700 − 150 − 62 = 488
+ *   1問目        ：700 − 232 − 62 = 406（案内の枠が入るぶん狭い）
+ *
+ * 「どっちも同じに見える」と戻るボタンは、この下に来てよい。
+ * 第1部はプレビューそのものを押して答えるので、ボタンまで
+ * 一度に見えている必要はない。
  */
-const HEIGHT_BUDGET = 448;
-const HEIGHT_BUDGET_FIRST = 366;
+const VISIBLE_HEIGHT = 700;
+const CHROME_ABOVE = 150;
+const CHROME_ABOVE_FIRST = 232;
+const OPTION_OVERHEAD = 62;
+
+const HEIGHT_BUDGET = VISIBLE_HEIGHT - CHROME_ABOVE - OPTION_OVERHEAD;
+const HEIGHT_BUDGET_FIRST = VISIBLE_HEIGHT - CHROME_ABOVE_FIRST - OPTION_OVERHEAD;
 
 interface HeightRow {
   question: (typeof QUESTIONS)[number];
@@ -287,7 +301,9 @@ function heightCheckSection(rows: HeightRow[], stage: HTMLElement): HTMLElement 
   return section(
     '高さの点検（スマホ幅390px）',
     `質問画面と同じ幅(${PREVIEW_WIDTH}px)で実際に描いて測っている。` +
-      `2枚の合計が ${HEIGHT_BUDGET}px（1問目は案内の枠があるので ${HEIGHT_BUDGET_FIRST}px）以内なら、スクロールなしで見比べられる`,
+      `iPhoneのSafariで見える高さ(${VISIBLE_HEIGHT}px)を基準に、2枚の合計が ` +
+      `${HEIGHT_BUDGET}px（1問目は案内の枠があるので ${HEIGHT_BUDGET_FIRST}px）以内なら、` +
+      `スクロールなしで2枚を見比べられる`,
     body,
   );
 }

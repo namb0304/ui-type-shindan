@@ -8,6 +8,10 @@ import type { PreviewComponent } from './types';
  * （明朝の数字は縦線が細く、ゴシックの数字は幅がそろって見える）。
  *
  * 会場名・行事名は架空。
+ *
+ * 行数は削ってある（紹介文と注記を落とし、申込の有無は料金の行に入れた）。
+ * 文字の軸は上下2つの高さが同じになるので、1行がそのまま2倍効くため。
+ * 書体の差が出る「大きい行事名」と「日付の数字」は残している。
  */
 export const eventBanner: PreviewComponent = {
   subject: 'event-banner',
@@ -29,11 +33,9 @@ export const eventBanner: PreviewComponent = {
         </li>
         <li class="pv-event__row">
           <span class="pv-event__row-label">料金</span>
-          <span class="pv-event__row-value">入場無料</span>
+          <span class="pv-event__row-value">入場無料（申込不要）</span>
         </li>
       </ul>
-      <p class="pv-event__text">古書と新刊が並びます。夕方からは朗読会。</p>
-      <p class="pv-event__note">申込不要　雨天決行</p>
     </article>
   `,
 };

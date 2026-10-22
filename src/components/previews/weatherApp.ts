@@ -10,6 +10,9 @@ import type { PreviewComponent } from './types';
  *
  * 地名は架空（湊見市 桜並）。実在の地名にすると、実際の天気予報と
  * 読まれるおそれがあるため。
+ *
+ * 注記の行は落としてある。トーンの軸は上下2つの高さが同じになるので、
+ * 1行の高さがそのまま2倍効くため。色の面（太陽・棒グラフ）は残している。
  */
 export const weatherApp: PreviewComponent = {
   subject: 'weather-app',
@@ -53,7 +56,6 @@ export const weatherApp: PreviewComponent = {
           <span class="pv-weather__hour-label">24時</span>
         </li>
       </ul>
-      <p class="pv-weather__note">降水確率 10%　/　洗濯指数 A</p>
     </article>
   `,
 };
