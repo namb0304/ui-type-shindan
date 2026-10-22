@@ -354,6 +354,10 @@ p {
 @media (min-width: 680px) {
   .q__options {
     grid-template-columns: repeat(2, minmax(0, 1fr)); /* PCは左右 */
+
+    /* 高さが違う2枚でも上端をそろえる。
+     * そろっていないと、同じ行どうしを見比べにくい */
+    align-items: start;
   }
 }
 
