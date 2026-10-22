@@ -4,6 +4,7 @@ import type {
   Answers,
   AnswerValue,
   AxisId,
+  AxisLean,
   AxisPoints,
   AxisScore,
   DiagnosisResult,
@@ -85,6 +86,15 @@ export function isRightSide(ratio: number): boolean {
   return ratio > SIDE_THRESHOLD;
 }
 
+/**
+ * その軸がどちらに寄っているか。ちょうど半分なら 'even'。
+ * あるある・説明文・プロンプトの文章を出し分けるのに使う。
+ */
+export function sideOf(score: AxisScore): AxisLean {
+  if (toPercent(score.rightRatio) === 50) return 'even';
+  return isRightSide(score.rightRatio) ? 'right' : 'left';
+}
+
 /** 点数から各軸のスコアを作る。並び順は軸の順（タイプコードの順）。 */
 export function toAxisScores(points: RightPoints): AxisScore[] {
   return AXIS_IDS.map((axis) => {
@@ -122,4 +132,34 @@ export function calcResult(
   questions: readonly Question[] = QUESTIONS,
 ): DiagnosisResult {
   return resultFromPoints(countRightPoints(answers, questions));
+}
+
+/**
+ * タイプコードから点数を作る（左側の文字なら0点、右側なら満点）。
+ * 共有URLではなく、コードから結果ページを開きたいとき（?debug=1&type=ARCM）に使う。
+ */
+export function pointsFromCode(code: string): RightPoints {
+  const letters = code.toUpperCase().split('');
+  if (letters.length !== AXES.length) {
+    throw new Error(`タイプコードは${AXES.length}文字です: ${code}`);
+  }
+
+  const entries = AXES.map((axis, index) => {
+    const letter = letters[index];
+    if (letter === axis.left.letter) return [axis.id, 0] as const;
+    if (letter === axis.right.letter) return [axis.id, MAX_POINTS] as const;
+    throw new Error(`${index + 1}文字目が不正です: ${letter}`);
+  });
+
+  return Object.fromEntries(entries) as RightPoints;
+}
+
+/** タイプコードとして正しい形式か。 */
+export function isTypeCode(value: string): boolean {
+  try {
+    pointsFromCode(value);
+    return true;
+  } catch {
+    return false;
+  }
 }

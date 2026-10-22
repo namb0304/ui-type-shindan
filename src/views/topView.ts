@@ -7,12 +7,11 @@ export function renderTop(onStart: () => void): HTMLElement {
 
   const hero = el('div', 'top__hero');
   hero.append(
-    el('p', 'top__eyebrow', 'UI TYPE'),
-    el('h1', 'top__title', 'UIタイプ診断'),
+    el('h1', 'top__title', 'デザインの好み、お店でいうと？'),
     el(
       'p',
       'top__lead',
-      '「どっちが好き？」に答えるだけ。あなたが心地よく感じるUIのタイプが分かります。',
+      '2つのデザインを見比べて、好きなほうを選ぶだけ。あなたの好みのタイプが分かります。',
     ),
   );
 

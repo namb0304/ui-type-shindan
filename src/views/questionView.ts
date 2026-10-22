@@ -1,6 +1,7 @@
 import { createPreview } from '../components/previews';
 import { resolveSubject } from '../components/previews/fallback';
 import type { AnswerValue } from '../data/types';
+import { isDebugMode } from '../debug';
 import { buildAxisVariantTheme } from '../logic/theme';
 import type { DiagnosisState } from '../state';
 import { canGoBack, currentQuestion, progress, sidesInDisplayOrder } from '../state';
@@ -38,7 +39,8 @@ export function renderQuestion(
   // --- 問い ---
   const ask = el('div', 'q__ask');
   ask.append(el('h1', 'q__title', 'どっちが好き？'), el('p', 'q__subject', question.label));
-  if (resolved.isFallback) {
+  // 開発用のメモなので、本番の画面には出さない
+  if (resolved.isFallback && isDebugMode()) {
     ask.append(el('p', 'q__fallback', '※ この題材の部品は仮です（ステップ6で差し替え）'));
   }
 

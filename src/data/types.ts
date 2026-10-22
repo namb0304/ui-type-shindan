@@ -23,6 +23,12 @@ export type AxisSide = 'left' | 'right';
  */
 export type AnswerValue = AxisSide | 'either';
 
+/**
+ * 割合から見た寄り方。'even' はちょうど半分（50%）。
+ * 文章の出し分け（あるある・説明文・プロンプト）に使う。
+ */
+export type AxisLean = 'left' | 'right' | 'even';
+
 /** タイプコードに使う文字。左側・右側の順で D/A・F/R・C/P・G/M。 */
 export type AxisLetter = 'D' | 'A' | 'F' | 'R' | 'C' | 'P' | 'G' | 'M';
 
@@ -57,8 +63,10 @@ export interface AxisScore {
 
 export interface TypeInfo {
   code: string; // 'ARCG'
-  name: string; // '静寂のミニマリスト'
-  description: string;
+  /** お店の呼び名（例: 'スマホの旗艦店'） */
+  shop: string;
+  /** ひとことツッコミ */
+  quip: string;
 }
 
 /** 診断結果。回答からも、共有URLの4桁からも同じ形で作れる。 */

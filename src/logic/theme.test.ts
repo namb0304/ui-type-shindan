@@ -348,12 +348,28 @@ describe('配色のコントラスト比（4.5:1 以上）', () => {
    */
   const GLOSS_ALPHA = 0.12;
 
+  /** 文字パネルの濃さ。base.css の --panel-scrim と同じ値にする。 */
+  const PANEL_SCRIM = 0.94;
+
   it('白い光沢を重ねても on-primary が読める余裕がある', () => {
     for (const [name, palette] of palettes) {
       for (const key of ['colorPrimarySoft', 'colorPrimary', 'colorPrimaryDeep'] as const) {
         const glossed = overlay(palette[key], '#FFFFFF', GLOSS_ALPHA);
         const ratio = contrastRatio(palette.colorOnPrimary, glossed);
         expect(ratio, `${name} ${key} + ツヤ`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
+  it('ぼかした背景の上でも、文字パネルの上なら4.5:1以上', () => {
+    // ファーストビューは、ぼかした写真の上に文字を置く。
+    // 文字の下にはテーマ色のパネル（--panel-scrim）を敷いてあるので、
+    // 背後がどんな写真でも読める。最悪ケース（真っ黒）で確かめる。
+    for (const [name, palette] of palettes) {
+      const panel = overlay(palette.colorBg, '#000000', 1 - PANEL_SCRIM);
+      for (const key of ['colorText', 'colorTextMuted', 'colorPrimaryText'] as const) {
+        const ratio = contrastRatio(palette[key], panel);
+        expect(ratio, `${name} ${key} on パネル`).toBeGreaterThanOrEqual(4.5);
       }
     }
   });

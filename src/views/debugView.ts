@@ -1,12 +1,15 @@
 import { createPreview, PREVIEWS } from '../components/previews';
+import { createShopPhoto } from '../components/shopPhoto';
 import { FALLBACK_SUBJECT, missingSubjects } from '../components/previews/fallback';
 import { AXES } from '../data/axes';
 import type { AxisDefinition } from '../data/axes';
 import { QUESTIONS } from '../data/questions';
+import { TYPE_INFOS } from '../data/typeInfos';
 import type { ThemeVars } from '../data/tokens';
 import type { AxisId, AxisSide, RightPoints } from '../data/types';
-import { toAxisScores } from '../logic/score';
-import { buildAxisVariantTheme, buildNeutralTheme, buildResultTheme } from '../logic/theme';
+import { pointsFromCode, toAxisScores } from '../logic/score';
+import { buildTypeSummary } from '../logic/summary';
+import { applyTheme, buildAxisVariantTheme, buildNeutralTheme, buildResultTheme } from '../logic/theme';
 import { el } from './dom';
 
 /**
@@ -107,6 +110,65 @@ function progressSection(): HTMLElement {
   return section('部品の進み具合', 'ステップ6で残りの題材を作る。作って登録すれば代用は自動で外れる', body);
 }
 
+/**
+ * 16タイプの写真の加工具合を並べて確認する（確認用）。
+ *
+ * 写真の薄さ・テーマ色のなじみ・店名の読みやすさを一画面で見比べる。
+ * 写真は16枚になるので、見えたものから読み込む（loading="lazy"）。
+ */
+function photoCheckSection(): HTMLElement {
+  const grid = el('div', 'gallery__photos');
+
+  for (const info of TYPE_INFOS) {
+    const scores = toAxisScores(pointsFromCode(info.code));
+
+    const card = el('a', 'photocheck');
+    card.href = `?debug=1&type=${info.code}`;
+    applyTheme(card, buildResultTheme(scores));
+
+    const photo = el('div', 'photocheck__photo');
+    photo.setAttribute('aria-hidden', 'true');
+    photo.append(createShopPhoto(info.code, { lazy: true }));
+
+    const text = el('div', 'photocheck__text');
+    text.append(
+      el('p', 'photocheck__shop', `『${info.shop}』`),
+      el('p', 'photocheck__summary', buildTypeSummary(scores)),
+      el('p', 'photocheck__code', info.code),
+    );
+
+    card.append(photo, text);
+    grid.append(card);
+  }
+
+  return section(
+    '写真の加工具合',
+    '結果ページと同じ加工（写真を35%・テーマ色の幕65%）。写真が無いタイプはグラデーションだけになる',
+    grid,
+  );
+}
+
+/** 16タイプの結果ページへの入口（確認用）。 */
+function typeLinksSection(): HTMLElement {
+  const body = el('div', 'gallery__types');
+
+  for (const info of TYPE_INFOS) {
+    const link = el('a', 'gallery__type');
+    link.href = `?debug=1&type=${info.code}`;
+    link.append(
+      el('span', 'gallery__type-code', info.code),
+      el('span', 'gallery__type-shop', info.shop),
+    );
+    body.append(link);
+  }
+
+  return section(
+    '16タイプの結果ページ',
+    'どのタイプの結果ページもここから開ける。文字が読めるか、崩れていないかを確認する',
+    body,
+  );
+}
+
 export function renderDebug(): HTMLElement {
   const wrap = el('div', 'gallery__wrap');
 
@@ -124,6 +186,8 @@ export function renderDebug(): HTMLElement {
 
   const main = el('main', 'gallery');
   main.append(
+    photoCheckSection(),
+    typeLinksSection(),
     progressSection(),
     section(
       'ニュートラル',

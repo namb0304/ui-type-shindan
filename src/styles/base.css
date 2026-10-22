@@ -372,75 +372,406 @@ p {
   text-align: center;
 }
 
-/* --- 結果（この要素にテーマのCSS変数が適用される） --- */
+/* ==================================================================
+ * 結果（この要素にテーマのCSS変数が適用される）
+ *
+ * 一番の見せ場。演出は「看板が灯る」一度きりに絞り、それ以外は静かに積む。
+ * 配色・書体・装飾はすべてテーマのCSS変数から来るので、
+ * ここではレイアウトと、タイプによらない構造だけを決める。
+ * ================================================================== */
 
 .screen--result {
   max-width: none;
   min-height: 100dvh;
-  padding: 48px var(--site-gutter) 72px;
+  padding: 40px var(--site-gutter) 72px;
   font-family: var(--font-family);
   color: var(--color-text);
   background-color: var(--color-bg);
 }
 
 .screen--result > * {
-  max-width: 760px;
+  max-width: 680px;
   margin-right: auto;
   margin-left: auto;
 }
 
-.result__head {
-  text-align: center;
+/* --- 発表演出 --- */
+
+/*
+ * 演出は「写真が現れ、店名が灯る」一度きりに絞る。
+ * 合計1.35秒（要件：1.5秒以内）。
+ */
+@keyframes result-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
-.result__eyebrow {
-  font-size: 12px;
-  font-weight: 500;
+@keyframes result-sign {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 看板より後ろは、店名が出てから静かに続く */
+.result__after {
+  animation: result-fade 0.4s ease 0.95s both;
+}
+
+/* 動きを減らす設定のときは、演出なしで即表示する */
+@media (prefers-reduced-motion: reduce) {
+  .result__after {
+    animation: none;
+  }
+}
+
+/* --- ファーストビュー（写真・店名・説明文・ひとこと） --- */
+
+/*
+ * この画面の主役。同じ写真を2回使う。
+ *   背景 … 大きくぼかして全面に敷く（左右に空白を作らない）
+ *   前景 … 縦長の枠にくっきり出す（切らずに見せる）
+ *
+ * 文字はぼかした背景の上に乗るので、テーマ色のパネルを敷いて読みやすさを保つ。
+ * 加工の強さは、下の変数だけで決まる。
+ */
+.screen--result {
+  /* くっきり写真 */
+  --photo-opacity: 0.85;
+  --photo-tint: 0.14;
+  /* ぼかし背景 */
+  --hero-bg-blur: 48px;
+  --hero-bg-opacity: 0.45;
+  --hero-bg-tint: 0.3;
+  /* 文字パネル。背後が真っ黒な写真でも 4.5:1 を保てる下限が 0.94 */
+  --panel-scrim: 0.94;
+  /* スマホでの写真の高さ */
+  --photo-height: 56svh;
+}
+
+.hero {
+  position: relative;
+  /* 画面の端まで使う（.screen--result > * の最大幅を打ち消す） */
+  max-width: none;
+  padding-bottom: 28px;
+  margin: -40px calc(var(--site-gutter) * -1) 0;
+  isolation: isolate;
+}
+
+/* --- ぼかした背景（画面全体） --- */
+
+.hero__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  /* 下端で切れて線が出ないよう、ページの背景色に溶かす */
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 100%) 86%, rgb(0 0 0 / 0%) 100%);
+  animation: result-fade 0.8s ease both;
+}
+
+.hero__blur {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: var(--hero-bg-opacity);
+  /* ぼかすと端が透けるので、少し拡大してから端を隠す */
+  filter: blur(var(--hero-bg-blur)) saturate(1.1);
+  transform: scale(1.18);
+}
+
+/* テーマ色を重ねて、配色になじませる */
+.hero__backdrop-tint {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: var(--accent-surface);
+  opacity: var(--hero-bg-tint);
+}
+
+/* 写真が無いときの下地。ぼかし写真の下にあるので、写真があるときは見えない */
+.hero__wash {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: var(--accent-surface);
+  opacity: 0.16;
+}
+
+/* --- 並べ方 --- */
+
+.hero__layout {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- くっきり写真 --- */
+
+.hero__photo {
+  position: relative;
+  height: var(--photo-height);
+  min-height: 300px;
+  max-height: 620px;
+  overflow: hidden;
+  /* スマホでは下端をぼかして、文字の領域にひと続きでつなぐ */
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 100%) 68%, rgb(0 0 0 / 0%) 100%);
+  animation: result-fade 0.8s ease both;
+}
+
+.hero__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: var(--photo-opacity);
+}
+
+.hero__tint {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+  background: var(--accent-surface);
+  opacity: var(--photo-tint);
+}
+
+/* --- 文字 --- */
+
+.hero__body {
+  position: relative;
+  padding: 20px var(--site-gutter) 24px;
+  margin-top: -16px;
+}
+
+/*
+ * 文字の下に敷くテーマ色のパネル。
+ * ぼかした背景がうっすら透けるよう、すりガラスにする。
+ */
+.hero__body::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  background-color: var(--color-bg);
+  opacity: var(--panel-scrim);
+  backdrop-filter: blur(6px);
+}
+
+.hero__lead {
+  font-size: 14px;
   color: var(--color-text-muted);
-  letter-spacing: 0.2em;
-}
-
-.result__code {
-  margin-top: 8px;
-  font-size: 56px;
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--color-primary-text);
   letter-spacing: 0.08em;
+  animation: result-fade 0.3s ease 0.2s both;
 }
 
-.result__note {
+.hero__reveal {
+  animation: result-sign 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) 0.45s both;
+}
+
+.hero__after {
+  animation: result-fade 0.4s ease 0.95s both;
+}
+
+.hero__shop {
+  margin-top: 4px;
+  /* 長い店名（おしゃれなジェラート屋など）でも収まる大きさにする */
+  font-size: clamp(28px, 9.2vw, 44px);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text);
+  letter-spacing: 0.01em;
+  /* 2行になるとき、1行目だけが長くならないようにする */
+  text-wrap: balance;
+}
+
+.hero__meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
   margin-top: 10px;
-  font-size: 12.5px;
+}
+
+.hero__suffix {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.22em;
+}
+
+.hero__code {
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-on-primary);
+  letter-spacing: 0.16em;
+  background: var(--accent-surface);
+  border-radius: calc(var(--radius) / 2);
+  box-shadow: var(--accent-shadow);
+}
+
+/* タイプの説明文。ここが結果の主役になるので大きく出す */
+.hero__summary {
+  margin-top: 18px;
+  font-size: clamp(17px, 4.6vw, 20px);
+  font-weight: 500;
+  line-height: 1.75;
+  color: var(--color-text);
+}
+
+/* ひとことはオチなので、説明文より小さく添える */
+.hero__quip {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.8;
   color: var(--color-text-muted);
 }
+
+/* --- PC：左に縦長の写真、右に文字 --- */
+
+@media (min-width: 900px) {
+  .hero {
+    padding: 56px 32px 64px;
+    margin-top: -40px;
+  }
+
+  .hero__layout {
+    display: grid;
+    grid-template-columns: 380px minmax(0, 1fr);
+    gap: 56px;
+    /* 文字は写真に対して上下中央。上ぞろえにすると右下に大きな空白が出る */
+    align-items: center;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  /* 縦長の枠なので、写真は切れない */
+  .hero__photo {
+    height: auto;
+    min-height: 0;
+    max-height: 72svh;
+    aspect-ratio: 1 / 1.5;
+    mask-image: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .hero__body {
+    padding: 0;
+    margin-top: 0;
+  }
+
+  /* PCでは文字だけにパネルを敷く（はみ出さないよう少し広げる） */
+  .hero__body::before {
+    inset: -24px -28px;
+    border-radius: var(--radius);
+  }
+
+  .hero__shop {
+    font-size: clamp(40px, 4vw, 56px);
+  }
+
+  .hero__summary {
+    max-width: 22em;
+    font-size: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__backdrop,
+  .hero__photo,
+  .hero__lead,
+  .hero__reveal,
+  .hero__after {
+    animation: none;
+  }
+}
+
+/* --- 共通の見出し --- */
 
 .result__block {
-  margin-top: 48px;
+  margin-top: 44px;
 }
 
 .result__heading {
   padding-bottom: 10px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.14em;
   border-bottom: 1px solid var(--color-border);
+}
+
+.result__heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.result__heading--flush {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .result__sub {
   margin-top: 10px;
   font-size: 13px;
+  line-height: 1.8;
   color: var(--color-text-muted);
 }
 
+/* --- 4. UIあるある --- */
+
+.traits {
+  padding: 0;
+  margin: 16px 0 0;
+  list-style: none;
+}
+
+.traits__item {
+  position: relative;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.traits__item + .traits__item {
+  margin-top: 10px;
+}
+
+/* 行頭の印。テーマの色が効くので、タイプごとに表情が変わる */
+.traits__item::before {
+  position: absolute;
+  top: 0.75em;
+  left: 0;
+  width: 10px;
+  height: 2px;
+  content: '';
+  background: var(--accent-surface);
+}
+
+/* --- 5. 4軸の割合バー --- */
+
 .axes {
   padding: 0;
-  margin: 20px 0 0;
+  margin: 18px 0 0;
   list-style: none;
 }
 
 .axis + .axis {
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .axis__labels {
@@ -451,16 +782,16 @@ p {
   color: var(--color-text-muted);
 }
 
-.axis__name {
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  opacity: 0.75;
-}
-
 .axis__side {
   display: inline-flex;
   gap: 5px;
   align-items: baseline;
+}
+
+.axis__name {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  opacity: 0.75;
 }
 
 .axis__side--on {
@@ -468,12 +799,23 @@ p {
   color: var(--color-primary-text);
 }
 
-/* タイプコードの文字。名前と混ざらないよう、小さく薄く添える */
+/* タイプコードの文字と、その略（D = Dense）。名前と混ざらないよう小さく薄く */
 .axis__letter {
+  display: inline-flex;
+  gap: 3px;
+  align-items: baseline;
   font-size: 10px;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+}
+
+.axis__letter-code {
   font-weight: 700;
-  letter-spacing: 0.08em;
-  opacity: 0.55;
+}
+
+.axis__letter-name {
+  font-size: 9.5px;
+  white-space: nowrap;
 }
 
 .axis__track {
@@ -489,7 +831,7 @@ p {
   display: block;
   height: 100%;
   margin-left: auto; /* 右側が優勢なら右から伸ばす */
-  background-color: var(--color-primary);
+  background: var(--accent-surface);
   border-radius: inherit;
 }
 
@@ -497,6 +839,8 @@ p {
   margin-right: auto;
   margin-left: 0;
 }
+
+/* --- 6. あなた専用UIのプレビュー --- */
 
 .result__previews {
   display: grid;
@@ -511,23 +855,128 @@ p {
   }
 }
 
+/* --- 7. お店の相性 --- */
+
+.affinity {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+@media (min-width: 560px) {
+  .affinity {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.affinity__card {
+  padding: 18px;
+  background-color: var(--color-surface);
+  background-image: var(--surface-gradient);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.affinity__title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  letter-spacing: 0.12em;
+}
+
+.affinity__shop {
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--color-primary-text);
+}
+
+.affinity__code {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.16em;
+}
+
+.affinity__note {
+  margin-top: 10px;
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--color-text-muted);
+}
+
+/* --- 8. AI向けプロンプト --- */
+
+.prompt__body {
+  max-height: 340px;
+  padding: 16px;
+  margin-top: 14px;
+  overflow: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.75;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.prompt__body:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: 2px;
+}
+
+/* --- 9. 注記と操作 --- */
+
+.result__footer {
+  margin-top: 48px;
+}
+
 .result__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   justify-content: center;
-  margin-top: 48px;
+}
+
+.result__disclaimer {
+  max-width: 30em;
+  margin: 24px auto 0;
+  font-size: 11.5px;
+  line-height: 1.9;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* --- 結果ページ内のボタン --- */
+
+.btn--small {
+  min-height: 36px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-on-primary);
+  cursor: pointer;
+  background: var(--accent-surface);
+  border: none;
+  border-radius: calc(var(--radius) / 2);
+  box-shadow: var(--accent-shadow);
 }
 
 .screen--result .btn--primary {
   color: var(--color-on-primary);
-  background-color: var(--color-primary);
+  background: var(--accent-surface);
   border-radius: var(--radius);
+  box-shadow: var(--accent-shadow);
 }
 
 .screen--result .btn--primary:hover {
-  background-color: var(--color-primary);
-  opacity: 0.88;
+  opacity: 0.9;
 }
 
 .screen--result .btn--ghost {
@@ -544,26 +993,6 @@ p {
 
 .screen--result .btn:focus-visible {
   outline-color: var(--color-primary-text);
-}
-
-/* --- 部品カタログ（?debug=1） --- */
-
-.gallery__status-line {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.gallery__todo {
-  padding: 0;
-  margin: 10px 0 0;
-  font-size: 12.5px;
-  line-height: 1.9;
-  color: var(--site-muted);
-  list-style: none;
-}
-
-.gallery__todo-item--done {
-  color: var(--site-text);
 }
 
 /* 「どっちも同じに見える」。2択より明らかに小さく、控えめに置く */
@@ -597,4 +1026,95 @@ p {
   font-weight: 700;
   color: var(--site-accent);
   text-decoration-color: var(--site-accent);
+}
+
+/* --- 16タイプへの入口（?debug=1） --- */
+
+.gallery__types {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+}
+
+.gallery__type {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  text-decoration: none;
+  background-color: var(--site-surface);
+  border: 1px solid var(--site-hairline);
+  border-radius: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.gallery__type:hover {
+  border-color: var(--site-accent);
+}
+
+.gallery__type-code {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--site-accent);
+  letter-spacing: 0.14em;
+}
+
+.gallery__type-shop {
+  font-size: 13px;
+  color: var(--site-text);
+}
+
+/* --- 写真の加工具合の確認（?debug=1） --- */
+
+.gallery__photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.photocheck {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  aspect-ratio: 1 / 1.5;
+  overflow: hidden;
+  font-family: var(--font-family);
+  color: var(--color-text);
+  text-decoration: none;
+  background-color: var(--color-bg);
+  border: 1px solid var(--site-hairline);
+  border-radius: 10px;
+}
+
+.photocheck__photo {
+  position: absolute;
+  inset: 0;
+}
+
+.photocheck__text {
+  position: relative;
+  padding: 10px;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0%) 0%, var(--color-bg) 62%);
+}
+
+.photocheck__shop {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.photocheck__summary {
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.photocheck__code {
+  margin-top: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--color-primary-text);
+  letter-spacing: 0.14em;
 }
