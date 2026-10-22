@@ -1,4 +1,4 @@
-import { createDemoFrame, demoButton, memoBodyHtml } from './memoApp';
+import { createDemoFrame, createTapper, demoButton, memoBodyHtml } from './memoApp';
 import { createScheduler } from './scheduler';
 import type { KitDemo, KitDemoInstance } from './types';
 
@@ -18,8 +18,12 @@ import type { KitDemo, KitDemoInstance } from './types';
 
 const PLAY_LEAD_MS = 450;
 
+/** パネルを開いたまま見せる時間。出る場所とボタンの並びが分かる長さにする */
+const PANEL_HOLD_MS = 2100;
+
 function panelBase(variant: 'modal' | 'sheet'): KitDemoInstance {
   const scheduler = createScheduler();
+  const tap = createTapper(scheduler);
   const { frame, screen } = createDemoFrame();
 
   const app = document.createElement('div');
@@ -31,7 +35,7 @@ function panelBase(variant: 'modal' | 'sheet'): KitDemoInstance {
 
   const actions = document.createElement('div');
   actions.className = 'memo__actions';
-  const deleteButton = demoButton('削除', { quiet: true, trigger: true });
+  const deleteButton = demoButton('削除', { quiet: true });
   actions.append(deleteButton);
   app.append(actions);
   screen.append(app);
@@ -97,14 +101,22 @@ function panelBase(variant: 'modal' | 'sheet'): KitDemoInstance {
 
   return {
     element: frame,
-    triggerLabel: '削除',
+    reset: close,
 
+    /** [削除] → 開く → 2.1秒そのまま → [やめる] → 閉じる */
     async play(): Promise<void> {
+      close();
       await scheduler.wait(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
-      open();
-      // 開ききるまで待って、開いたまま止める
-      await scheduler.wait(900);
+
+      await tap(deleteButton, open);
+      if (scheduler.cancelled) return;
+
+      await scheduler.wait(PANEL_HOLD_MS);
+      if (scheduler.cancelled) return;
+
+      await tap(cancel, close);
+      await scheduler.wait(300);
     },
 
     destroy(): void {

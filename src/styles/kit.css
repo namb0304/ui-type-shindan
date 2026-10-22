@@ -182,21 +182,40 @@
   border-color: var(--color-border);
 }
 
-/* 「ここを押すと動きます」の目印。やわらかい輪を出す。
- * 一度押したらクラスごと外す（押し方が分かった人には出し続けない） */
-.memo__btn--trigger {
+/* 自動再生で「指で押した」ように見せる波紋。
+ * 再生は人の操作なしで進むので、これが無いと
+ * 「勝手に画面が変わった」ようにしか見えない */
+.memo__btn {
   position: relative;
-  animation: kit-attention 1.8s ease-in-out infinite;
+  transition: transform var(--duration) ease;
 }
 
-@keyframes kit-attention {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 var(--color-shadow-tint);
+.memo__btn--pressed {
+  transform: scale(0.94);
+}
+
+.memo__tap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  width: 2.75em;
+  aspect-ratio: 1 / 1;
+  pointer-events: none;
+  background-color: currentcolor;
+  border-radius: 50%;
+  animation: kit-tap 0.42s ease-out forwards;
+}
+
+@keyframes kit-tap {
+  from {
+    opacity: 0.45;
+    transform: translate(-50%, -50%) scale(0.3);
   }
 
-  50% {
-    box-shadow: 0 0 0 0.4em transparent;
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
@@ -536,10 +555,12 @@
     animation: none;
   }
 
-  /* 点滅はさせないが、「ここを押す」の目印自体は残す */
-  .memo__btn--trigger {
-    box-shadow: 0 0 0 2px var(--color-shadow-tint);
+  /* 波紋は広げず、押された瞬間だけ色を置く。
+   * どのボタンが押されたかは、これでも分かる */
+  .memo__tap {
+    opacity: 0.3;
     animation: none;
+    transform: translate(-50%, -50%) scale(0.8);
   }
 
   .kit-spinner {

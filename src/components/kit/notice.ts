@@ -1,4 +1,4 @@
-import { createDemoFrame, demoButton, memoBodyHtml } from './memoApp';
+import { createDemoFrame, createTapper, demoButton, memoBodyHtml } from './memoApp';
 import { createScheduler } from './scheduler';
 import type { KitDemo, KitDemoInstance } from './types';
 
@@ -20,8 +20,12 @@ const TOAST_LIFETIME_MS = 1800;
 /** 自動再生で、押すまでの間。いきなり動くと見逃すため少し待つ */
 const PLAY_LEAD_MS = 450;
 
+/** バナーを出したまま見せる時間。押すまで消えないことが伝わる長さにする */
+const BANNER_HOLD_MS = 2600;
+
 function noticeBase(variant: 'toast' | 'banner'): KitDemoInstance {
   const scheduler = createScheduler();
+  const tap = createTapper(scheduler);
   const { frame, screen } = createDemoFrame();
 
   const app = document.createElement('div');
@@ -33,7 +37,7 @@ function noticeBase(variant: 'toast' | 'banner'): KitDemoInstance {
 
   const actions = document.createElement('div');
   actions.className = 'memo__actions';
-  const saveButton = demoButton('保存', { trigger: true });
+  const saveButton = demoButton('保存');
   actions.append(saveButton);
   app.append(actions);
 
@@ -91,25 +95,42 @@ function noticeBase(variant: 'toast' | 'banner'): KitDemoInstance {
     delete frame.dataset.noticeOpen;
   }
 
+  function reset(): void {
+    // 待っている消去タイマーを無効にしてから閉じる
+    hideToken += 1;
+    hide();
+  }
+
   saveButton.addEventListener('click', show);
   closeButton?.addEventListener('click', hide);
 
   return {
     element: frame,
-    triggerLabel: '保存',
+    reset,
 
+    /**
+     * トースト：[保存] → 出る → 数秒で自分で消える（押さなくても戻る）
+     * バナー  ：[保存] → 出る → 2.6秒そのまま → [✕] → 閉じる
+     */
     async play(): Promise<void> {
+      reset();
       await scheduler.wait(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
-      show();
+
+      await tap(saveButton, show);
+      if (scheduler.cancelled) return;
 
       if (variant === 'toast') {
-        // 出てから自分で消えるまでを見せきる
-        await scheduler.wait(TOAST_LIFETIME_MS + 700);
-      } else {
-        // バナーは残るのが見せ場なので、出きったところで止める
-        await scheduler.wait(900);
+        // 自分で消えるまでを見せきる。ここで最初の状態に戻る
+        await scheduler.wait(TOAST_LIFETIME_MS + 500);
+        return;
       }
+
+      // バナーは押すまで消えない。そのことを見せてから、✕を押して閉じる
+      await scheduler.wait(BANNER_HOLD_MS);
+      if (scheduler.cancelled || !closeButton) return;
+      await tap(closeButton, hide);
+      await scheduler.wait(300);
     },
 
     destroy(): void {

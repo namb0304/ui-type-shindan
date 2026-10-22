@@ -61,7 +61,7 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
     );
     ask.append(steps);
   } else {
-    ask.append(el('p', 'kit__note', '動きを見てから選んでください'));
+    ask.append(el('p', 'kit__note', '2つの動きを見比べてから選んでください'));
   }
 
   // --- 切り替えスイッチ（スマホのみ表示） ---
@@ -103,22 +103,22 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
     const playButton = player.add(demo, tabs[i]);
     playButton.setAttribute('aria-label', `${option.name}の動きを見る`);
 
-    // どこを押せば動くかを、ボタン名のまま伝える（文章にベタ書きしない）
-    const touchHint = el(
-      'p',
-      'kit__touch',
-      `枠の中の「${demo.triggerLabel}」を押しても動きます`,
-    );
-
-    card.append(caption, demo.element, playButton, touchHint);
+    card.append(caption, demo.element, playButton);
     stage.append(card);
 
+    // 文言は選んでも「〜にする」のまま（押すと何が起きるかを書く）。
+    // 選択中かどうかは、✓と色で見せる
     const choose = button(
       `kit__choose${isSelected ? ' kit__choose--selected' : ''}`,
-      isSelected ? `${option.name}にした` : `${option.name}にする`,
+      `${option.name}にする`,
       () => handlers.onAnswer(choice),
     );
-    if (isSelected) choose.setAttribute('aria-pressed', 'true');
+    if (isSelected) {
+      choose.setAttribute('aria-pressed', 'true');
+      const check = el('span', 'kit__check', '✓');
+      check.setAttribute('aria-hidden', 'true');
+      choose.prepend(check);
+    }
     choices.append(choose);
   }
 

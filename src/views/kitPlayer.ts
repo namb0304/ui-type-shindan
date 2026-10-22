@@ -17,11 +17,15 @@ import { el } from './dom';
 
 export type PlayState = 'idle' | 'playing' | 'played';
 
-/** 再生ボタンの表示。状態が一目で分かるようにする */
+/**
+ * 再生ボタンの表示。
+ * 「押すと何が起きるか」を書く（CLAUDE.md の文言のルール）。
+ * 「見ました」のような状態の報告にはしない。
+ */
 const BUTTON_LABEL: Readonly<Record<PlayState, string>> = {
   idle: '▶ 動きを見る',
   playing: '再生中…',
-  played: '✓ 見ました（もう一度）',
+  played: '▶ もう一度見る',
 };
 
 /** 自動再生で、1つめと2つめの間に置く間 */

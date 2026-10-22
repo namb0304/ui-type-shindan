@@ -26,8 +26,8 @@ export function renderBreak(handlers: BreakHandlers): HTMLElement {
     el(
       'p',
       'brk__lead',
-      'ここまでは「どんな雰囲気が好きか」でした。' +
-        'ここからは、よく見るUIの部品について、どっちをよく使いたいかを聞きます。',
+      'ここまでは、見た目の好みを聞きました。' +
+        'ここからは、ボタンやお知らせなど、アプリでよく見るUIのうち、どっちが好きかを聞きます。',
     ),
     el('p', 'brk__next', `のこり ${TOTAL_KIT_QUESTIONS}問`),
   );

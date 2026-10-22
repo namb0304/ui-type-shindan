@@ -206,7 +206,6 @@ function kitSection(players: KitPlayer[]): HTMLElement {
         el('p', 'gallery__caption', option.description),
         demo.element,
         player.add(demo),
-        el('p', 'kit__touch', `枠の中の「${demo.triggerLabel}」を押しても動きます`),
       );
       grid.append(cell);
     }

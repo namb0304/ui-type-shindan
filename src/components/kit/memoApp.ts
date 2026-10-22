@@ -1,3 +1,5 @@
+import type { Scheduler } from './scheduler';
+
 /**
  * デモ3問に共通の「架空のメモアプリ」の画面。
  *
@@ -67,33 +69,43 @@ export function memoListHtml(): string {
 export interface DemoButtonOptions {
   /** 控えめな見た目にする（削除・再読み込みなど、主役でない操作） */
   quiet?: boolean;
-  /**
-   * 押すとデモが動くボタン。光の輪で「ここを押す」と示す。
-   * 一度押したら輪は消す（押し方が分かった人に出し続けない）。
-   */
-  trigger?: boolean;
 }
 
 /** デモの中の操作ボタン。「これにする」と見分けがつく見た目にする（kit.css）。 */
 export function demoButton(label: string, options: DemoButtonOptions = {}): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = [
-    'memo__btn',
-    options.quiet ? 'memo__btn--quiet' : '',
-    options.trigger ? 'memo__btn--trigger' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  button.className = `memo__btn${options.quiet ? ' memo__btn--quiet' : ''}`;
   button.textContent = label;
-
-  if (options.trigger) {
-    button.addEventListener(
-      'click',
-      () => button.classList.remove('memo__btn--trigger'),
-      { once: true },
-    );
-  }
-
   return button;
+}
+
+/** タップの波紋を見せている時間。 */
+export const TAP_MS = 420;
+
+/**
+ * 自動再生のときに「指で押した」ように見せる。
+ *
+ * 再生は人の操作なしで進むので、何もしないと
+ * 「勝手に画面が変わった」ようにしか見えない。
+ * どのボタンが押されたのかを波紋で示す。
+ */
+export function createTapper(scheduler: Scheduler) {
+  return async function tap(button: HTMLButtonElement, action: () => void): Promise<void> {
+    const ripple = document.createElement('span');
+    ripple.className = 'memo__tap';
+    ripple.setAttribute('aria-hidden', 'true');
+    button.append(ripple);
+    button.classList.add('memo__btn--pressed');
+
+    // 波紋が広がり始めてから動かす。同時だと「押したから動いた」に見えない
+    await scheduler.wait(TAP_MS * 0.5);
+    if (!scheduler.cancelled) action();
+    await scheduler.wait(TAP_MS * 0.5);
+
+    // 片付けはタイマーでやる。animationend に任せると、動きを止めている
+    // 環境ではイベントが来ず、押したままの見た目が残る
+    ripple.remove();
+    button.classList.remove('memo__btn--pressed');
+  };
 }

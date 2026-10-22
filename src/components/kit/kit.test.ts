@@ -239,3 +239,36 @@ describe('kit.css が CSS変数だけを参照している', () => {
     expect(CSS_WITHOUT_COMMENTS).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
   });
 });
+
+describe('デモの文言（CLAUDE.md の文言のルール）', () => {
+  it('説明文に、かたい言い回しを使っていない', () => {
+    for (const question of KIT_QUESTIONS) {
+      for (const option of [question.a, question.b]) {
+        // 「〜させる」は説明口調になりやすい（「待たせる」など）
+        expect(option.description, `${question.id} ${option.id}`).not.toMatch(/させる|による|すること/);
+      }
+    }
+  });
+
+  it('説明文が短い（1行で読み切れる長さ）', () => {
+    for (const question of KIT_QUESTIONS) {
+      for (const option of [question.a, question.b]) {
+        expect(option.description.length, `${question.id} ${option.id}`).toBeLessThanOrEqual(24);
+      }
+    }
+  });
+});
+
+describe('kit.css のタップの波紋', () => {
+  it('波紋のスタイルがある（どこが押されたか分かるようにする）', () => {
+    expect(CSS_WITHOUT_COMMENTS).toMatch(/\.memo__tap\s*\{/);
+    expect(CSS_WITHOUT_COMMENTS).toMatch(/@keyframes kit-tap/);
+  });
+
+  it('動きを止めた環境では、波紋を広げない', () => {
+    const reduced = CSS_WITHOUT_COMMENTS.match(
+      /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*\}/,
+    )?.[0] ?? '';
+    expect(reduced).toMatch(/\.memo__tap\s*\{[^}]*animation:\s*none/);
+  });
+});

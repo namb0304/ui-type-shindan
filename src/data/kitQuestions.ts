@@ -18,27 +18,27 @@ export const KIT_QUESTIONS = [
     a: {
       id: 'toast',
       name: 'トースト',
-      description: '画面の端に一瞬出て、自分で消える',
+      description: '数秒で自動的に消えるお知らせ',
     },
     b: {
       id: 'banner',
       name: 'バナー',
-      description: '画面の上に出たまま残り、自分で閉じる',
+      description: '✕を押すまで画面の上に残るお知らせ',
     },
   },
   {
     id: 'k5',
     category: 'component',
-    label: '確認・選択パネル',
+    label: '確認の出し方',
     a: {
       id: 'modal',
       name: 'モーダル',
-      description: '画面の真ん中に重なって出る窓',
+      description: '画面の真ん中に出てくる確認画面',
     },
     b: {
       id: 'bottom-sheet',
       name: 'ボトムシート',
-      description: '画面の下からせり上がってくる板',
+      description: '画面の下からせり上がってくる確認画面',
     },
   },
   {
@@ -48,12 +48,12 @@ export const KIT_QUESTIONS = [
     a: {
       id: 'skeleton',
       name: 'スケルトンスクリーン',
-      description: '中身の形を先に灰色で出して待たせる',
+      description: '読み込み中に、出てくる中身の形を先に見せる',
     },
     b: {
       id: 'spinner',
       name: 'スピナー',
-      description: 'くるくる回る印で待たせる',
+      description: '読み込み中に、くるくる回る印を見せる',
     },
   },
 ] as const satisfies readonly KitQuestion[];

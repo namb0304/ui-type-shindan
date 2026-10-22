@@ -1,4 +1,10 @@
-import { createDemoFrame, demoButton, MEMO_LIST_ITEMS, memoListHtml } from './memoApp';
+import {
+  createDemoFrame,
+  createTapper,
+  demoButton,
+  MEMO_LIST_ITEMS,
+  memoListHtml,
+} from './memoApp';
 import { createScheduler } from './scheduler';
 import type { KitDemo, KitDemoInstance } from './types';
 
@@ -44,6 +50,7 @@ function spinnerHtml(): string {
 
 function loadingBase(variant: 'skeleton' | 'spinner'): KitDemoInstance {
   const scheduler = createScheduler();
+  const tap = createTapper(scheduler);
   const { frame, screen } = createDemoFrame();
 
   const app = document.createElement('div');
@@ -64,7 +71,7 @@ function loadingBase(variant: 'skeleton' | 'spinner'): KitDemoInstance {
 
   const actions = document.createElement('div');
   actions.className = 'memo__actions';
-  const reloadButton = demoButton('もう一度読み込む', { quiet: true, trigger: true });
+  const reloadButton = demoButton('もう一度読み込む', { quiet: true });
   actions.append(reloadButton);
   app.append(actions);
 
@@ -89,20 +96,34 @@ function loadingBase(variant: 'skeleton' | 'spinner'): KitDemoInstance {
 
   reloadButton.addEventListener('click', onReload);
 
-  // 最初から読み込み中の状態で置いておく。
-  // 自動再生の順番待ちの間も「待っている画面」に見えるのが自然
-  frame.dataset.loading = 'true';
+  /**
+   * 最初の状態は「一覧が出ている状態」。
+   * 読み込み中で止めて始めると、読み込みが**始まる瞬間**が見られず、
+   * 一覧に変わるところしか見えない。
+   */
+  function reset(): void {
+    loadToken += 1;
+    delete frame.dataset.loading;
+  }
 
   return {
     element: frame,
-    triggerLabel: 'もう一度読み込む',
+    reset,
 
+    /** [もう一度読み込む] → 読み込み中 → 一覧が出る（＝最初の状態に戻る） */
     async play(): Promise<void> {
+      reset();
       await scheduler.wait(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
-      await startLoading();
+
+      let loading: Promise<void> = Promise.resolve();
+      await tap(reloadButton, () => {
+        loading = startLoading();
+      });
+      await loading;
+
       // 中身が出たところを見せてから次へ
-      await scheduler.wait(500);
+      await scheduler.wait(600);
     },
 
     destroy(): void {
