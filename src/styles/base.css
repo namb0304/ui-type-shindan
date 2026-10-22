@@ -321,6 +321,23 @@ p {
   color: var(--site-muted);
 }
 
+/* 1問目だけ出す案内。「中身ではなく見た目を選ぶ」ことを最初に伝える。
+ * 読ませたい文なので左揃えにし、アクセントの縦線で本文と区別する */
+.q__hint {
+  max-width: 24em;
+  padding: 10px 14px;
+  margin: 14px auto 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.7;
+  color: var(--site-text);
+  text-align: left;
+  background-color: var(--site-surface);
+  border: 1px solid var(--site-hairline);
+  border-left: 3px solid var(--site-accent);
+  border-radius: 10px;
+}
+
 .q__fallback {
   margin-top: 8px;
   font-size: 11.5px;

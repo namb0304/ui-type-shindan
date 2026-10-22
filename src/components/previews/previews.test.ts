@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { QUESTIONS } from '../../data/questions';
 import { CSS_VAR_NAMES } from '../../data/tokens';
-import { getPreview, hasPreview, PREVIEWS } from './index';
+import { getPreview, hasPreview, PREVIEWS, RESULT_PREVIEW_SUBJECTS } from './index';
 
 const PREVIEW_CSS = readFileSync(
   fileURLToPath(new URL('../../styles/preview.css', import.meta.url)),
@@ -16,12 +16,33 @@ const PREVIEW_CSS = readFileSync(
 const CSS_WITHOUT_COMMENTS = PREVIEW_CSS.replace(/\/\*[\s\S]*?\*\//g, '');
 
 describe('部品の登録', () => {
-  it('ステップ4の3題材が登録されている', () => {
+  it('作成済みの題材が登録されている（ステップ6で順に増やす）', () => {
     expect(PREVIEWS.map((preview) => preview.subject)).toEqual([
-      'cafe-menu',
-      'music-player',
-      'weather-app',
+      'cafe-menu', // Q1  情報量
+      'music-player', // Q2  装飾
+      'weather-app', // Q3  トーン
+      'news-headline', // Q4  文字
+      'profile-card', // Q8  文字
+      'event-banner', // Q12 文字
     ]);
+  });
+
+  it('並び順が questions.ts と同じ', () => {
+    const order = QUESTIONS.map((question) => question.subject);
+    const registered = PREVIEWS.map((preview) => preview.subject);
+    expect(registered).toEqual(order.filter((subject) => registered.includes(subject)));
+  });
+
+  it('同じ題材を二重に登録していない', () => {
+    const subjects = PREVIEWS.map((preview) => preview.subject);
+    expect(new Set(subjects).size).toBe(subjects.length);
+  });
+
+  it('結果ページに出す見本は3つで、すべて登録済み（要件 §5-3-6）', () => {
+    expect(RESULT_PREVIEW_SUBJECTS).toHaveLength(3);
+    for (const subject of RESULT_PREVIEW_SUBJECTS) {
+      expect(hasPreview(subject), subject).toBe(true);
+    }
   });
 
   it('subject が questions.ts の題材と一致している', () => {
@@ -41,8 +62,8 @@ describe('部品の登録', () => {
   it('getPreview / hasPreview が引ける', () => {
     expect(getPreview('cafe-menu').label).toBe('カフェのメニュー');
     expect(hasPreview('cafe-menu')).toBe(true);
-    expect(hasPreview('news-headline')).toBe(false); // ステップ6で追加する
-    expect(() => getPreview('news-headline')).toThrow(/news-headline/);
+    expect(hasPreview('timetable')).toBe(false); // ステップ6の残り
+    expect(() => getPreview('timetable')).toThrow(/timetable/);
   });
 });
 

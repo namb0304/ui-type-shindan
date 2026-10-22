@@ -25,7 +25,7 @@ const AXIS_SUBJECT: Record<AxisId, string> = {
   density: 'cafe-menu',
   decoration: 'music-player',
   tone: 'weather-app',
-  font: 'cafe-menu',
+  font: 'news-headline',
 };
 
 function caption(vars: ThemeVars): HTMLElement {

@@ -7,6 +7,9 @@ import type { PreviewComponent } from './types';
  * 太陽と気温グラフは CSS の図形だけで描く（画像は使わない）。
  * 棒の高さはクラス（--lv1〜--lv5）で指定する。
  * インラインstyleを使うと、CSS変数で見た目を切り替える方針が崩れるため。
+ *
+ * 地名は架空（湊見市 桜並）。実在の地名にすると、実際の天気予報と
+ * 読まれるおそれがあるため。
  */
 export const weatherApp: PreviewComponent = {
   subject: 'weather-app',
@@ -15,7 +18,7 @@ export const weatherApp: PreviewComponent = {
     <article class="pv pv-weather">
       <header class="pv-weather__head">
         <div>
-          <p class="pv-weather__place">福岡市 中央区</p>
+          <p class="pv-weather__place">湊見市 桜並</p>
           <p class="pv-weather__now">
             <span class="pv-weather__temp">24</span><span class="pv-weather__unit">°C</span>
           </p>

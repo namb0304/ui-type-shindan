@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { hasPreview } from './components/previews';
+import { hasPreview, PREVIEWS } from './components/previews';
 import { FALLBACK_SUBJECT, missingSubjects, resolveSubject } from './components/previews/fallback';
 import { QUESTIONS, TOTAL_QUESTIONS } from './data/questions';
 import type { AnswerValue } from './data/types';
@@ -231,12 +231,13 @@ describe('部品の代用（ステップ6までの暫定措置）', () => {
 
   it('部品がある題材はそのまま、無い題材は代用になる', () => {
     expect(resolveSubject('cafe-menu')).toEqual({ subject: 'cafe-menu', isFallback: false });
-    expect(resolveSubject('news-headline')).toEqual({ subject: 'cafe-menu', isFallback: true });
+    expect(resolveSubject('timetable')).toEqual({ subject: 'cafe-menu', isFallback: true });
   });
 
   it('部品を作れば代用が自動で外れる（hasPreview が判断している）', () => {
-    for (const preview of ['cafe-menu', 'music-player', 'weather-app']) {
-      expect(resolveSubject(preview).isFallback).toBe(false);
+    for (const preview of PREVIEWS) {
+      expect(resolveSubject(preview.subject).isFallback, preview.subject).toBe(false);
+      expect(FALLBACK_SUBJECT[preview.subject], preview.subject).toBeUndefined();
     }
   });
 });

@@ -16,15 +16,12 @@ import { hasPreview } from './index';
  *   装飾軸   → 面と操作部を持つ音楽プレイヤー
  */
 export const FALLBACK_SUBJECT: Readonly<Record<string, string>> = {
-  'news-headline': 'cafe-menu', // Q4  文字
   'product-card': 'cafe-menu', // Q5  情報量
   'login-form': 'music-player', // Q6  装飾
   'todo-list': 'cafe-menu', // Q7  トーン
-  'profile-card': 'music-player', // Q8  文字
   timetable: 'cafe-menu', // Q9  情報量
   'notification-list': 'cafe-menu', // Q10 装飾
   'social-post': 'weather-app', // Q11 トーン
-  'event-banner': 'weather-app', // Q12 文字
 };
 
 export interface ResolvedSubject {

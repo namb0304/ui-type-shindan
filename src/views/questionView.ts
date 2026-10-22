@@ -37,8 +37,26 @@ export function renderQuestion(
   head.append(bar, el('p', 'q__count', `${current} / ${total}`));
 
   // --- 問い ---
+  //
+  // 初めての人は「何を比べる画面なのか」が分からず、中身を読んで迷ってしまう。
+  // 1問目だけ案内を大きく出し、2問目以降は題材名に一言添えるだけにする
+  // （毎問大きく出すとプレビューの邪魔になる）。
   const ask = el('div', 'q__ask');
-  ask.append(el('h1', 'q__title', 'どっちが好き？'), el('p', 'q__subject', question.label));
+  ask.append(el('h1', 'q__title', 'どっちが好き？'));
+
+  if (current === 1) {
+    ask.append(
+      el('p', 'q__subject', question.label),
+      el(
+        'p',
+        'q__hint',
+        '書いてある中身は、どちらも同じです。見た目（デザイン）が好きなほうを選んでください。',
+      ),
+    );
+  } else {
+    ask.append(el('p', 'q__subject', `${question.label}（見た目で選ぶ）`));
+  }
+
   // 開発用のメモなので、本番の画面には出さない
   if (resolved.isFallback && isDebugMode()) {
     ask.append(el('p', 'q__fallback', '※ この題材の部品は仮です（ステップ6で差し替え）'));

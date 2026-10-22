@@ -5,6 +5,8 @@ import type { PreviewComponent } from './types';
  *
  * 情報量の差が最も出るのは「行の間隔・文字サイズ・行間」なので、
  * 品名／説明／価格の3段構えのリストにしている。
+ *
+ * 地名は架空（湊見市）。実在の地名を使うと、実在の店の情報と誤解されるため。
  */
 export const cafeMenu: PreviewComponent = {
   subject: 'cafe-menu',
@@ -26,7 +28,7 @@ export const cafeMenu: PreviewComponent = {
         <li class="pv-cafe__item">
           <div class="pv-cafe__body">
             <p class="pv-cafe__name">カフェラテ</p>
-            <p class="pv-cafe__note">ミルクは糸島産を使用</p>
+            <p class="pv-cafe__note">ミルクは湊見産を使用</p>
           </div>
           <p class="pv-cafe__price">¥620</p>
         </li>

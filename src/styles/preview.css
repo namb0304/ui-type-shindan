@@ -369,3 +369,188 @@
   font-size: 0.75em;
   color: var(--color-text-muted);
 }
+
+/* ------------------------------------------------------------------
+ * ニュース記事の見出し（文字）
+ *
+ * 文字の軸は --font-family だけが変わる。
+ * 大きい見出しで骨格の差を、本文3行で読み心地の差を見せる。
+ * ------------------------------------------------------------------ */
+
+.pv-news__meta {
+  display: flex;
+  gap: calc(var(--space-unit) * 0.75);
+  align-items: baseline;
+  font-size: 0.75em;
+  line-height: 1.4;
+}
+
+.pv-news__section {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-primary-text);
+}
+
+.pv-news__time {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.pv-news__title {
+  margin-top: calc(var(--space-unit) * 0.5);
+  font-size: 1.65em;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.pv-news__lead {
+  margin-top: calc(var(--space-unit) * 0.5);
+  font-size: 0.95em;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.pv-news__body {
+  margin-top: calc(var(--space-unit) * 1.25);
+  padding-top: calc(var(--space-unit) * 1.25);
+  border-top: var(--border);
+}
+
+/* 1字下げ。新聞の本文らしさは字下げで出る（px を使わず em で指定） */
+.pv-news__text {
+  font-size: 0.875em;
+  text-indent: 1em;
+}
+
+.pv-news__byline {
+  margin-top: calc(var(--space-unit) * 1.25);
+  font-size: 0.75em;
+  color: var(--color-text-muted);
+}
+
+/* ------------------------------------------------------------------
+ * プロフィールカード（文字）
+ * ------------------------------------------------------------------ */
+
+.pv-profile__head {
+  display: flex;
+  gap: calc(var(--space-unit) * 1.25);
+  align-items: center;
+}
+
+/* 頭文字1字のアイコン。画像を使わずに主役を作る。
+ * width は自分の font-size を基準に計算されるので、1.5em の文字に対して
+ * 2.2em（= 本文の約3.3倍）を指定している。 */
+.pv-profile__mark {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.2em;
+  aspect-ratio: 1 / 1;
+  font-size: 1.5em;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-on-primary);
+  background: var(--accent-surface);
+  border-radius: 50%;
+  box-shadow: var(--accent-shadow);
+}
+
+.pv-profile__ident {
+  min-width: 0;
+}
+
+.pv-profile__name {
+  font-size: 1.35em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.pv-profile__role {
+  margin-top: calc(var(--space-unit) * 0.25);
+  font-size: 0.85em;
+  color: var(--color-text-muted);
+}
+
+.pv-profile__bio {
+  margin-top: calc(var(--space-unit) * 1.25);
+  font-size: 0.9em;
+}
+
+.pv-profile__facts {
+  display: flex;
+  gap: calc(var(--space-unit) * 1.5);
+  margin-top: calc(var(--space-unit) * 1.25);
+  padding-top: calc(var(--space-unit) * 1.25);
+  border-top: var(--border);
+}
+
+.pv-profile__fact {
+  display: flex;
+  gap: calc(var(--space-unit) * 0.5);
+  align-items: baseline;
+  font-size: 0.8125em;
+}
+
+.pv-profile__fact-label {
+  color: var(--color-text-muted);
+}
+
+.pv-profile__fact-value {
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------------------
+ * イベント告知（文字）
+ * ------------------------------------------------------------------ */
+
+.pv-event__title {
+  font-size: 1.8em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.pv-event__date {
+  margin-top: calc(var(--space-unit) * 0.5);
+  font-size: 1.05em;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary-text);
+}
+
+.pv-event__details {
+  margin-top: calc(var(--space-unit) * 1.25);
+  padding-top: calc(var(--space-unit) * 1.25);
+  border-top: var(--border);
+}
+
+.pv-event__row {
+  display: flex;
+  gap: calc(var(--space-unit) * 1.25);
+  font-size: 0.875em;
+}
+
+.pv-event__row + .pv-event__row {
+  margin-top: calc(var(--space-unit) * 0.375);
+}
+
+.pv-event__row-label {
+  flex-shrink: 0;
+  width: 3em;
+  color: var(--color-text-muted);
+}
+
+.pv-event__row-value {
+  min-width: 0;
+}
+
+.pv-event__text {
+  margin-top: calc(var(--space-unit) * 1.25);
+  font-size: 0.875em;
+}
+
+.pv-event__note {
+  margin-top: calc(var(--space-unit) * 1);
+  font-size: 0.75em;
+  color: var(--color-text-muted);
+}

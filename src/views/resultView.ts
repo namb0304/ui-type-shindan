@@ -1,5 +1,5 @@
 import { createCopyButton } from '../components/copyButton';
-import { createPreview, PREVIEWS } from '../components/previews';
+import { createPreview, RESULT_PREVIEW_SUBJECTS } from '../components/previews';
 import { createShopPhoto } from '../components/shopPhoto';
 import { AXES, getAxis } from '../data/axes';
 import { getTrait } from '../data/traits';
@@ -184,8 +184,8 @@ function renderPreviews(result: DiagnosisResult): HTMLElement {
 
   const grid = el('div', 'result__previews');
   const vars = buildResultTheme(result.scores);
-  for (const preview of PREVIEWS) {
-    grid.append(createPreview(preview.subject, vars));
+  for (const subject of RESULT_PREVIEW_SUBJECTS) {
+    grid.append(createPreview(subject, vars));
   }
 
   block.append(grid);

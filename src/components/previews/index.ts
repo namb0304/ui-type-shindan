@@ -1,17 +1,43 @@
 import type { ThemeVars } from '../../data/tokens';
 import { applyTheme } from '../../logic/theme';
 import { cafeMenu } from './cafeMenu';
+import { eventBanner } from './eventBanner';
 import { musicPlayer } from './musicPlayer';
+import { newsHeadline } from './newsHeadline';
+import { profileCard } from './profileCard';
 import type { PreviewComponent } from './types';
 import { weatherApp } from './weatherApp';
 
 export type { PreviewComponent } from './types';
 
 /**
- * 題材ごとのプレビュー部品。
- * ステップ4では3題材だけ。残り9題材はステップ6で追加する。
+ * 題材ごとのプレビュー部品。並び順は questions.ts と同じにする。
+ * ステップ6で、残りの題材を順に追加していく。
  */
-export const PREVIEWS: readonly PreviewComponent[] = [cafeMenu, musicPlayer, weatherApp];
+export const PREVIEWS: readonly PreviewComponent[] = [
+  cafeMenu, // Q1  情報量
+  musicPlayer, // Q2  装飾
+  weatherApp, // Q3  トーン
+  newsHeadline, // Q4  文字
+  profileCard, // Q8  文字
+  eventBanner, // Q12 文字
+];
+
+/**
+ * 結果ページの「あなた好みのデザイン見本」に出す題材（要件 §5-3-6：3つ）。
+ *
+ * 登録済みの部品を全部並べると最終的に12枚になり、結果ページが縦に伸びすぎる。
+ * 軸ごとの違いがいちばん出る3つに絞る。
+ *   カフェのメニュー → 情報量（余白・行間）
+ *   音楽プレイヤー   → 装飾（影・グラデーション）
+ *   天気アプリ       → トーン（配色・角丸）
+ * 書体はどの部品にも効くので、専用の1つは置かない。
+ */
+export const RESULT_PREVIEW_SUBJECTS: readonly string[] = [
+  'cafe-menu',
+  'music-player',
+  'weather-app',
+];
 
 export function hasPreview(subject: string): boolean {
   return PREVIEWS.some((preview) => preview.subject === subject);
