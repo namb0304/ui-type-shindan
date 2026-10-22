@@ -43,15 +43,18 @@
   box-sizing: border-box;
 }
 
-.kit-demo h4,
-.kit-demo p,
-.kit-demo ul,
-.kit-demo li {
+/* 要素のリセット。
+ *
+ * :where() で包んでセレクタの強さを0にしている。
+ * `.kit-demo p { margin: 0 }` と書くと強さが（クラス1＋要素1）になり、
+ * あとから書く `.memo__text { margin-top: ... }`（クラス1）に勝ってしまう。
+ * preview.css と同じ理由（同じ事故を1度やっている）。 */
+:where(.kit-demo) :where(h4, p, ul, li) {
   margin: 0;
   padding: 0;
 }
 
-.kit-demo ul {
+:where(.kit-demo) :where(ul) {
   list-style: none;
 }
 
