@@ -814,3 +814,277 @@
   border-radius: var(--radius);
   box-shadow: var(--accent-shadow);
 }
+
+/* ------------------------------------------------------------------
+ * 大学の時間割（情報量）
+ *
+ * 列は minmax(0, 1fr) で等分する。文字が大きくなっても
+ * 列がはみ出さず、横スクロールが出ない。
+ * ------------------------------------------------------------------ */
+
+.pv-timetable__term {
+  font-size: 0.65em;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  color: var(--color-primary-text);
+}
+
+.pv-timetable__title {
+  font-size: 1em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.pv-timetable__grid {
+  display: grid;
+  grid-template-columns: 1.4em repeat(5, minmax(0, 1fr));
+  margin-top: calc(var(--space-unit) * 0.5);
+  border-top: var(--border);
+  border-left: var(--border);
+}
+
+.pv-timetable__corner,
+.pv-timetable__day,
+.pv-timetable__period,
+.pv-timetable__cell {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 0.125);
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: calc(var(--space-unit) * 0.1875) calc(var(--space-unit) * 0.125);
+  overflow: hidden;
+  border-right: var(--border);
+  border-bottom: var(--border);
+}
+
+.pv-timetable__day,
+.pv-timetable__period {
+  font-size: 0.6em;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface-alt);
+}
+
+.pv-timetable__subject {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.65em;
+  font-weight: 500;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv-timetable__room {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.55em;
+  line-height: 1.25;
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 空きコマ。高さをそろえるため、中身のある枠と同じ作りにしておく */
+.pv-timetable__cell--empty {
+  background-color: var(--color-surface-alt);
+}
+
+/* ------------------------------------------------------------------
+ * 通知一覧（装飾）
+ * ------------------------------------------------------------------ */
+
+.pv-notify__head {
+  display: flex;
+  gap: calc(var(--space-unit) * 0.625);
+  align-items: center;
+}
+
+.pv-notify__title {
+  font-size: 1.05em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.pv-notify__badge {
+  display: grid;
+  place-items: center;
+  min-width: 1.4em;
+  padding: 0 calc(var(--space-unit) * 0.25);
+  font-size: 0.65em;
+  font-weight: 700;
+  line-height: 1.8;
+  color: var(--color-on-primary);
+  background: var(--accent-surface);
+  border-radius: var(--radius);
+}
+
+/* 一覧に薄い下地を敷く。白い面を白い面に重ねると、
+ * 影があるのか線で区切られているのかが読み取れないため。
+ *
+ * 下地は div に持たせている。ul だとリセット（.pv ul）のほうが
+ * セレクタが強く、余白が効かないため */
+.pv-notify__panel {
+  margin-top: calc(var(--space-unit) * 0.625);
+  padding: calc(var(--space-unit) * 0.5);
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius);
+}
+
+.pv-notify__list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 0.625);
+}
+
+/* 1件ずつが面。フラットなら線で区切られた行、リッチなら浮いたカードに見える */
+.pv-notify__item {
+  display: flex;
+  gap: calc(var(--space-unit) * 0.625);
+  align-items: center;
+  padding: calc(var(--space-unit) * 0.5) calc(var(--space-unit) * 0.625);
+  background-color: var(--color-surface);
+  background-image: var(--surface-gradient);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.pv-notify__icon {
+  display: block;
+  flex-shrink: 0;
+  width: 1.5em;
+  aspect-ratio: 1 / 1;
+  background: var(--accent-surface);
+  border-radius: calc(var(--radius) / 2);
+  box-shadow: var(--accent-shadow);
+}
+
+.pv-notify__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pv-notify__text {
+  overflow: hidden;
+  font-size: 0.75em;
+  font-weight: 500;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv-notify__time {
+  font-size: 0.625em;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+.pv-notify__dot {
+  display: block;
+  flex-shrink: 0;
+  width: 0.45em;
+  aspect-ratio: 1 / 1;
+  background-color: var(--color-primary);
+  border-radius: 50%;
+}
+
+/* ------------------------------------------------------------------
+ * SNSの投稿（トーン）
+ * ------------------------------------------------------------------ */
+
+.pv-post__head {
+  display: flex;
+  gap: calc(var(--space-unit) * 0.625);
+  align-items: center;
+}
+
+.pv-post__avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2em;
+  aspect-ratio: 1 / 1;
+  font-size: 0.9em;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-on-primary);
+  background: var(--accent-surface);
+  border-radius: 50%;
+  box-shadow: var(--accent-shadow);
+}
+
+.pv-post__who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pv-post__name {
+  font-size: 0.8125em;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.pv-post__handle {
+  overflow: hidden;
+  font-size: 0.65em;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 角丸が効く部品。クールは角ばった札、ポップは丸いピルになる */
+.pv-post__follow {
+  flex-shrink: 0;
+  padding: calc(var(--space-unit) * 0.25) calc(var(--space-unit) * 0.75);
+  font-size: 0.65em;
+  font-weight: 700;
+  color: var(--color-on-primary);
+  background: var(--accent-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--accent-shadow);
+}
+
+.pv-post__body {
+  margin-top: calc(var(--space-unit) * 0.75);
+  font-size: 0.8125em;
+}
+
+.pv-post__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--space-unit) * 0.375);
+  margin-top: calc(var(--space-unit) * 0.5);
+}
+
+.pv-post__tag {
+  padding: calc(var(--space-unit) * 0.125) calc(var(--space-unit) * 0.5);
+  font-size: 0.65em;
+  font-weight: 500;
+  color: var(--color-primary-text);
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius);
+}
+
+.pv-post__actions {
+  display: flex;
+  gap: calc(var(--space-unit) * 1.25);
+  margin-top: calc(var(--space-unit) * 0.625);
+  padding-top: calc(var(--space-unit) * 0.5);
+  border-top: var(--border);
+}
+
+.pv-post__action {
+  font-size: 0.65em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}

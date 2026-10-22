@@ -5,8 +5,11 @@ import { eventBanner } from './eventBanner';
 import { loginForm } from './loginForm';
 import { musicPlayer } from './musicPlayer';
 import { newsHeadline } from './newsHeadline';
+import { notificationList } from './notificationList';
 import { productCard } from './productCard';
 import { profileCard } from './profileCard';
+import { socialPost } from './socialPost';
+import { timetable } from './timetable';
 import { todoList } from './todoList';
 import type { PreviewComponent } from './types';
 import { weatherApp } from './weatherApp';
@@ -26,6 +29,9 @@ export const PREVIEWS: readonly PreviewComponent[] = [
   loginForm, // Q6  装飾
   todoList, // Q7  トーン
   profileCard, // Q8  文字
+  timetable, // Q9  情報量
+  notificationList, // Q10 装飾
+  socialPost, // Q11 トーン
   eventBanner, // Q12 文字
 ];
 

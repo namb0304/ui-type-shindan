@@ -16,9 +16,8 @@ import { hasPreview } from './index';
  *   装飾軸   → 面と操作部を持つ音楽プレイヤー
  */
 export const FALLBACK_SUBJECT: Readonly<Record<string, string>> = {
-  timetable: 'cafe-menu', // Q9  情報量
-  'notification-list': 'cafe-menu', // Q10 装飾
-  'social-post': 'weather-app', // Q11 トーン
+  // 12題材すべての部品ができたので、代用は1件も無くなった。
+  // 題材を増やしたときのために、仕組みだけ残してある。
 };
 
 export interface ResolvedSubject {

@@ -234,7 +234,7 @@ describe('通しで診断できる', () => {
   });
 });
 
-describe('部品の代用（ステップ6までの暫定措置）', () => {
+describe('部品の代用（12題材そろったので、いまは出番がない）', () => {
   it('部品が無い題材すべてに代用先がある', () => {
     for (const subject of missingSubjects()) {
       expect(FALLBACK_SUBJECT[subject], subject).toBeDefined();
@@ -254,9 +254,19 @@ describe('部品の代用（ステップ6までの暫定措置）', () => {
     }
   });
 
-  it('部品がある題材はそのまま、無い題材は代用になる', () => {
-    expect(resolveSubject('cafe-menu')).toEqual({ subject: 'cafe-menu', isFallback: false });
-    expect(resolveSubject('timetable')).toEqual({ subject: 'cafe-menu', isFallback: true });
+  it('12題材すべてに部品があり、代用は1件も残っていない', () => {
+    expect(missingSubjects()).toEqual([]);
+    expect(Object.keys(FALLBACK_SUBJECT)).toEqual([]);
+    for (const question of QUESTIONS) {
+      expect(resolveSubject(question.subject), question.id).toEqual({
+        subject: question.subject,
+        isFallback: false,
+      });
+    }
+  });
+
+  it('部品の無い題材は代用も無いのでエラーになる（取りこぼしに気づけるように）', () => {
+    expect(() => resolveSubject('tooltip')).toThrow(/tooltip/);
   });
 
   it('部品を作れば代用が自動で外れる（hasPreview が判断している）', () => {

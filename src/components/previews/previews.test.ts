@@ -26,6 +26,9 @@ describe('部品の登録', () => {
       'login-form', // Q6  装飾
       'todo-list', // Q7  トーン
       'profile-card', // Q8  文字
+      'timetable', // Q9  情報量
+      'notification-list', // Q10 装飾
+      'social-post', // Q11 トーン
       'event-banner', // Q12 文字
     ]);
   });
@@ -65,8 +68,8 @@ describe('部品の登録', () => {
   it('getPreview / hasPreview が引ける', () => {
     expect(getPreview('cafe-menu').label).toBe('カフェのメニュー');
     expect(hasPreview('cafe-menu')).toBe(true);
-    expect(hasPreview('timetable')).toBe(false); // ステップ6の残り
-    expect(() => getPreview('timetable')).toThrow(/timetable/);
+    expect(hasPreview('tooltip')).toBe(false); // 題材にない名前
+    expect(() => getPreview('tooltip')).toThrow(/tooltip/);
   });
 });
 
