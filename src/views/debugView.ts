@@ -1,7 +1,7 @@
 import { createKitDemo } from '../components/kit';
 import { createPreview, PREVIEWS } from '../components/previews';
 import { createShopPhoto } from '../components/shopPhoto';
-import { FALLBACK_SUBJECT, missingSubjects } from '../components/previews/fallback';
+import { FALLBACK_SUBJECT, missingSubjects, resolveSubject } from '../components/previews/fallback';
 import { AXES } from '../data/axes';
 import type { AxisDefinition } from '../data/axes';
 import { KIT_QUESTIONS } from '../data/kitQuestions';
@@ -221,6 +221,106 @@ function kitSection(players: KitPlayer[]): HTMLElement {
   );
 }
 
+
+/* ------------------------------------------------------------------
+ * 高さの点検（?debug=1）
+ *
+ * 「スマホで2枚を同時に見られるか」を12問ぶん一覧にする。
+ * 部品を直したあと、ここを見れば収まったかどうかがすぐ分かる。
+ *
+ * 数値は推測ではなく、質問画面と同じ幅の器に実際に描いて測る。
+ * ------------------------------------------------------------------ */
+
+/** 基準にするスマホ。iPhone 15 などの論理ピクセル */
+const PHONE_WIDTH = 390;
+
+/**
+ * 質問画面でのプレビュー1枚の幅。
+ *   390 − 左右の余白(16×2) − 選択肢の内側(10×2) − 枠線(2×2)
+ */
+const PREVIEW_WIDTH = PHONE_WIDTH - 16 * 2 - 10 * 2 - 2 * 2;
+
+/**
+ * 2枚ぶんに使える高さ。実測値から出した。
+ *   画面の高さ844 − 上の進捗と問い − 下の「どっちも同じ」と戻る
+ * 1問目だけ案内の枠が入るぶん狭い。
+ */
+const HEIGHT_BUDGET = 448;
+const HEIGHT_BUDGET_FIRST = 366;
+
+interface HeightRow {
+  question: (typeof QUESTIONS)[number];
+  cell: HTMLElement;
+  budget: number;
+}
+
+function heightCheckSection(rows: HeightRow[], stage: HTMLElement): HTMLElement {
+  const table = el('div', 'heightcheck');
+
+  table.append(
+    el('div', 'heightcheck__row heightcheck__row--head'),
+  );
+  const head = table.firstElementChild as HTMLElement;
+  for (const text of ['問', '題材', '2枚の合計', '収まるか']) {
+    head.append(el('span', 'heightcheck__cell', text));
+  }
+
+  for (const question of QUESTIONS) {
+    const row = el('div', 'heightcheck__row');
+    const budget = question === QUESTIONS[0] ? HEIGHT_BUDGET_FIRST : HEIGHT_BUDGET;
+    const result = el('span', 'heightcheck__cell heightcheck__cell--result', '測定中…');
+
+    row.append(
+      el('span', 'heightcheck__cell', question.id.toUpperCase()),
+      el('span', 'heightcheck__cell', question.label),
+      el('span', 'heightcheck__cell heightcheck__cell--size', '…'),
+      result,
+    );
+    table.append(row);
+    rows.push({ question, cell: row.children[2] as HTMLElement, budget });
+    // 判定の欄は cell の次。measure() でまとめて書き込む
+  }
+
+  const body = el('div', 'heightcheck__body');
+  body.append(table, stage);
+
+  return section(
+    '高さの点検（スマホ幅390px）',
+    `質問画面と同じ幅(${PREVIEW_WIDTH}px)で実際に描いて測っている。` +
+      `2枚の合計が ${HEIGHT_BUDGET}px（1問目は案内の枠があるので ${HEIGHT_BUDGET_FIRST}px）以内なら、スクロールなしで見比べられる`,
+    body,
+  );
+}
+
+/**
+ * 実際に描いて測る。ページに入ってからでないと測れないので、
+ * renderDebug の mounted() から呼ぶ。
+ */
+function measureHeights(rows: HeightRow[], stage: HTMLElement): void {
+  for (const row of rows) {
+    const { subject } = resolveSubject(row.question.subject);
+    const heights = (['left', 'right'] as AxisSide[]).map((side) => {
+      const host = el('div', 'heightcheck__probe');
+      host.append(createPreview(subject, buildAxisVariantTheme(row.question.axis, side)));
+      stage.append(host);
+      const height = Math.round(
+        (host.firstElementChild?.firstElementChild as HTMLElement).getBoundingClientRect().height,
+      );
+      host.remove();
+      return height;
+    });
+
+    const total = heights[0] + heights[1];
+    const over = total - row.budget;
+    row.cell.textContent = `${heights[0]} + ${heights[1]} = ${total}px`;
+
+    const result = row.cell.nextElementSibling as HTMLElement;
+    result.textContent = over <= 0 ? `収まる（余り ${-over}px）` : `はみ出す（+${over}px）`;
+    result.classList.toggle('heightcheck__cell--ng', over > 0);
+    result.classList.toggle('heightcheck__cell--ok', over <= 0);
+  }
+}
+
 export function renderDebug(): View {
   const wrap = el('div', 'gallery__wrap');
 
@@ -237,9 +337,14 @@ export function renderDebug(): View {
   );
 
   const players: KitPlayer[] = [];
+  const heightRows: HeightRow[] = [];
+  // 測るための器。画面の外に置くが、レイアウトはさせる（でないと高さが出ない）
+  const stage = el('div', 'heightcheck__stage');
+  stage.setAttribute('aria-hidden', 'true');
 
   const main = el('main', 'gallery');
   main.append(
+    heightCheckSection(heightRows, stage),
     kitSection(players),
     photoCheckSection(),
     typeLinksSection(),
@@ -270,6 +375,9 @@ export function renderDebug(): View {
 
   return {
     element: wrap,
+    mounted() {
+      measureHeights(heightRows, stage);
+    },
     destroy() {
       for (const player of players) player.destroy();
     },

@@ -1401,3 +1401,67 @@ p {
   color: var(--color-primary-text);
   letter-spacing: 0.14em;
 }
+
+/* --- 高さの点検（?debug=1） --- */
+
+.heightcheck {
+  overflow: hidden;
+  font-size: 12.5px;
+  border: 1px solid var(--site-hairline);
+  border-radius: 10px;
+}
+
+.heightcheck__row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 140px 150px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--site-surface);
+}
+
+.heightcheck__row + .heightcheck__row {
+  border-top: 1px solid var(--site-hairline);
+}
+
+.heightcheck__row--head {
+  font-weight: 700;
+  color: var(--site-muted);
+  background-color: #eceef2;
+}
+
+.heightcheck__cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.heightcheck__cell--size {
+  font-variant-numeric: tabular-nums;
+  color: var(--site-muted);
+}
+
+.heightcheck__cell--result {
+  font-weight: 700;
+}
+
+.heightcheck__cell--ok {
+  color: #1f6b4a;
+}
+
+.heightcheck__cell--ng {
+  color: #a3341f;
+}
+
+/* 測るための器。画面の外に出すが、レイアウトはさせる */
+.heightcheck__stage {
+  position: absolute;
+  top: 0;
+  left: -9999px;
+  width: 334px; /* 390 − 16×2 − 10×2 − 2×2（質問画面と同じ幅） */
+}
+
+.heightcheck__probe {
+  width: 100%;
+}
