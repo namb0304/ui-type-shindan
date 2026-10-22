@@ -1,8 +1,12 @@
+import { createKitDemo } from '../components/kit';
+import type { KitDemoInstance } from '../components/kit';
 import { createPreview, PREVIEWS } from '../components/previews';
 import { createShopPhoto } from '../components/shopPhoto';
 import { FALLBACK_SUBJECT, missingSubjects } from '../components/previews/fallback';
 import { AXES } from '../data/axes';
 import type { AxisDefinition } from '../data/axes';
+import { KIT_QUESTIONS } from '../data/kitQuestions';
+import type { KitChoice } from '../data/kitTypes';
 import { QUESTIONS } from '../data/questions';
 import { TYPE_INFOS } from '../data/typeInfos';
 import type { ThemeVars } from '../data/tokens';
@@ -10,7 +14,8 @@ import type { AxisId, AxisSide, RightPoints } from '../data/types';
 import { pointsFromCode, toAxisScores } from '../logic/score';
 import { buildTypeSummary } from '../logic/summary';
 import { applyTheme, buildAxisVariantTheme, buildNeutralTheme, buildResultTheme } from '../logic/theme';
-import { el } from './dom';
+import { button, el } from './dom';
+import type { View } from './dom';
 
 /**
  * 部品カタログ（?debug=1 でのみ表示）。
@@ -169,7 +174,53 @@ function typeLinksSection(): HTMLElement {
   );
 }
 
-export function renderDebug(): HTMLElement {
+/**
+ * 第2部のデモ（?debug=1）。
+ *
+ * 質問画面と違って自動再生はしない。3問ぶんが一斉に動くと見にくいので、
+ * 「動かす」ボタンで1つずつ確かめる。デモの中のボタンも普通に触れる。
+ */
+function kitSection(demos: KitDemoInstance[]): HTMLElement {
+  const body = el('div', 'gallery__kit');
+  const vars = buildNeutralTheme();
+
+  for (const question of KIT_QUESTIONS) {
+    const block = el('div', 'gallery__kit-block');
+    block.append(
+      el('p', 'gallery__kit-label', `${question.id.toUpperCase()}　${question.label}`),
+    );
+
+    const grid = el('div', 'gallery__grid gallery__grid--pair');
+    for (const choice of ['a', 'b'] as KitChoice[]) {
+      const option = question[choice];
+      const cell = el('div', 'gallery__cell');
+
+      const demo = createKitDemo(option.id, vars);
+      demos.push(demo);
+
+      cell.append(
+        el('p', 'gallery__cell-title', `${choice.toUpperCase()}　${option.name}`),
+        el('p', 'gallery__caption', option.description),
+        demo.element,
+        button('gallery__kit-play', '動かす', () => {
+          void demo.play();
+        }),
+      );
+      grid.append(cell);
+    }
+
+    block.append(grid);
+    body.append(block);
+  }
+
+  return section(
+    '第2部のデモ',
+    '「動かす」で1つずつ再生する。デモの中のボタン（保存・削除）も触れる',
+    body,
+  );
+}
+
+export function renderDebug(): View {
   const wrap = el('div', 'gallery__wrap');
 
   const header = el('header', 'gallery__header');
@@ -184,8 +235,11 @@ export function renderDebug(): HTMLElement {
     ),
   );
 
+  const demos: KitDemoInstance[] = [];
+
   const main = el('main', 'gallery');
   main.append(
+    kitSection(demos),
     photoCheckSection(),
     typeLinksSection(),
     progressSection(),
@@ -212,5 +266,11 @@ export function renderDebug(): HTMLElement {
   );
 
   wrap.append(header, main);
-  return wrap;
+
+  return {
+    element: wrap,
+    destroy() {
+      for (const demo of demos) demo.destroy();
+    },
+  };
 }

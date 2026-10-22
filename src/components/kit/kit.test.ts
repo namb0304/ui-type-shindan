@@ -1,0 +1,206 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+import { describe, expect, it, vi } from 'vitest';
+
+import { KIT_QUESTIONS, TOTAL_KIT_QUESTIONS } from '../../data/kitQuestions';
+import { KIT_CATEGORY_LABEL } from '../../data/kitTypes';
+import { CSS_VAR_NAMES } from '../../data/tokens';
+import { getKitDemo, hasKitDemo, KIT_DEMOS } from './index';
+import { createScheduler } from './scheduler';
+
+const KIT_CSS = readFileSync(
+  fileURLToPath(new URL('../../styles/kit.css', import.meta.url)),
+  'utf8',
+);
+
+const CSS_WITHOUT_COMMENTS = KIT_CSS.replace(/\/\*[\s\S]*?\*\//g, '');
+
+/** 第2部が自前で持つ変数。tokens.ts に入るまでは既定値で動かす（要件 §6） */
+const KIT_OWN_VARS = ['--duration', '--kit-duration'];
+
+describe('第2部の質問データ', () => {
+  it('いまは最初の3問（K4・K5・K6）', () => {
+    expect(KIT_QUESTIONS.map((question) => question.id)).toEqual(['k4', 'k5', 'k6']);
+    expect(TOTAL_KIT_QUESTIONS).toBe(3);
+  });
+
+  it('id が重複していない', () => {
+    const ids = KIT_QUESTIONS.map((question) => question.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('分類に表示名がある', () => {
+    for (const question of KIT_QUESTIONS) {
+      expect(KIT_CATEGORY_LABEL[question.category], question.id).toBeTruthy();
+    }
+  });
+
+  it('どの選択肢にも名前と一言の説明がある（要件 §4.2）', () => {
+    for (const question of KIT_QUESTIONS) {
+      for (const option of [question.a, question.b]) {
+        expect(option.name.length, `${question.id} ${option.id}`).toBeGreaterThan(0);
+        expect(option.description.length, `${question.id} ${option.id}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('問いと説明が日本語で書かれている', () => {
+    for (const question of KIT_QUESTIONS) {
+      expect(question.label, question.id).toMatch(/[ぁ-んァ-ヶ一-龠]/);
+      expect(question.a.description, question.id).toMatch(/[ぁ-んァ-ヶ一-龠]/);
+      expect(question.b.description, question.id).toMatch(/[ぁ-んァ-ヶ一-龠]/);
+    }
+  });
+});
+
+describe('デモ部品の登録', () => {
+  it('すべての選択肢にデモがある', () => {
+    for (const question of KIT_QUESTIONS) {
+      for (const option of [question.a, question.b]) {
+        expect(hasKitDemo(option.id), `${question.id} ${option.id}`).toBe(true);
+      }
+    }
+  });
+
+  it('余分なデモが登録されていない（質問から引けないデモを残さない）', () => {
+    const used = new Set(KIT_QUESTIONS.flatMap((question) => [question.a.id, question.b.id]));
+    for (const demo of KIT_DEMOS) {
+      expect(used, demo.id).toContain(demo.id);
+    }
+  });
+
+  it('id が重複していない', () => {
+    const ids = KIT_DEMOS.map((demo) => demo.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('getKitDemo は無いものを引くとエラーになる', () => {
+    expect(getKitDemo('toast').id).toBe('toast');
+    expect(() => getKitDemo('tooltip')).toThrow(/tooltip/);
+  });
+});
+
+describe('取り消せる待ち時間（scheduler）', () => {
+  it('指定した時間が過ぎたら解決する', async () => {
+    vi.useFakeTimers();
+    const scheduler = createScheduler();
+
+    let done = false;
+    const waiting = scheduler.wait(1000).then(() => {
+      done = true;
+    });
+
+    await vi.advanceTimersByTimeAsync(999);
+    expect(done).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await waiting;
+    expect(done).toBe(true);
+
+    vi.useRealTimers();
+  });
+
+  it('cancel したら、待っている側はその場で解決する（await が止まらない）', async () => {
+    vi.useFakeTimers();
+    const scheduler = createScheduler();
+
+    const waiting = scheduler.wait(100000);
+    scheduler.cancel();
+
+    await expect(waiting).resolves.toBeUndefined();
+    expect(scheduler.cancelled).toBe(true);
+
+    vi.useRealTimers();
+  });
+
+  it('cancel したあとはタイマーが発火しない（画面を離れたあとの誤作動を防ぐ）', async () => {
+    vi.useFakeTimers();
+    const scheduler = createScheduler();
+
+    let fired = false;
+    void scheduler.wait(1000).then(() => {
+      // cancel 済みなら、ここは「解決はするが続きはやらない」側で弾く
+      if (!scheduler.cancelled) fired = true;
+    });
+
+    scheduler.cancel();
+    await vi.advanceTimersByTimeAsync(2000);
+
+    expect(fired).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+
+    vi.useRealTimers();
+  });
+
+  it('cancel 後の wait は待たずに解決する', async () => {
+    const scheduler = createScheduler();
+    scheduler.cancel();
+    await expect(scheduler.wait(100000)).resolves.toBeUndefined();
+  });
+});
+
+describe('kit.css が CSS変数だけを参照している', () => {
+  it('生の色（16進・rgb・hsl・色名）を書いていない', () => {
+    expect(CSS_WITHOUT_COMMENTS).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+    expect(CSS_WITHOUT_COMMENTS).not.toMatch(/\b(?:rgb|rgba|hsl|hsla)\(/);
+    expect(CSS_WITHOUT_COMMENTS).not.toMatch(/:\s*(?:white|black|gray|grey|red|blue)\b/);
+  });
+
+  it('色・背景・影・フォントの指定が var() を経由している', () => {
+    const declarations = CSS_WITHOUT_COMMENTS.match(
+      /(?:^|[\s;{])(?:color|background|background-color|background-image|box-shadow|font-family)\s*:[^;}]+/g,
+    );
+    expect(declarations?.length ?? 0).toBeGreaterThan(0);
+    for (const declaration of declarations ?? []) {
+      const value = declaration.split(':').slice(1).join(':').trim();
+      const ok =
+        value.includes('var(') || value === 'inherit' || value === 'none' || value === 'currentcolor';
+      expect(ok, declaration.trim()).toBe(true);
+    }
+  });
+
+  it('余白・角丸を px で直接書いていない（1px / 2px は枠線用に許容）', () => {
+    const pxValues = CSS_WITHOUT_COMMENTS.match(/\b\d+(?:\.\d+)?px\b/g) ?? [];
+    const notAllowed = pxValues.filter((value: string) => value !== '1px' && value !== '2px');
+    expect(notAllowed).toEqual([]);
+  });
+
+  it('余白は --space-unit から、角丸は --radius から導いている', () => {
+    const paddings = CSS_WITHOUT_COMMENTS.match(
+      /(?:^|[\s;{])(?:margin|padding|gap)(?:-top|-right|-bottom|-left)?\s*:[^;}]+/g,
+    );
+    expect(paddings?.length ?? 0).toBeGreaterThan(0);
+    for (const declaration of paddings ?? []) {
+      const value = declaration.split(':')[1].trim();
+      const ok = value.includes('var(--space-unit)') || value === '0' || value === '0 auto';
+      expect(ok, declaration.trim()).toBe(true);
+    }
+
+    const radii = CSS_WITHOUT_COMMENTS.match(/(?:^|[\s;{])border-radius\s*:[^;}]+/g) ?? [];
+    for (const declaration of radii) {
+      const value = declaration.split(':')[1].trim();
+      const ok = value.includes('var(--radius)') || value === '50%' || value === 'inherit';
+      expect(ok, declaration.trim()).toBe(true);
+    }
+  });
+
+  it('デモが使うCSS変数は theme.ts が生成するものだけ（--duration を除く）', () => {
+    const used = new Set(
+      [...CSS_WITHOUT_COMMENTS.matchAll(/var\((--[a-z-]+)/g)].map((match) => match[1]),
+    );
+    expect(used.size).toBeGreaterThan(0);
+    for (const name of used) {
+      if (KIT_OWN_VARS.includes(name)) continue;
+      expect(CSS_VAR_NAMES, name).toContain(name);
+    }
+  });
+
+  it('動きの長さは --duration を見ている（手順4〜5で tokens.ts から渡せるように）', () => {
+    expect(CSS_WITHOUT_COMMENTS).toMatch(/transition:[^;}]*var\(--duration\)/);
+  });
+
+  it('prefers-reduced-motion の指定がある（要件 §4.2）', () => {
+    expect(CSS_WITHOUT_COMMENTS).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
+  });
+});

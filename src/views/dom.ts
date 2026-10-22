@@ -17,3 +17,24 @@ export function button(className: string, text: string, onClick: () => void): HT
   node.addEventListener('click', onClick);
   return node;
 }
+
+/**
+ * 画面ひとつ。
+ *
+ * 第2部のデモはタイマーとイベントを持つので、画面を描き直す前に
+ * 後片付けが要る。また、動きの自動再生は要素がページに入ってからでないと
+ * 始められない（入る前だと transition が効かない）。
+ * そのため、ただの要素ではなくこの形で受け渡す。
+ */
+export interface View {
+  element: HTMLElement;
+  /** ページに入れたあとに呼ばれる。自動再生の開始に使う */
+  mounted?: () => void;
+  /** 画面を離れるときに呼ばれる。タイマーとイベントを止める */
+  destroy?: () => void;
+}
+
+/** 後片付けの要らない画面を View にする。 */
+export function staticView(element: HTMLElement): View {
+  return { element };
+}

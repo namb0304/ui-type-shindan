@@ -2,23 +2,47 @@ import { describe, expect, it } from 'vitest';
 
 import { hasPreview, PREVIEWS } from './components/previews';
 import { FALLBACK_SUBJECT, missingSubjects, resolveSubject } from './components/previews/fallback';
+import { KIT_QUESTIONS, TOTAL_KIT_QUESTIONS } from './data/kitQuestions';
+import type { KitAnswerValue } from './data/kitTypes';
 import { QUESTIONS, TOTAL_QUESTIONS } from './data/questions';
 import type { AnswerValue } from './data/types';
 import { calcResult } from './logic/score';
 import type { DiagnosisState } from './state';
 import {
   answer,
+  answerKit,
   backFromResult,
+  backToQuestions,
   canGoBack,
+  canGoBackKit,
   createInitialState,
+  currentKitQuestion,
   currentQuestion,
   goBack,
+  goBackKit,
   isComplete,
+  isKitComplete,
+  kitChoicesInDisplayOrder,
+  kitProgress,
   progress,
   restart,
   sidesInDisplayOrder,
   start,
+  startKit,
 } from './state';
+
+/** 第2部まで通して答える（第1部 → ひと休み → 第2部）。 */
+function answerAllKit(
+  kitValue: KitAnswerValue,
+  value: AnswerValue = 'left',
+  random = neverSwap,
+): DiagnosisState {
+  let state = startKit(answerAll(value, random));
+  for (let i = 0; i < TOTAL_KIT_QUESTIONS; i += 1) {
+    state = answerKit(state, kitValue);
+  }
+  return state;
+}
 
 /** 乱数を固定して、表示順の入れ替えを決め打ちにする。 */
 const alwaysSwap = () => 0.1;
@@ -56,17 +80,17 @@ describe('画面の遷移', () => {
     expect(state.answers.q1).toBe('left');
   });
 
-  it('12問目に回答すると結果画面になる', () => {
+  it('12問目に回答するとひと休み画面になる（結果はまだ出ない）', () => {
     const state = answerAll('left');
-    expect(state.screen).toBe('result');
+    expect(state.screen).toBe('break');
     expect(isComplete(state)).toBe(true);
     expect(Object.keys(state.answers)).toHaveLength(TOTAL_QUESTIONS);
   });
 
-  it('結果画面から最後の問題に戻れる', () => {
-    const state = backFromResult(answerAll('left'));
-    expect(state.screen).toBe('question');
-    expect(currentQuestion(state).id).toBe('q12');
+  it('結果画面から、第2部の最後の問題に戻れる', () => {
+    const state = backFromResult(answerAllKit('a'));
+    expect(state.screen).toBe('kit');
+    expect(currentKitQuestion(state).id).toBe(KIT_QUESTIONS[TOTAL_KIT_QUESTIONS - 1].id);
   });
 
   it('もう一度診断するとトップに戻り、回答が消える', () => {
@@ -183,7 +207,7 @@ describe('通しで診断できる', () => {
   });
 
   it('全問「どっちも同じ」でも最後まで進み、結果が出る', () => {
-    const state = answerAll('either');
+    const state = answerAllKit('either', 'either');
     expect(state.screen).toBe('result');
     expect(calcResult(state.answers).code).toBe('DFCG');
     for (const score of calcResult(state.answers).scores) {
@@ -205,7 +229,7 @@ describe('通しで診断できる', () => {
       expect(() => resolveSubject(question.subject), question.id).not.toThrow();
       state = answer(state, i % 2 === 0 ? 'left' : 'right');
     }
-    expect(state.screen).toBe('result');
+    expect(state.screen).toBe('break');
   });
 });
 
@@ -238,6 +262,106 @@ describe('部品の代用（ステップ6までの暫定措置）', () => {
     for (const preview of PREVIEWS) {
       expect(resolveSubject(preview.subject).isFallback, preview.subject).toBe(false);
       expect(FALLBACK_SUBJECT[preview.subject], preview.subject).toBeUndefined();
+    }
+  });
+});
+
+describe('第2部（定番UIキット）', () => {
+  it('ひと休みから第2部へ進む', () => {
+    const state = startKit(answerAll('left'));
+    expect(state.screen).toBe('kit');
+    expect(currentKitQuestion(state).id).toBe(KIT_QUESTIONS[0].id);
+  });
+
+  it('ひと休みから第1部の最後の問題へ戻れる', () => {
+    const state = backToQuestions(answerAll('left'));
+    expect(state.screen).toBe('question');
+    expect(currentQuestion(state).id).toBe('q12');
+  });
+
+  it('最後の問題に回答すると結果画面になる', () => {
+    const state = answerAllKit('a');
+    expect(state.screen).toBe('result');
+    expect(isKitComplete(state)).toBe(true);
+    expect(Object.keys(state.kitAnswers)).toHaveLength(TOTAL_KIT_QUESTIONS);
+  });
+
+  it('「どっちでもいい」を選んでも次の問題へ進む', () => {
+    let state = startKit(answerAll('left'));
+    state = answerKit(state, 'either');
+    expect(state.kitAnswers[KIT_QUESTIONS[0].id]).toBe('either');
+    expect(currentKitQuestion(state).id).toBe(KIT_QUESTIONS[1].id);
+  });
+
+  it('1問目から戻るとひと休み画面に出る', () => {
+    const state = goBackKit(startKit(answerAll('left')));
+    expect(state.screen).toBe('break');
+  });
+
+  it('2問目から戻ると1問目に出る', () => {
+    let state = startKit(answerAll('left'));
+    state = answerKit(state, 'a');
+    state = goBackKit(state);
+    expect(state.screen).toBe('kit');
+    expect(currentKitQuestion(state).id).toBe(KIT_QUESTIONS[0].id);
+  });
+
+  it('戻って選び直せる', () => {
+    let state = startKit(answerAll('left'));
+    state = answerKit(state, 'a');
+    state = goBackKit(state);
+    state = answerKit(state, 'b');
+    expect(state.kitAnswers[KIT_QUESTIONS[0].id]).toBe('b');
+  });
+
+  it('第2部ではいつでも戻れる（1問目でも）', () => {
+    expect(canGoBackKit(startKit(answerAll('left')))).toBe(true);
+  });
+
+  it('進捗が1始まりで出る', () => {
+    const state = startKit(answerAll('left'));
+    expect(kitProgress(state)).toEqual({ current: 1, total: TOTAL_KIT_QUESTIONS });
+  });
+
+  it('表示順は問題ごとに決まり、戻っても変わらない', () => {
+    const question = KIT_QUESTIONS[0];
+    const normal = createInitialState(neverSwap);
+    const swapped = createInitialState(alwaysSwap);
+
+    expect(kitChoicesInDisplayOrder(normal, question)).toEqual(['a', 'b']);
+    expect(kitChoicesInDisplayOrder(swapped, question)).toEqual(['b', 'a']);
+  });
+
+  it('すべての問題に表示順が決まっている', () => {
+    const state = createInitialState(neverSwap);
+    for (const question of KIT_QUESTIONS) {
+      expect(state.kitSwapped[question.id], question.id).toBeTypeOf('boolean');
+    }
+  });
+
+  it('第2部の回答を変えても、タイプコードと割合が変わらない（判定に混ざっていない）', () => {
+    const a = answerAllKit('a', 'right');
+    const b = answerAllKit('b', 'right');
+    const either = answerAllKit('either', 'right');
+
+    expect(calcResult(a.answers)).toEqual(calcResult(b.answers));
+    expect(calcResult(a.answers)).toEqual(calcResult(either.answers));
+    expect(calcResult(a.answers).code).toBe('ARPM');
+  });
+
+  it('もう一度診断すると第2部の回答も消える', () => {
+    const state = start(answerAllKit('a'));
+    expect(state.kitAnswers).toEqual({});
+    expect(state.kitIndex).toBe(0);
+  });
+
+  it('第1部と第2部で、回答の入れ物が分かれている', () => {
+    const state = answerAllKit('a');
+    for (const question of QUESTIONS) {
+      expect(state.kitAnswers[question.id], question.id).toBeUndefined();
+    }
+    for (const question of KIT_QUESTIONS) {
+      expect(state.answers[question.id], question.id).toBeUndefined();
     }
   });
 });
