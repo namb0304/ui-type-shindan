@@ -2,9 +2,12 @@ import type { ThemeVars } from '../../data/tokens';
 import { applyTheme } from '../../logic/theme';
 import { cafeMenu } from './cafeMenu';
 import { eventBanner } from './eventBanner';
+import { loginForm } from './loginForm';
 import { musicPlayer } from './musicPlayer';
 import { newsHeadline } from './newsHeadline';
+import { productCard } from './productCard';
 import { profileCard } from './profileCard';
+import { todoList } from './todoList';
 import type { PreviewComponent } from './types';
 import { weatherApp } from './weatherApp';
 
@@ -19,6 +22,9 @@ export const PREVIEWS: readonly PreviewComponent[] = [
   musicPlayer, // Q2  装飾
   weatherApp, // Q3  トーン
   newsHeadline, // Q4  文字
+  productCard, // Q5  情報量
+  loginForm, // Q6  装飾
+  todoList, // Q7  トーン
   profileCard, // Q8  文字
   eventBanner, // Q12 文字
 ];

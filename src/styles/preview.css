@@ -554,3 +554,263 @@
   font-size: 0.75em;
   color: var(--color-text-muted);
 }
+
+/* ------------------------------------------------------------------
+ * ECの商品カード（情報量）
+ *
+ * 写真の場所は横に置く。縦に積むと、ユッタリ側だけが極端に伸びて
+ * 2つを並べて見比べられなくなる。
+ * ------------------------------------------------------------------ */
+
+.pv-product__head {
+  display: flex;
+  gap: calc(var(--space-unit) * 1);
+  align-items: flex-start;
+}
+
+/* 商品の面。中に瓶を1本だけ描く（画像は使わない） */
+.pv-product__media {
+  display: grid;
+  flex-shrink: 0;
+  place-items: end center;
+  width: 4.25em;
+  aspect-ratio: 1 / 1;
+  background-color: var(--color-surface-alt);
+  border: var(--border);
+  border-radius: var(--radius);
+}
+
+.pv-product__bottle {
+  display: block;
+  width: 1.1em;
+  height: 68%;
+  background-color: var(--color-primary);
+  border-radius: calc(var(--radius) / 2) calc(var(--radius) / 2) 0 0;
+}
+
+.pv-product__info {
+  min-width: 0;
+}
+
+.pv-product__brand {
+  font-size: 0.6875em;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  color: var(--color-primary-text);
+}
+
+.pv-product__name {
+  margin-top: calc(var(--space-unit) * 0.25);
+  font-size: 0.95em;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.pv-product__rating {
+  margin-top: calc(var(--space-unit) * 0.25);
+  font-size: 0.6875em;
+  color: var(--color-text-muted);
+}
+
+.pv-product__price {
+  display: flex;
+  gap: calc(var(--space-unit) * 0.625);
+  align-items: baseline;
+  margin-top: calc(var(--space-unit) * 1);
+}
+
+.pv-product__now {
+  font-size: 1.25em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  color: var(--color-primary-text);
+}
+
+.pv-product__was {
+  font-size: 0.75em;
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.pv-product__off {
+  font-size: 0.6875em;
+  font-weight: 700;
+  color: var(--color-primary-text);
+}
+
+.pv-product__note {
+  margin-top: calc(var(--space-unit) * 0.5);
+  font-size: 0.6875em;
+  color: var(--color-text-muted);
+}
+
+.pv-product__cart {
+  display: block;
+  margin-top: calc(var(--space-unit) * 0.875);
+  padding-top: calc(var(--space-unit) * 0.625);
+  padding-bottom: calc(var(--space-unit) * 0.625);
+  font-size: 0.8125em;
+  font-weight: 700;
+  color: var(--color-on-primary);
+  text-align: center;
+  background: var(--accent-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--accent-shadow);
+}
+
+/* ------------------------------------------------------------------
+ * ログイン画面（装飾）
+ * ------------------------------------------------------------------ */
+
+.pv-login__title {
+  font-size: 1.1em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.pv-login__field {
+  margin-top: calc(var(--space-unit) * 0.625);
+}
+
+.pv-login__label {
+  display: block;
+  font-size: 0.6875em;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* へこんだ面。フラットは枠線だけ、リッチは枠が消えて影で沈む */
+.pv-login__input {
+  display: block;
+  margin-top: calc(var(--space-unit) * 0.25);
+  padding: calc(var(--space-unit) * 0.4375) calc(var(--space-unit) * 0.625);
+  overflow: hidden;
+  font-size: 0.75em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background-color: var(--color-surface-alt);
+  background-image: var(--surface-gradient);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* 出っぱった面。フラットはベタ塗り、リッチはグラデと落ち影 */
+.pv-login__submit {
+  display: block;
+  margin-top: calc(var(--space-unit) * 0.625);
+  padding-top: calc(var(--space-unit) * 0.625);
+  padding-bottom: calc(var(--space-unit) * 0.625);
+  font-size: 0.8125em;
+  font-weight: 700;
+  color: var(--color-on-primary);
+  text-align: center;
+  background: var(--accent-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--accent-shadow);
+}
+
+/* ------------------------------------------------------------------
+ * ToDoリスト（トーン）
+ * ------------------------------------------------------------------ */
+
+.pv-todo__head {
+  display: flex;
+  gap: calc(var(--space-unit) * 1);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.pv-todo__title {
+  font-size: 1.05em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.pv-todo__count {
+  flex-shrink: 0;
+  font-size: 0.6875em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary-text);
+}
+
+.pv-todo__bar {
+  display: block;
+  width: 100%;
+  height: 0.4em;
+  margin-top: calc(var(--space-unit) * 0.625);
+  overflow: hidden;
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius);
+}
+
+.pv-todo__fill {
+  display: block;
+  width: 50%;
+  height: 100%;
+  background: var(--accent-surface);
+  border-radius: inherit;
+}
+
+.pv-todo__list {
+  margin-top: calc(var(--space-unit) * 0.75);
+}
+
+.pv-todo__item {
+  display: flex;
+  gap: calc(var(--space-unit) * 0.625);
+  align-items: center;
+  padding-top: calc(var(--space-unit) * 0.375);
+  padding-bottom: calc(var(--space-unit) * 0.375);
+}
+
+.pv-todo__item + .pv-todo__item {
+  border-top: var(--border);
+}
+
+/* 角丸が一番効く部品。クールは四角、ポップは丸に寄る */
+.pv-todo__box {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 1.15em;
+  aspect-ratio: 1 / 1;
+  font-size: 0.75em;
+  line-height: 1;
+  color: var(--color-on-primary);
+  background-color: var(--color-surface);
+  border: var(--border);
+  border-radius: calc(var(--radius) / 2);
+}
+
+.pv-todo__box--on {
+  background: var(--accent-surface);
+  border-color: transparent;
+}
+
+.pv-todo__text {
+  min-width: 0;
+  font-size: 0.8125em;
+}
+
+.pv-todo__item--done .pv-todo__text {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.pv-todo__add {
+  display: block;
+  margin-top: calc(var(--space-unit) * 0.75);
+  padding-top: calc(var(--space-unit) * 0.5);
+  padding-bottom: calc(var(--space-unit) * 0.5);
+  font-size: 0.75em;
+  font-weight: 700;
+  color: var(--color-on-primary);
+  text-align: center;
+  background: var(--accent-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--accent-shadow);
+}

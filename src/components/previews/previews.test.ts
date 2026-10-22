@@ -22,6 +22,9 @@ describe('部品の登録', () => {
       'music-player', // Q2  装飾
       'weather-app', // Q3  トーン
       'news-headline', // Q4  文字
+      'product-card', // Q5  情報量
+      'login-form', // Q6  装飾
+      'todo-list', // Q7  トーン
       'profile-card', // Q8  文字
       'event-banner', // Q12 文字
     ]);
