@@ -12,6 +12,17 @@ import { sideOf } from './score';
  * 画面に依存しない純粋な関数。
  */
 export function buildTypeSummary(scores: readonly AxisScore[]): string {
+  return buildTypeSummaryParts(scores).join('');
+}
+
+/**
+ * 説明文を、区切りごとのまとまりに分けて返す。
+ *
+ * 画面では、この1つずつを折り返さない単位として扱う。
+ * 「色は落ち着い／て」のように言葉の途中で改行されるのを防ぐため。
+ * 句読点は前のまとまりに含める（行頭に「、」が来ないようにする）。
+ */
+export function buildTypeSummaryParts(scores: readonly AxisScore[]): string[] {
   const parts = AXES.map((axis) => {
     const score = scores.find((candidate) => candidate.axis === axis.id);
     if (!score) {
@@ -20,5 +31,5 @@ export function buildTypeSummary(scores: readonly AxisScore[]): string {
     return getSummaryPart(axis.id, sideOf(score));
   });
 
-  return `${parts.join('、')}。`;
+  return parts.map((part, index) => `${part}${index === parts.length - 1 ? '。' : '、'}`);
 }

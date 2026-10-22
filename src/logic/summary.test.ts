@@ -4,7 +4,7 @@ import { AXES } from '../data/axes';
 import { getSummaryPart, SUMMARY_PARTS } from '../data/traits';
 import type { RightPoints } from '../data/types';
 import { resultFromPoints } from './score';
-import { buildTypeSummary } from './summary';
+import { buildTypeSummary, buildTypeSummaryParts } from './summary';
 
 function summaryOf(points: RightPoints): string {
   return buildTypeSummary(resultFromPoints(points).scores);
@@ -71,5 +71,37 @@ describe('タイプの説明文', () => {
   it('スコアが足りなければエラーになる', () => {
     const scores = resultFromPoints({ density: 0, decoration: 0, tone: 0, font: 0 }).scores;
     expect(() => buildTypeSummary(scores.slice(0, 2))).toThrow();
+  });
+});
+
+describe('説明文の区切り', () => {
+  it('4つのまとまりに分かれ、句読点は前のまとまりに付く', () => {
+    const scores = resultFromPoints({ density: 0, decoration: 0, tone: 0, font: 0 }).scores;
+    expect(buildTypeSummaryParts(scores)).toEqual([
+      '情報はぎっしり、',
+      '飾りはシンプル、',
+      '色は落ち着いて、',
+      '文字はすっきり。',
+    ]);
+  });
+
+  it('つなげると1文になる', () => {
+    for (const points of [0, 3, 6] as const) {
+      const scores = resultFromPoints({
+        density: points,
+        decoration: points,
+        tone: points,
+        font: points,
+      }).scores;
+      expect(buildTypeSummaryParts(scores).join('')).toBe(buildTypeSummary(scores));
+    }
+  });
+
+  it('まとまりの先頭に句読点が来ない', () => {
+    const scores = resultFromPoints({ density: 6, decoration: 3, tone: 0, font: 6 }).scores;
+    for (const part of buildTypeSummaryParts(scores)) {
+      expect(part.startsWith('、'), part).toBe(false);
+      expect(part.startsWith('。'), part).toBe(false);
+    }
   });
 });

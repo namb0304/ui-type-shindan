@@ -8,7 +8,7 @@ import type { AxisScore, DiagnosisResult, TypeInfo } from '../data/types';
 import { calcAffinity } from '../logic/affinity';
 import { buildPrompt } from '../logic/prompt';
 import { sideOf, toPercent } from '../logic/score';
-import { buildTypeSummary } from '../logic/summary';
+import { buildTypeSummaryParts } from '../logic/summary';
 import { applyTheme, buildResultTheme } from '../logic/theme';
 import { button, el } from './dom';
 
@@ -83,11 +83,14 @@ function renderHero(result: DiagnosisResult, info: TypeInfo): HTMLElement {
   meta.append(el('span', 'hero__suffix', 'タイプ'), el('span', 'hero__code', result.code));
   reveal.append(el('h1', 'hero__shop', `『${info.shop}』`), meta);
 
+  // 区切りごとに包み、言葉の途中で改行されないようにする
+  const summary = el('p', 'hero__summary');
+  for (const part of buildTypeSummaryParts(result.scores)) {
+    summary.append(el('span', 'hero__summary-part', part));
+  }
+
   const after = el('div', 'hero__after');
-  after.append(
-    el('p', 'hero__summary', buildTypeSummary(result.scores)),
-    el('p', 'hero__quip', info.quip),
-  );
+  after.append(summary, el('p', 'hero__quip', info.quip));
 
   body.append(el('p', 'hero__lead', 'あなたのデザインの好みは……'), reveal, after);
 

@@ -526,7 +526,7 @@ p {
   max-height: 620px;
   overflow: hidden;
   /* スマホでは下端をぼかして、文字の領域にひと続きでつなぐ */
-  mask-image: linear-gradient(180deg, rgb(0 0 0 / 100%) 68%, rgb(0 0 0 / 0%) 100%);
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 100%) 84%, rgb(0 0 0 / 0%) 100%);
   animation: result-fade 0.8s ease both;
 }
 
@@ -588,6 +588,8 @@ p {
   /* 長い店名（おしゃれなジェラート屋など）でも収まる大きさにする */
   font-size: clamp(28px, 9.2vw, 44px);
   font-weight: 700;
+  /* 『』の内側の余白を詰める。そのままだと文字が右にずれて見える */
+  font-feature-settings: 'palt' 1;
   line-height: 1.25;
   color: var(--color-text);
   letter-spacing: 0.01em;
@@ -628,6 +630,11 @@ p {
   color: var(--color-text);
 }
 
+/* 「色は落ち着いて、」のまとまりの途中では改行させない */
+.hero__summary-part {
+  display: inline-block;
+}
+
 /* ひとことはオチなので、説明文より小さく添える */
 .hero__quip {
   margin-top: 12px;
@@ -665,19 +672,19 @@ p {
     box-shadow: var(--shadow);
   }
 
+  /* 余白はパネルの内側に取る。列からはみ出すと左右の余白がそろわない */
   .hero__body {
-    padding: 0;
+    padding: 28px 32px;
     margin-top: 0;
   }
 
-  /* PCでは文字だけにパネルを敷く（はみ出さないよう少し広げる） */
   .hero__body::before {
-    inset: -24px -28px;
+    inset: 0;
     border-radius: var(--radius);
   }
 
   .hero__shop {
-    font-size: clamp(40px, 4vw, 56px);
+    font-size: clamp(38px, 3.4vw, 50px);
   }
 
   .hero__summary {
