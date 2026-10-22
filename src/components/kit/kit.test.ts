@@ -16,8 +16,13 @@ const KIT_CSS = readFileSync(
 
 const CSS_WITHOUT_COMMENTS = KIT_CSS.replace(/\/\*[\s\S]*?\*\//g, '');
 
-/** 第2部が自前で持つ変数。tokens.ts に入るまでは既定値で動かす（要件 §6） */
-const KIT_OWN_VARS = ['--duration', '--kit-duration'];
+/**
+ * 第2部が自前で持つ変数。
+ *   --duration / --kit-duration … 動きの長さ。tokens.ts に入るまでは既定値で動かす（要件 §6）
+ *   --bezel                      … 筐体の縁の太さ。--space-unit から計算している
+ *                                  （下の「--bezel は --space-unit から導いている」で検証）
+ */
+const KIT_OWN_VARS = ['--duration', '--kit-duration', '--bezel'];
 
 describe('第2部の質問データ', () => {
   it('いまは最初の3問（K4・K5・K6）', () => {
@@ -155,7 +160,12 @@ describe('kit.css が CSS変数だけを参照している', () => {
     for (const declaration of declarations ?? []) {
       const value = declaration.split(':').slice(1).join(':').trim();
       const ok =
-        value.includes('var(') || value === 'inherit' || value === 'none' || value === 'currentcolor';
+        value.includes('var(') ||
+        value === 'inherit' ||
+        value === 'none' ||
+        value === 'currentcolor' ||
+        // 色を持たない影（目印の輪が消えきった状態）は素の値でよい
+        /^0 0 0 [\d.]+em transparent$/.test(value);
       expect(ok, declaration.trim()).toBe(true);
     }
   });
@@ -173,7 +183,12 @@ describe('kit.css が CSS変数だけを参照している', () => {
     expect(paddings?.length ?? 0).toBeGreaterThan(0);
     for (const declaration of paddings ?? []) {
       const value = declaration.split(':')[1].trim();
-      const ok = value.includes('var(--space-unit)') || value === '0' || value === '0 auto';
+      const ok =
+        value.includes('var(--space-unit)') ||
+        // --bezel は --space-unit から計算した値
+        value.includes('var(--bezel)') ||
+        value === '0' ||
+        value === '0 auto';
       expect(ok, declaration.trim()).toBe(true);
     }
 
@@ -183,6 +198,26 @@ describe('kit.css が CSS変数だけを参照している', () => {
       const ok = value.includes('var(--radius)') || value === '50%' || value === 'inherit';
       expect(ok, declaration.trim()).toBe(true);
     }
+  });
+
+  it('--bezel は --space-unit から導いている（素のpxで持たない）', () => {
+    const bezel = CSS_WITHOUT_COMMENTS.match(/--bezel:\s*([^;]+);/);
+    expect(bezel?.[1], '--bezel の定義が見つからない').toBeTruthy();
+    expect(bezel?.[1]).toContain('var(--space-unit)');
+  });
+
+  it('内側の画面の角丸を、縁の太さぶん小さくしている（角の見切れ対策）', () => {
+    const screen = CSS_WITHOUT_COMMENTS.match(/\.kit-demo__screen\s*\{[^}]+\}/)?.[0] ?? '';
+    const radius = screen.match(/border-radius:\s*([^;]+);/)?.[1] ?? '';
+    expect(radius, '.kit-demo__screen の border-radius').toContain('var(--bezel)');
+  });
+
+  it('スマホの枠を縦長に保っている（横長だと一般的なUIに見えない）', () => {
+    const frame = CSS_WITHOUT_COMMENTS.match(/\.kit-demo\s*\{[^}]+\}/)?.[0] ?? '';
+    const ratio = frame.match(/aspect-ratio:\s*(\d+)\s*\/\s*(\d+)/);
+    expect(ratio, '.kit-demo の aspect-ratio').toBeTruthy();
+    const [, w, h] = ratio ?? [];
+    expect(Number(w) / Number(h), '幅 ÷ 高さ が1未満（縦長）').toBeLessThan(1);
   });
 
   it('デモが使うCSS変数は theme.ts が生成するものだけ（--duration を除く）', () => {

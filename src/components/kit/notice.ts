@@ -33,7 +33,7 @@ function noticeBase(variant: 'toast' | 'banner'): KitDemoInstance {
 
   const actions = document.createElement('div');
   actions.className = 'memo__actions';
-  const saveButton = demoButton('保存');
+  const saveButton = demoButton('保存', { trigger: true });
   actions.append(saveButton);
   app.append(actions);
 
@@ -61,8 +61,9 @@ function noticeBase(variant: 'toast' | 'banner'): KitDemoInstance {
   }
 
   if (variant === 'toast') {
-    // 画面の上に浮かせる。中身の場所は取らない
-    frame.append(notice);
+    // 画面の上に浮かせる。中身の場所は取らない。
+    // 外枠ではなく内側の画面に入れるので、角丸に沿って切り取られる
+    screen.append(notice);
   } else {
     // 中身を押し下げて、場所を取って居座る
     const slot = document.createElement('div');
@@ -95,6 +96,7 @@ function noticeBase(variant: 'toast' | 'banner'): KitDemoInstance {
 
   return {
     element: frame,
+    triggerLabel: '保存',
 
     async play(): Promise<void> {
       await scheduler.wait(PLAY_LEAD_MS);

@@ -64,7 +64,7 @@ function loadingBase(variant: 'skeleton' | 'spinner'): KitDemoInstance {
 
   const actions = document.createElement('div');
   actions.className = 'memo__actions';
-  const reloadButton = demoButton('もう一度読み込む', 'quiet');
+  const reloadButton = demoButton('もう一度読み込む', { quiet: true, trigger: true });
   actions.append(reloadButton);
   app.append(actions);
 
@@ -95,6 +95,7 @@ function loadingBase(variant: 'skeleton' | 'spinner'): KitDemoInstance {
 
   return {
     element: frame,
+    triggerLabel: 'もう一度読み込む',
 
     async play(): Promise<void> {
       await scheduler.wait(PLAY_LEAD_MS);

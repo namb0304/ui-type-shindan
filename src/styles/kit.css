@@ -11,10 +11,19 @@
 .kit-demo {
   --duration: var(--kit-duration, 0.25s);
 
+  /* 筐体の縁の太さ。内側の角丸をこの値から計算するので、変数にしてある */
+  --bezel: calc(var(--space-unit) * 0.5);
+
   position: relative;
   display: flex;
+
+  /* 本物のスマホと同じ縦長にする。
+   * 横長だと、ボトムシートのボタンが横に伸びて一般的なUIに見えない。
+   * 高さを固定せず比率で決めるので、どの幅でも同じ形になる */
   width: 100%;
-  height: 17em;
+  max-width: 22em;
+  margin: 0 auto;
+  aspect-ratio: 9 / 11;
   overflow: hidden;
   font-family: var(--font-family);
   font-size: var(--font-size-base);
@@ -46,16 +55,24 @@
   list-style: none;
 }
 
-/* 筐体の内側の画面。縁の太さだけ内側に寄せる */
+/* 筐体の内側の画面。
+ *
+ * 角丸は「外側の角丸 − 縁の太さ」。同じ値にすると、内側の角が
+ * 外側の弧からはみ出して見切れる（外側 24px・内側 12px だとずれる）。
+ *
+ * トースト・幕・パネルはこの要素の子にしてある。外枠の子にすると
+ * 縁の上まで乗ってしまい、角丸にも沿わない。
+ * overflow: hidden があるので、はみ出した分はここで切り取られる。 */
 .kit-demo__screen {
   position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
-  margin: calc(var(--space-unit) * 0.25);
+  min-width: 0;
+  margin: var(--bezel);
   overflow: hidden;
   background-color: var(--color-surface);
-  border-radius: var(--radius);
+  border-radius: calc(var(--radius) + var(--radius) - var(--bezel));
 }
 
 /* --- ステータスバー（時刻と電波） --- */
@@ -163,6 +180,24 @@
   color: var(--color-text-muted);
   background: none;
   border-color: var(--color-border);
+}
+
+/* 「ここを押すと動きます」の目印。やわらかい輪を出す。
+ * 一度押したらクラスごと外す（押し方が分かった人には出し続けない） */
+.memo__btn--trigger {
+  position: relative;
+  animation: kit-attention 1.8s ease-in-out infinite;
+}
+
+@keyframes kit-attention {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--color-shadow-tint);
+  }
+
+  50% {
+    box-shadow: 0 0 0 0.4em transparent;
+  }
 }
 
 .memo__btn:focus-visible {
@@ -498,6 +533,12 @@
 
   .kit-skeleton__bar {
     background-image: none;
+    animation: none;
+  }
+
+  /* 点滅はさせないが、「ここを押す」の目印自体は残す */
+  .memo__btn--trigger {
+    box-shadow: 0 0 0 2px var(--color-shadow-tint);
     animation: none;
   }
 

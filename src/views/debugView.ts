@@ -1,5 +1,4 @@
 import { createKitDemo } from '../components/kit';
-import type { KitDemoInstance } from '../components/kit';
 import { createPreview, PREVIEWS } from '../components/previews';
 import { createShopPhoto } from '../components/shopPhoto';
 import { FALLBACK_SUBJECT, missingSubjects } from '../components/previews/fallback';
@@ -14,8 +13,10 @@ import type { AxisId, AxisSide, RightPoints } from '../data/types';
 import { pointsFromCode, toAxisScores } from '../logic/score';
 import { buildTypeSummary } from '../logic/summary';
 import { applyTheme, buildAxisVariantTheme, buildNeutralTheme, buildResultTheme } from '../logic/theme';
-import { button, el } from './dom';
+import { el } from './dom';
 import type { View } from './dom';
+import { createKitPlayer } from './kitPlayer';
+import type { KitPlayer } from './kitPlayer';
 
 /**
  * 部品カタログ（?debug=1 でのみ表示）。
@@ -180,7 +181,7 @@ function typeLinksSection(): HTMLElement {
  * 質問画面と違って自動再生はしない。3問ぶんが一斉に動くと見にくいので、
  * 「動かす」ボタンで1つずつ確かめる。デモの中のボタンも普通に触れる。
  */
-function kitSection(demos: KitDemoInstance[]): HTMLElement {
+function kitSection(players: KitPlayer[]): HTMLElement {
   const body = el('div', 'gallery__kit');
   const vars = buildNeutralTheme();
 
@@ -190,21 +191,22 @@ function kitSection(demos: KitDemoInstance[]): HTMLElement {
       el('p', 'gallery__kit-label', `${question.id.toUpperCase()}　${question.label}`),
     );
 
+    // 問題ごとに1つ。質問画面と同じ「一度に動かすのは1つだけ」が効く
     const grid = el('div', 'gallery__grid gallery__grid--pair');
+    const player = createKitPlayer(grid);
+    players.push(player);
+
     for (const choice of ['a', 'b'] as KitChoice[]) {
       const option = question[choice];
       const cell = el('div', 'gallery__cell');
-
       const demo = createKitDemo(option.id, vars);
-      demos.push(demo);
 
       cell.append(
         el('p', 'gallery__cell-title', `${choice.toUpperCase()}　${option.name}`),
         el('p', 'gallery__caption', option.description),
         demo.element,
-        button('gallery__kit-play', '動かす', () => {
-          void demo.play();
-        }),
+        player.add(demo),
+        el('p', 'kit__touch', `枠の中の「${demo.triggerLabel}」を押しても動きます`),
       );
       grid.append(cell);
     }
@@ -215,7 +217,7 @@ function kitSection(demos: KitDemoInstance[]): HTMLElement {
 
   return section(
     '第2部のデモ',
-    '「動かす」で1つずつ再生する。デモの中のボタン（保存・削除）も触れる',
+    '質問画面と同じ再生ボタン。デモの中のボタン（保存・削除）も触れる',
     body,
   );
 }
@@ -235,11 +237,11 @@ export function renderDebug(): View {
     ),
   );
 
-  const demos: KitDemoInstance[] = [];
+  const players: KitPlayer[] = [];
 
   const main = el('main', 'gallery');
   main.append(
-    kitSection(demos),
+    kitSection(players),
     photoCheckSection(),
     typeLinksSection(),
     progressSection(),
@@ -270,7 +272,7 @@ export function renderDebug(): View {
   return {
     element: wrap,
     destroy() {
-      for (const demo of demos) demo.destroy();
+      for (const player of players) player.destroy();
     },
   };
 }

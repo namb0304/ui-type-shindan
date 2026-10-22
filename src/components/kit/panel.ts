@@ -31,7 +31,7 @@ function panelBase(variant: 'modal' | 'sheet'): KitDemoInstance {
 
   const actions = document.createElement('div');
   actions.className = 'memo__actions';
-  const deleteButton = demoButton('削除', 'quiet');
+  const deleteButton = demoButton('削除', { quiet: true, trigger: true });
   actions.append(deleteButton);
   app.append(actions);
   screen.append(app);
@@ -78,7 +78,9 @@ function panelBase(variant: 'modal' | 'sheet'): KitDemoInstance {
   }
 
   panel.append(message, buttons);
-  frame.append(scrim, panel);
+  // 外枠ではなく内側の画面に入れる。
+  // こうしないと幕が縁まで覆い、ボトムシートの下の角も角丸に沿わない
+  screen.append(scrim, panel);
 
   function open(): void {
     frame.dataset.panelOpen = 'true';
@@ -95,6 +97,7 @@ function panelBase(variant: 'modal' | 'sheet'): KitDemoInstance {
 
   return {
     element: frame,
+    triggerLabel: '削除',
 
     async play(): Promise<void> {
       await scheduler.wait(PLAY_LEAD_MS);

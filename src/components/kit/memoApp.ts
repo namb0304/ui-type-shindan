@@ -64,11 +64,36 @@ export function memoListHtml(): string {
   return `<ul class="memo__list">${rows}</ul>`;
 }
 
+export interface DemoButtonOptions {
+  /** 控えめな見た目にする（削除・再読み込みなど、主役でない操作） */
+  quiet?: boolean;
+  /**
+   * 押すとデモが動くボタン。光の輪で「ここを押す」と示す。
+   * 一度押したら輪は消す（押し方が分かった人に出し続けない）。
+   */
+  trigger?: boolean;
+}
+
 /** デモの中の操作ボタン。「これにする」と見分けがつく見た目にする（kit.css）。 */
-export function demoButton(label: string, variant?: 'quiet'): HTMLButtonElement {
+export function demoButton(label: string, options: DemoButtonOptions = {}): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = `memo__btn${variant === 'quiet' ? ' memo__btn--quiet' : ''}`;
+  button.className = [
+    'memo__btn',
+    options.quiet ? 'memo__btn--quiet' : '',
+    options.trigger ? 'memo__btn--trigger' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   button.textContent = label;
+
+  if (options.trigger) {
+    button.addEventListener(
+      'click',
+      () => button.classList.remove('memo__btn--trigger'),
+      { once: true },
+    );
+  }
+
   return button;
 }
