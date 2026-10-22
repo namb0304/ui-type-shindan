@@ -35,15 +35,19 @@
   box-sizing: border-box;
 }
 
-.pv h3,
-.pv p,
-.pv ul,
-.pv li {
+/* 要素のリセット。
+ *
+ * :where() で包んでセレクタの強さを0にしている。
+ * `.pv p { margin: 0 }` のように書くと、強さが（クラス1＋要素1）になり、
+ * あとから書く `.pv-cafe__note { margin-top: ... }`（クラス1）に勝ってしまう。
+ * その結果、部品側の余白指定がすべて無視される。
+ * :where() なら強さが0なので、部品側の指定が必ず勝つ。 */
+:where(.pv) :where(h3, p, ul, li) {
   margin: 0;
   padding: 0;
 }
 
-.pv ul {
+:where(.pv) :where(ul) {
   list-style: none;
 }
 
