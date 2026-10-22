@@ -1,4 +1,5 @@
 import { KIT_QUESTIONS, TOTAL_KIT_QUESTIONS } from './data/kitQuestions';
+import { TOTAL_ALL_QUESTIONS } from './data/quiz';
 import type { KitAnswers, KitAnswerValue, KitChoice, KitQuestion } from './data/kitTypes';
 import { QUESTIONS, TOTAL_QUESTIONS } from './data/questions';
 import type { Answers, AnswerValue, AxisSide, Question } from './data/types';
@@ -12,9 +13,13 @@ import type { Answers, AnswerValue, AxisSide, Question } from './data/types';
 
 /**
  * 画面の流れ（要件 §5）。
- *   top → question（第1部12問）→ break（ひと休み）→ kit（第2部）→ result
+ *   top → question（第1部12問）→ kit（第2部）→ result
+ *
+ * 第1部と第2部の間に切れ目は置かない。進捗バーが満了してから
+ * 「まだ続きます」と出すと、ゴールが急に遠ざかってだまされた感じになる。
+ * 進捗は最初から通しの1本で数える（overallProgress）。
  */
-export type Screen = 'top' | 'question' | 'break' | 'kit' | 'result';
+export type Screen = 'top' | 'question' | 'kit' | 'result';
 
 export interface DiagnosisState {
   screen: Screen;
@@ -101,12 +106,13 @@ export function answer(state: DiagnosisState, value: AnswerValue): DiagnosisStat
   const answers: Answers = { ...state.answers, [question.id]: value };
   const isLast = state.index >= TOTAL_QUESTIONS - 1;
 
-  // 第1部の最後は、結果ではなくひと休み画面へ（要件 §5）
+  // 第1部の最後は、そのまま第2部の1問目へ（要件 §5）
   return {
     ...state,
     answers,
-    screen: isLast ? 'break' : 'question',
+    screen: isLast ? 'kit' : 'question',
     index: isLast ? state.index : state.index + 1,
+    kitIndex: isLast ? 0 : state.kitIndex,
   };
 }
 
@@ -142,18 +148,6 @@ export function isComplete(state: DiagnosisState): boolean {
 // 混ざると判定が濁るので、関数も状態も最後まで分けておく（要件 §4.2）。
 // ---------------------------------------------------------------------------
 
-/** ひと休み画面から第2部へ進む。 */
-export function startKit(state: DiagnosisState): DiagnosisState {
-  if (state.screen !== 'break') return state;
-  return { ...state, screen: 'kit', kitIndex: 0 };
-}
-
-/** ひと休み画面から、第1部の最後の問題へ戻る。 */
-export function backToQuestions(state: DiagnosisState): DiagnosisState {
-  if (state.screen !== 'break') return state;
-  return { ...state, screen: 'question', index: TOTAL_QUESTIONS - 1 };
-}
-
 export function currentKitQuestion(state: DiagnosisState): KitQuestion {
   const question = KIT_QUESTIONS[state.kitIndex];
   if (!question) {
@@ -187,14 +181,16 @@ export function answerKit(state: DiagnosisState, value: KitAnswerValue): Diagnos
   };
 }
 
-/** 第2部ではいつでも戻れる。1問目から戻るとひと休み画面に出る。 */
+/** 第2部ではいつでも戻れる。1問目から戻ると第1部の最後の問題に出る。 */
 export function canGoBackKit(state: DiagnosisState): boolean {
   return state.screen === 'kit';
 }
 
 export function goBackKit(state: DiagnosisState): DiagnosisState {
   if (!canGoBackKit(state)) return state;
-  if (state.kitIndex === 0) return { ...state, screen: 'break' };
+  if (state.kitIndex === 0) {
+    return { ...state, screen: 'question', index: TOTAL_QUESTIONS - 1 };
+  }
   return { ...state, kitIndex: state.kitIndex - 1 };
 }
 
@@ -204,4 +200,14 @@ export function kitProgress(state: DiagnosisState): { current: number; total: nu
 
 export function isKitComplete(state: DiagnosisState): boolean {
   return KIT_QUESTIONS.every((question) => state.kitAnswers[question.id] !== undefined);
+}
+
+/**
+ * 通しの進捗（1始まり）。第1部と第2部を1本に続けて数える。
+ * 第1部の12問目が 12/15、第2部の1問目が 13/15 になる。
+ */
+export function overallProgress(state: DiagnosisState): { current: number; total: number } {
+  const current =
+    state.screen === 'kit' ? TOTAL_QUESTIONS + state.kitIndex + 1 : state.index + 1;
+  return { current, total: TOTAL_ALL_QUESTIONS };
 }

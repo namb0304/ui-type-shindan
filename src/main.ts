@@ -9,15 +9,12 @@ import {
   answer,
   answerKit,
   backFromResult,
-  backToQuestions,
   createInitialState,
   goBack,
   goBackKit,
   restart,
   start,
-  startKit,
 } from './state';
-import { renderBreak } from './views/breakView';
 import { renderDebug } from './views/debugView';
 import type { View } from './views/dom';
 import { staticView } from './views/dom';
@@ -30,7 +27,7 @@ import { renderTop } from './views/topView';
  * 起動と画面の切り替え（要件定義書 §9）。
  *
  * 状態は state.ts が持ち、ここは「状態 → 画面」を描き直すだけにする。
- * 画面の流れ：top → question（12問）→ break → kit（第2部）→ result
+ * 画面の流れ：top → question（12問）→ kit（第2部）→ result
  *
  * 確認用の入口：
  *   ?debug=1            部品カタログと16タイプへのリンク
@@ -64,13 +61,6 @@ function currentView(): View {
         renderQuestion(state, {
           onAnswer: (value) => update(answer(state, value)),
           onBack: () => update(goBack(state)),
-        }),
-      );
-    case 'break':
-      return staticView(
-        renderBreak({
-          onContinue: () => update(startKit(state)),
-          onBack: () => update(backToQuestions(state)),
         }),
       );
     case 'kit':

@@ -38,7 +38,7 @@ describe('部品の登録', () => {
     expect(new Set(subjects).size).toBe(subjects.length);
   });
 
-  it('結果ページに出す見本は3つで、すべて登録済み（要件 §5-3-6）', () => {
+  it('結果ページに出す見本は3つで、すべて登録済み（要件 §5-4-6）', () => {
     expect(RESULT_PREVIEW_SUBJECTS).toHaveLength(3);
     for (const subject of RESULT_PREVIEW_SUBJECTS) {
       expect(hasPreview(subject), subject).toBe(true);

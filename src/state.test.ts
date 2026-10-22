@@ -5,6 +5,7 @@ import { FALLBACK_SUBJECT, missingSubjects, resolveSubject } from './components/
 import { KIT_QUESTIONS, TOTAL_KIT_QUESTIONS } from './data/kitQuestions';
 import type { KitAnswerValue } from './data/kitTypes';
 import { QUESTIONS, TOTAL_QUESTIONS } from './data/questions';
+import { estimatedMinutes, SECONDS_PER_QUESTION, TOTAL_ALL_QUESTIONS } from './data/quiz';
 import type { AnswerValue } from './data/types';
 import { calcResult } from './logic/score';
 import type { DiagnosisState } from './state';
@@ -12,7 +13,6 @@ import {
   answer,
   answerKit,
   backFromResult,
-  backToQuestions,
   canGoBack,
   canGoBackKit,
   createInitialState,
@@ -24,20 +24,20 @@ import {
   isKitComplete,
   kitChoicesInDisplayOrder,
   kitProgress,
+  overallProgress,
   progress,
   restart,
   sidesInDisplayOrder,
   start,
-  startKit,
 } from './state';
 
-/** 第2部まで通して答える（第1部 → ひと休み → 第2部）。 */
+/** 第2部まで通して答える（第1部 → 第2部）。 */
 function answerAllKit(
   kitValue: KitAnswerValue,
   value: AnswerValue = 'left',
   random = neverSwap,
 ): DiagnosisState {
-  let state = startKit(answerAll(value, random));
+  let state = answerAll(value, random);
   for (let i = 0; i < TOTAL_KIT_QUESTIONS; i += 1) {
     state = answerKit(state, kitValue);
   }
@@ -80,9 +80,10 @@ describe('画面の遷移', () => {
     expect(state.answers.q1).toBe('left');
   });
 
-  it('12問目に回答するとひと休み画面になる（結果はまだ出ない）', () => {
+  it('12問目に回答すると、そのまま第2部の1問目になる', () => {
     const state = answerAll('left');
-    expect(state.screen).toBe('break');
+    expect(state.screen).toBe('kit');
+    expect(state.kitIndex).toBe(0);
     expect(isComplete(state)).toBe(true);
     expect(Object.keys(state.answers)).toHaveLength(TOTAL_QUESTIONS);
   });
@@ -229,7 +230,7 @@ describe('通しで診断できる', () => {
       expect(() => resolveSubject(question.subject), question.id).not.toThrow();
       state = answer(state, i % 2 === 0 ? 'left' : 'right');
     }
-    expect(state.screen).toBe('break');
+    expect(state.screen).toBe('kit');
   });
 });
 
@@ -267,16 +268,10 @@ describe('部品の代用（ステップ6までの暫定措置）', () => {
 });
 
 describe('第2部（定番UIキット）', () => {
-  it('ひと休みから第2部へ進む', () => {
-    const state = startKit(answerAll('left'));
+  it('第1部から切れ目なく続く', () => {
+    const state = answerAll('left');
     expect(state.screen).toBe('kit');
     expect(currentKitQuestion(state).id).toBe(KIT_QUESTIONS[0].id);
-  });
-
-  it('ひと休みから第1部の最後の問題へ戻れる', () => {
-    const state = backToQuestions(answerAll('left'));
-    expect(state.screen).toBe('question');
-    expect(currentQuestion(state).id).toBe('q12');
   });
 
   it('最後の問題に回答すると結果画面になる', () => {
@@ -287,19 +282,20 @@ describe('第2部（定番UIキット）', () => {
   });
 
   it('「どっちでもいい」を選んでも次の問題へ進む', () => {
-    let state = startKit(answerAll('left'));
+    let state = answerAll('left');
     state = answerKit(state, 'either');
     expect(state.kitAnswers[KIT_QUESTIONS[0].id]).toBe('either');
     expect(currentKitQuestion(state).id).toBe(KIT_QUESTIONS[1].id);
   });
 
-  it('1問目から戻るとひと休み画面に出る', () => {
-    const state = goBackKit(startKit(answerAll('left')));
-    expect(state.screen).toBe('break');
+  it('1問目から戻ると第1部の最後の問題に出る', () => {
+    const state = goBackKit(answerAll('left'));
+    expect(state.screen).toBe('question');
+    expect(currentQuestion(state).id).toBe('q12');
   });
 
   it('2問目から戻ると1問目に出る', () => {
-    let state = startKit(answerAll('left'));
+    let state = answerAll('left');
     state = answerKit(state, 'a');
     state = goBackKit(state);
     expect(state.screen).toBe('kit');
@@ -307,7 +303,7 @@ describe('第2部（定番UIキット）', () => {
   });
 
   it('戻って選び直せる', () => {
-    let state = startKit(answerAll('left'));
+    let state = answerAll('left');
     state = answerKit(state, 'a');
     state = goBackKit(state);
     state = answerKit(state, 'b');
@@ -315,11 +311,11 @@ describe('第2部（定番UIキット）', () => {
   });
 
   it('第2部ではいつでも戻れる（1問目でも）', () => {
-    expect(canGoBackKit(startKit(answerAll('left')))).toBe(true);
+    expect(canGoBackKit(answerAll('left'))).toBe(true);
   });
 
   it('進捗が1始まりで出る', () => {
-    const state = startKit(answerAll('left'));
+    const state = answerAll('left');
     expect(kitProgress(state)).toEqual({ current: 1, total: TOTAL_KIT_QUESTIONS });
   });
 
@@ -363,5 +359,63 @@ describe('第2部（定番UIキット）', () => {
     for (const question of KIT_QUESTIONS) {
       expect(state.answers[question.id], question.id).toBeUndefined();
     }
+  });
+});
+
+describe('通しの進捗（ひと休み画面を廃止したあと）', () => {
+  it('第1部の1問目が 1 / 全体', () => {
+    const state = start(createInitialState(neverSwap));
+    expect(overallProgress(state)).toEqual({ current: 1, total: TOTAL_ALL_QUESTIONS });
+  });
+
+  it('第1部の最後が 12 / 全体', () => {
+    let state = start(createInitialState(neverSwap));
+    for (let i = 0; i < TOTAL_QUESTIONS - 1; i += 1) state = answer(state, 'left');
+    expect(overallProgress(state).current).toBe(TOTAL_QUESTIONS);
+  });
+
+  it('第2部に入っても数字が戻らない（12の次が13）', () => {
+    const state = answerAll('left');
+    expect(state.screen).toBe('kit');
+    expect(overallProgress(state).current).toBe(TOTAL_QUESTIONS + 1);
+  });
+
+  it('第2部の最後が、全体の問題数と一致する', () => {
+    let state = answerAll('left');
+    for (let i = 0; i < TOTAL_KIT_QUESTIONS - 1; i += 1) state = answerKit(state, 'a');
+    expect(overallProgress(state)).toEqual({
+      current: TOTAL_ALL_QUESTIONS,
+      total: TOTAL_ALL_QUESTIONS,
+    });
+  });
+
+  it('進捗が1ずつ増え、戻ると1ずつ減る（通して一本になっている）', () => {
+    let state = start(createInitialState(neverSwap));
+    const forward: number[] = [];
+    for (let i = 0; i < TOTAL_ALL_QUESTIONS - 1; i += 1) {
+      forward.push(overallProgress(state).current);
+      state = state.screen === 'kit' ? answerKit(state, 'a') : answer(state, 'left');
+    }
+    forward.push(overallProgress(state).current);
+    expect(forward).toEqual(forward.map((_, i) => i + 1));
+
+    // 第2部の1問目まで戻ると、第1部の12問目に出る
+    while (state.screen === 'kit' && state.kitIndex > 0) state = goBackKit(state);
+    state = goBackKit(state);
+    expect(state.screen).toBe('question');
+    expect(overallProgress(state).current).toBe(TOTAL_QUESTIONS);
+  });
+});
+
+describe('トップに出す分量（データから数える）', () => {
+  it('問題数は第1部と第2部の合計', () => {
+    expect(TOTAL_ALL_QUESTIONS).toBe(TOTAL_QUESTIONS + TOTAL_KIT_QUESTIONS);
+  });
+
+  it('所要時間は問題数から計算し、切り上げる', () => {
+    expect(estimatedMinutes()).toBe(
+      Math.max(1, Math.ceil((TOTAL_ALL_QUESTIONS * SECONDS_PER_QUESTION) / 60)),
+    );
+    expect(estimatedMinutes()).toBeGreaterThan(0);
   });
 });

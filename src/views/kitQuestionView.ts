@@ -2,7 +2,13 @@ import { createKitDemo } from '../components/kit';
 import type { KitAnswerValue, KitOption } from '../data/kitTypes';
 import { buildNeutralTheme } from '../logic/theme';
 import type { DiagnosisState } from '../state';
-import { canGoBackKit, currentKitQuestion, kitChoicesInDisplayOrder, kitProgress } from '../state';
+import {
+  canGoBackKit,
+  currentKitQuestion,
+  kitChoicesInDisplayOrder,
+  kitProgress,
+  overallProgress,
+} from '../state';
 import { button, el } from './dom';
 import type { View } from './dom';
 import { createKitPlayer } from './kitPlayer';
@@ -34,8 +40,9 @@ const POSITION_LABEL = ['A', 'B'] as const;
  */
 export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHandlers): View {
   const question = currentKitQuestion(state);
-  const { current, total } = kitProgress(state);
-  const isFirst = current === 1;
+  const { current, total } = overallProgress(state);
+  // 手順の案内を出すのは、第2部に入った最初の1問だけ
+  const isFirst = kitProgress(state).current === 1;
 
   const screen = el('main', 'screen screen--kit');
 
@@ -45,7 +52,7 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
   const fill = el('span', 'q__bar-fill');
   fill.style.width = `${(current / total) * 100}%`;
   bar.append(fill);
-  head.append(bar, el('p', 'q__count', `後半 ${current} / ${total}`));
+  head.append(bar, el('p', 'q__count', `${current} / ${total}`));
 
   // --- 問い ---
   const ask = el('div', 'q__ask');

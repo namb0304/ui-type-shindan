@@ -4,7 +4,7 @@ import type { AnswerValue } from '../data/types';
 import { isDebugMode } from '../debug';
 import { buildAxisVariantTheme } from '../logic/theme';
 import type { DiagnosisState } from '../state';
-import { canGoBack, currentQuestion, progress, sidesInDisplayOrder } from '../state';
+import { canGoBack, currentQuestion, overallProgress, sidesInDisplayOrder } from '../state';
 import { button, el } from './dom';
 
 export interface QuestionHandlers {
@@ -23,7 +23,7 @@ export function renderQuestion(
   handlers: QuestionHandlers,
 ): HTMLElement {
   const question = currentQuestion(state);
-  const { current, total } = progress(state);
+  const { current, total } = overallProgress(state);
   const resolved = resolveSubject(question.subject);
 
   const screen = el('main', 'screen screen--question');

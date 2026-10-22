@@ -1,4 +1,4 @@
-import { TOTAL_QUESTIONS } from '../data/questions';
+import { estimatedMinutes, TOTAL_ALL_QUESTIONS } from '../data/quiz';
 import { button, el } from './dom';
 
 /** トップ画面（要件 §5-1）。 */
@@ -11,12 +11,13 @@ export function renderTop(onStart: () => void): HTMLElement {
     el(
       'p',
       'top__lead',
-      '同じ画面を2つ並べます。中身は同じなので、見た目が好きなほうを選んでください。12問で、あなたの好みのタイプが分かります。',
+      `同じ画面を2つ並べます。中身は同じなので、見た目が好きなほうを選んでください。${TOTAL_ALL_QUESTIONS}問で、あなたの好みのタイプが分かります。`,
     ),
   );
 
   const meta = el('ul', 'top__meta');
-  for (const text of [`全${TOTAL_QUESTIONS}問`, '約2分', '登録なし']) {
+  // 問題数と所要時間は質問データから数える（増やしてもここは直さない）
+  for (const text of [`全${TOTAL_ALL_QUESTIONS}問`, `約${estimatedMinutes()}分`, '登録なし']) {
     meta.append(el('li', 'top__meta-item', text));
   }
 
