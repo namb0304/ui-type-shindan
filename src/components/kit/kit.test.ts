@@ -22,11 +22,26 @@ const CSS_WITHOUT_COMMENTS = KIT_CSS.replace(/\/\*[\s\S]*?\*\//g, '');
  *   --duration / --kit-duration … 動きの長さ。tokens.ts に入るまでは既定値で動かす（要件 §6）
  *   --bezel                      … 筐体の縁の太さ。--space-unit から計算している
  *                                  （下の「--bezel は --space-unit から導いている」で検証）
+ *   --kit-danger / --kit-danger-bg … 入力ミスの赤（K8）。16タイプのどれで見ても
+ *                                  「間違っている」と伝わる必要があるので、
+ *                                  テーマで変えずに base.css に固定で置いている
+ *                                  （下の「入力ミスの赤は〜」で検証）
  */
-const KIT_OWN_VARS = ['--duration', '--kit-duration', '--bezel'];
+const KIT_OWN_VARS = [
+  '--duration',
+  '--kit-duration',
+  '--bezel',
+  '--kit-danger',
+  '--kit-danger-bg',
+];
+
+const BASE_CSS = readFileSync(
+  fileURLToPath(new URL('../../styles/base.css', import.meta.url)),
+  'utf8',
+);
 
 describe('第2部の質問データ', () => {
-  it('いまは K1〜K6（残りは後の手順で足す）', () => {
+  it('いまは K1〜K8（残りは後の手順で足す）', () => {
     expect(KIT_QUESTIONS.map((question) => question.id)).toEqual([
       'k1',
       'k2',
@@ -34,8 +49,10 @@ describe('第2部の質問データ', () => {
       'k4',
       'k5',
       'k6',
+      'k7',
+      'k8',
     ]);
-    expect(TOTAL_KIT_QUESTIONS).toBe(6);
+    expect(TOTAL_KIT_QUESTIONS).toBe(8);
   });
 
   it('分類ごとにまとまって並んでいる（出題中に分類が行き来しない）', () => {
@@ -310,6 +327,14 @@ describe('kit.css が CSS変数だけを参照している', () => {
       if (KIT_OWN_VARS.includes(name)) continue;
       expect(CSS_VAR_NAMES, name).toContain(name);
     }
+  });
+
+  it('入力ミスの赤は、テーマではなく base.css に固定で置いている（K8）', () => {
+    // kit.css 側では変数を参照するだけ
+    expect(CSS_WITHOUT_COMMENTS).toContain('var(--kit-danger)');
+    // 実体は base.css の :root にある
+    expect(BASE_CSS).toMatch(/--kit-danger:\s*#[0-9a-fA-F]{6};/);
+    expect(BASE_CSS).toMatch(/--kit-danger-bg:\s*#[0-9a-fA-F]{6};/);
   });
 
   it('動きの長さは --duration を見ている（手順4〜5で tokens.ts から渡せるように）', () => {

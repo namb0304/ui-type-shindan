@@ -1,11 +1,13 @@
 import type { ThemeVars } from '../../data/tokens';
 import { applyTheme } from '../../logic/theme';
+import { inlineErrorDemo, summaryErrorDemo } from './formError';
 import { cardDemo, listDemo } from './list';
 import { skeletonDemo, spinnerDemo } from './loading';
 import { bottomNavDemo, hamburgerDemo } from './menu';
 import { infiniteScrollDemo, loadMoreDemo } from './more';
 import { bannerDemo, toastDemo } from './notice';
 import { bottomSheetDemo, modalDemo } from './panel';
+import { segmentedDemo, tabsDemo } from './switcher';
 import type { KitDemo, KitDemoInstance } from './types';
 
 export type { KitDemo, KitDemoInstance } from './types';
@@ -27,6 +29,10 @@ export const KIT_DEMOS: readonly KitDemo[] = [
   bottomSheetDemo, // K5-B
   skeletonDemo, // K6-A
   spinnerDemo, // K6-B
+  segmentedDemo, // K7-A
+  tabsDemo, // K7-B
+  inlineErrorDemo, // K8-A
+  summaryErrorDemo, // K8-B
 ];
 
 export function hasKitDemo(id: string): boolean {

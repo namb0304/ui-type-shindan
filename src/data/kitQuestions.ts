@@ -103,6 +103,36 @@ export const KIT_QUESTIONS = [
       description: '読み込み中に、くるくる回る印を見せる',
     },
   },
+  {
+    id: 'k7',
+    category: 'component',
+    label: '切り替えの形',
+    a: {
+      id: 'segmented',
+      name: 'セグメントコントロール',
+      description: '横に並んだボタンで切り替える',
+    },
+    b: {
+      id: 'tabs',
+      name: 'タブ',
+      description: '見出しを押すと、下の中身が入れ替わる',
+    },
+  },
+  {
+    id: 'k8',
+    category: 'component',
+    label: '入力ミスの伝え方',
+    a: {
+      id: 'inline-error',
+      name: 'その場で出す',
+      description: '打った直後に、欄のすぐ下に出る',
+    },
+    b: {
+      id: 'summary-error',
+      name: 'まとめて出す',
+      description: '送るボタンを押してから、上にまとめて出る',
+    },
+  },
 ] as const satisfies readonly KitQuestion[];
 
 /** 第2部の問題数。進捗バーの分母とひと休み画面の案内に使う。 */

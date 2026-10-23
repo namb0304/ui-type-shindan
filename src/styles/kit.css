@@ -855,6 +855,263 @@
 }
 
 /* ------------------------------------------------------------------
+ * K7 切り替えの形：セグメントコントロール ／ タブ
+ *
+ * 選んだ印は、どちらも data-selected（0 か 1）で位置を決める。
+ * CSSは「何番目か」しか見ないので、増やしたいときは幅の割合だけ直せばよい。
+ * ------------------------------------------------------------------ */
+
+/* セグメントコントロールは、中身の上に置く面。
+ * 面の中でつまみが動くので、置き場所ごと中身から浮いている */
+.kit-seg-wrap {
+  flex-shrink: 0;
+  padding: calc(var(--space-unit) * 0.625) calc(var(--space-unit) * 0.75) 0;
+}
+
+.kit-seg {
+  position: relative;
+  display: flex;
+  padding: calc(var(--space-unit) * 0.1875);
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius);
+}
+
+/* 動くつまみ。押した側の下に滑り込む */
+.kit-seg__thumb {
+  position: absolute;
+  top: calc(var(--space-unit) * 0.1875);
+  bottom: calc(var(--space-unit) * 0.1875);
+  left: calc(var(--space-unit) * 0.1875);
+  width: calc(50% - var(--space-unit) * 0.1875);
+  background-color: var(--color-surface);
+  border-radius: calc(var(--radius) * 0.75);
+  box-shadow: var(--shadow);
+  transition: transform var(--duration) ease;
+  transform: translateX(0);
+}
+
+.kit-seg[data-selected='1'] .kit-seg__thumb {
+  transform: translateX(100%);
+}
+
+.kit-seg__btn {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  padding: calc(var(--space-unit) * 0.375) calc(var(--space-unit) * 0.25);
+  font: inherit;
+  font-size: 0.6875em;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: calc(var(--radius) * 0.75);
+  transition: color var(--duration) ease;
+}
+
+.kit-seg__btn--on {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.kit-seg__btn:focus-visible,
+.kit-tabs__btn:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: -2px;
+}
+
+/* タブは、バーの下にくっつく見出しの列。
+ * 面を持たず、下の線だけが動く */
+.kit-tabs {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  padding: 0 calc(var(--space-unit) * 0.5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.kit-tabs__btn {
+  flex: 1;
+  min-width: 0;
+  padding: calc(var(--space-unit) * 0.5) calc(var(--space-unit) * 0.25);
+  font: inherit;
+  font-size: 0.6875em;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  transition: color var(--duration) ease;
+}
+
+.kit-tabs__btn--on {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+/* 下の線。見出しの幅ぶんだけ動く */
+.kit-tabs__ink {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--space-unit) * 0.5);
+  z-index: 1;
+  display: block;
+  width: calc(50% - var(--space-unit) * 0.5);
+  height: 2px;
+  background-color: var(--color-primary-text);
+  transition: transform var(--duration) ease;
+  transform: translateX(0);
+}
+
+.kit-tabs[data-selected='1'] .kit-tabs__ink {
+  transform: translateX(100%);
+}
+
+/* ------------------------------------------------------------------
+ * K8 入力ミスの伝え方：その場で出す ／ まとめて出す
+ * ------------------------------------------------------------------ */
+
+.memo__form {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 0.75);
+}
+
+.memo__field {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 0.25);
+}
+
+.memo__label {
+  font-size: 0.625em;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* 本物の入力欄にはしない（打つのはデモだけ）。
+ * 押せる箱にしてあるので、タップの波紋も出せる */
+.memo__input {
+  display: flex;
+  align-items: center;
+  min-height: 2.2em;
+  padding: calc(var(--space-unit) * 0.3125) calc(var(--space-unit) * 0.5);
+  font: inherit;
+  font-size: 0.6875em;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--radius) / 2);
+}
+
+.memo__input--filled {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+/* 間違っている欄。色だけに頼らず、枠も太くする */
+.kit-demo[data-invalid='true'] .memo__input:not(.memo__input--filled) {
+  color: var(--kit-danger);
+  background-color: var(--kit-danger-bg);
+  border-color: var(--kit-danger);
+  border-width: 2px;
+}
+
+/* 打っている最中だけ出るカーソル */
+.memo__caret {
+  display: none;
+  width: 1px;
+  height: 1.1em;
+  background-color: var(--color-text);
+  animation: kit-caret 1s step-end infinite;
+}
+
+.kit-demo[data-editing='true'] .memo__caret {
+  display: block;
+}
+
+@keyframes kit-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* その場で出す：欄のすぐ下。出ると下の欄を押し下げる（本物と同じ） */
+.kit-error {
+  display: none;
+  font-size: 0.625em;
+  line-height: 1.4;
+  color: var(--kit-danger);
+}
+
+/* まとめて出す：フォームのいちばん上。間違えた欄からは離れている */
+.kit-error-summary {
+  display: none;
+  padding: calc(var(--space-unit) * 0.5) calc(var(--space-unit) * 0.625);
+  background-color: var(--kit-danger-bg);
+  border: 1px solid var(--kit-danger);
+  border-radius: calc(var(--radius) / 2);
+}
+
+.kit-demo[data-invalid='true'] .kit-error,
+.kit-demo[data-invalid='true'] .kit-error-summary {
+  display: block;
+}
+
+.kit-error-summary__title {
+  font-size: 0.625em;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--kit-danger);
+}
+
+.kit-error-summary__item {
+  padding-top: calc(var(--space-unit) * 0.1875);
+  font-size: 0.625em;
+  line-height: 1.4;
+  color: var(--kit-danger);
+}
+
+/* 送れたあと。フォームと入れ替わる */
+.memo__done {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 0.5);
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--space-unit) * 0.75);
+}
+
+.kit-demo[data-sent='true'] .memo__done {
+  display: flex;
+}
+
+.kit-demo[data-sent='true'] .memo__form,
+.kit-demo[data-sent='true'] .memo__actions {
+  display: none;
+}
+
+/* 送れた印。チェックの形を2辺の線で描く */
+.memo__done-mark {
+  display: block;
+  width: 1.4em;
+  height: 0.7em;
+  border-bottom: 2px solid var(--color-primary-text);
+  border-left: 2px solid var(--color-primary-text);
+  transform: rotate(-45deg);
+}
+
+.memo__done-text {
+  font-size: 0.75em;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------
  * 動きが苦手な人への配慮（要件 §4.2）
  *
  * 動きは止めるが、**違いは残す**。
@@ -876,6 +1133,13 @@
   /* 行き先を変えたときの出入りも止める。
    * 行き先が隠れているかどうかは、動きが無くても分かる */
   .memo__page--on {
+    animation: none;
+  }
+
+  /* カーソルは点滅を止めて、出しっぱなしにする。
+   * 消えた状態で止まると、打っている最中に見えなくなる */
+  .memo__caret {
+    opacity: 1;
     animation: none;
   }
 
