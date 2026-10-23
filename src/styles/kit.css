@@ -28,7 +28,7 @@
   margin: 0 auto;
   aspect-ratio: 9 / 11;
   overflow: hidden;
-  font-family: var(--font-family);
+  font-family: var(--font-family-body);
   font-size: var(--font-size-base);
   line-height: var(--line-height);
   color: var(--color-text);
@@ -165,6 +165,14 @@
 .memo__burger:focus-visible {
   outline: 2px solid var(--color-primary-text);
   outline-offset: 1px;
+}
+
+/* アプリの題と、メモの題。
+ * 結果ページでその人のテーマで描くとき、見出しだけ書体が変わる（要件 §4.1） */
+.memo__bar-title,
+.memo__title,
+.memo__card-title {
+  font-family: var(--font-family-heading);
 }
 
 .memo__bar-title {

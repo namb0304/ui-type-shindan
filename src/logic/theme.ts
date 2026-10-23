@@ -1,12 +1,13 @@
 import { AXIS_IDS } from '../data/axes';
 import {
   AXIS_VARS,
+  BODY_FONT,
   CSS_VAR,
   CSS_VAR_NAMES,
   DECORATION_PRESETS,
-  FONT_PRESETS,
+  HEADING_FONT_PRESETS,
   NEUTRAL_DECORATION,
-  NEUTRAL_FONT,
+  NEUTRAL_HEADING_FONT,
   NEUTRAL_PALETTE,
   NEUTRAL_RATIO,
   NUMERIC_TOKENS,
@@ -95,7 +96,11 @@ function axisVars(axis: AxisId, ratio: number): PartialThemeVars {
     case 'tone':
       return { ...numericVarsOf(axis, ratio), ...paletteToVars(TONE_PALETTES[side]) };
     case 'font':
-      return { [CSS_VAR.fontFamily]: FONT_PRESETS[side] };
+      // 変わるのは見出しだけ。本文はどちらに寄ってもゴシックのまま（要件 §4.1）
+      return {
+        [CSS_VAR.fontFamilyHeading]: HEADING_FONT_PRESETS[side],
+        [CSS_VAR.fontFamilyBody]: BODY_FONT,
+      };
   }
 }
 
@@ -109,7 +114,10 @@ function neutralAxisVars(axis: AxisId): PartialThemeVars {
     case 'tone':
       return { ...numericVarsOf(axis, NEUTRAL_RATIO), ...paletteToVars(NEUTRAL_PALETTE) };
     case 'font':
-      return { [CSS_VAR.fontFamily]: NEUTRAL_FONT };
+      return {
+        [CSS_VAR.fontFamilyHeading]: NEUTRAL_HEADING_FONT,
+        [CSS_VAR.fontFamilyBody]: BODY_FONT,
+      };
   }
 }
 

@@ -93,9 +93,23 @@ export const PROMPT_ADVICE: readonly AxisText[] = [
   { axis: 'tone', side: 'right', text: '彩度の高い暖色系でまとめる。角丸は大きめにする' },
   { axis: 'tone', side: 'even', text: '色味は中間的に。彩度も角丸も極端にしない' },
 
-  { axis: 'font', side: 'left', text: '{left}体（Noto Sans JP）を本文にも見出しにも使う' },
-  { axis: 'font', side: 'right', text: '{right}体（Noto Serif JP）を使い、行間を少し広めに取る' },
-  { axis: 'font', side: 'even', text: '書体は読みやすさ優先で選ぶ。本文は{left}体でよい' },
+  // 本文がゴシックのままであることが伝わるように書く（要件 §4.1・§7）。
+  // 「明朝体で」とだけ渡すと、AIは本文まで明朝にしてしまう
+  {
+    axis: 'font',
+    side: 'left',
+    text: '見出しも本文も{left}体（Noto Sans JP）にする',
+  },
+  {
+    axis: 'font',
+    side: 'right',
+    text: '見出しだけ{right}体（Noto Serif JP）にし、本文は{left}体（Noto Sans JP）にする',
+  },
+  {
+    axis: 'font',
+    side: 'even',
+    text: '見出しの書体はどちらでもよい。本文は{left}体（Noto Sans JP）にする',
+  },
 ];
 
 export function getPromptAdvice(axis: AxisId, side: TraitSide): string {
@@ -122,9 +136,9 @@ export const SUMMARY_PARTS: readonly AxisText[] = [
   { axis: 'tone', side: 'right', text: '色は元気に' },
   { axis: 'tone', side: 'even', text: '色はどちらでも' },
 
-  { axis: 'font', side: 'left', text: '文字はすっきり' },
-  { axis: 'font', side: 'right', text: '文字は上品に' },
-  { axis: 'font', side: 'even', text: '文字はどちらでも' },
+  { axis: 'font', side: 'left', text: '見出しはすっきり' },
+  { axis: 'font', side: 'right', text: '見出しは上品に' },
+  { axis: 'font', side: 'even', text: '見出しはどちらでも' },
 ];
 
 export function getSummaryPart(axis: AxisId, side: TraitSide): string {

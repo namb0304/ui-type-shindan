@@ -20,7 +20,15 @@ export const CSS_VAR = {
   shadow: '--shadow',
   surfaceGradient: '--surface-gradient',
   border: '--border',
-  fontFamily: '--font-family',
+  /**
+   * 書体は見出し用と本文用に分ける（要件 §4.1）。
+   *
+   * 画面で長い文章を読むなら、本文はゴシック体のほうが読みやすい。
+   * 本文まで明朝にすると「好み」ではなく「読みにくさ」を選ばせることになるので、
+   * この軸は見出しだけを変えて測る。本文は左右どちらもゴシックのまま。
+   */
+  fontFamilyHeading: '--font-family-heading',
+  fontFamilyBody: '--font-family-body',
   // 色の付いた要素（ボタン・ジャケット・アイコンなど）の装飾
   accentSurface: '--accent-surface',
   accentShadow: '--accent-shadow',
@@ -76,7 +84,7 @@ export const AXIS_VARS = {
     'colorShadowTint',
     'colorBorder',
   ],
-  font: ['fontFamily'],
+  font: ['fontFamilyHeading', 'fontFamilyBody'],
 } as const satisfies Record<AxisId, readonly CssVarKey[]>;
 
 // ---------------------------------------------------------------------------
@@ -268,7 +276,16 @@ export const DECORATION_PRESETS = { left: FLAT_DECORATION, right: RICH_DECORATIO
 export const GOTHIC_FONT = "'Noto Sans JP', system-ui, sans-serif";
 export const MINCHO_FONT = "'Noto Serif JP', serif";
 
-export const FONT_PRESETS = { left: GOTHIC_FONT, right: MINCHO_FONT } as const;
+/** 見出しの書体。この軸で変わるのはここだけ。 */
+export const HEADING_FONT_PRESETS = { left: GOTHIC_FONT, right: MINCHO_FONT } as const;
 
-/** ニュートラルはゴシック（要件 §5：トップと質問画面はゴシック体）。 */
-export const NEUTRAL_FONT = GOTHIC_FONT;
+/**
+ * 本文の書体。左右どちらもゴシックで変えない（要件 §4.1）。
+ *
+ * 定数にしてあるのは、「変わらない」こと自体がこの軸の決め事だから。
+ * 値を直接書くと、あとから片方だけ明朝に変えられてしまう。
+ */
+export const BODY_FONT = GOTHIC_FONT;
+
+/** ニュートラルの見出し（要件 §5：トップと質問画面はゴシック体）。 */
+export const NEUTRAL_HEADING_FONT = GOTHIC_FONT;

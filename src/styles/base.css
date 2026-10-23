@@ -687,7 +687,9 @@ p {
   max-width: none;
   min-height: 100dvh;
   padding: 40px var(--site-gutter) 72px;
-  font-family: var(--font-family);
+
+  /* 結果ページ全体は本文用の書体。見出しだけ下で差し替える（要件 §4.1） */
+  font-family: var(--font-family-body);
   color: var(--color-text);
   background-color: var(--color-bg);
 }
@@ -884,6 +886,16 @@ p {
 
 .hero__after {
   animation: result-fade 0.4s ease 0.95s both;
+}
+
+/* 結果ページの見出し。
+ *
+ * 場所の名前・各節の見出し・相性の場所名の3つ。
+ * ここだけが、Mタイプのときに明朝体になる（要件 §4.1）。 */
+.hero__shop,
+.result__heading,
+.affinity__shop {
+  font-family: var(--font-family-heading);
 }
 
 .hero__shop {
@@ -1409,7 +1421,7 @@ p {
   justify-content: flex-end;
   aspect-ratio: 1 / 1.5;
   overflow: hidden;
-  font-family: var(--font-family);
+  font-family: var(--font-family-body);
   color: var(--color-text);
   text-decoration: none;
   background-color: var(--color-bg);

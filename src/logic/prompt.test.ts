@@ -56,6 +56,29 @@ describe('buildPrompt', () => {
     expect(lines[3]).toContain('（100%）'); // 左側に100%寄り
   });
 
+  it('見出しの軸は、本文がゴシックのままだと分かる文になる（要件 §4.1）', () => {
+    // 「明朝体で」とだけ渡すと、AIは本文まで明朝にしてしまう。
+    // どのタイプでも、本文がゴシックであることが文面に出ていること
+    const mincho = axisLinesOf(buildPrompt(resultFromPoints(ALL_RIGHT)))[3];
+    expect(mincho).toContain('見出し');
+    expect(mincho).toContain('見出しだけ明朝体（Noto Serif JP）');
+    expect(mincho).toContain('本文はゴシック体（Noto Sans JP）');
+
+    const gothic = axisLinesOf(buildPrompt(resultFromPoints(ALL_LEFT)))[3];
+    expect(gothic).toContain('見出しも本文もゴシック体（Noto Sans JP）');
+
+    const even = axisLinesOf(buildPrompt(resultFromPoints(ALL_EVEN)))[3];
+    expect(even).toContain('本文はゴシック体（Noto Sans JP）');
+  });
+
+  it('設計図のトークンに、見出し用と本文用の書体が両方入る', () => {
+    const prompt = buildPrompt(resultFromPoints(ALL_RIGHT));
+    expect(prompt).toContain("--font-family-heading: 'Noto Serif JP', serif;");
+    expect(prompt).toContain("--font-family-body: 'Noto Sans JP', system-ui, sans-serif;");
+    // 分ける前の1本の変数は、もう出さない
+    expect(prompt).not.toMatch(/--font-family:/);
+  });
+
   it('左に寄っているときは左側の割合を出す', () => {
     const prompt = buildPrompt(resultFromPoints({ ...ALL_LEFT, density: 2 }));
     const line = prompt.split('\n').find((text) => text.startsWith(`- ${AXES[0].label}`));

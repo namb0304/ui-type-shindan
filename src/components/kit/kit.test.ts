@@ -364,6 +364,16 @@ describe('kit.css が CSS変数だけを参照している', () => {
     expect(reduced).toMatch(/\.kit-demo\[data-speed\][\s\S]{0,80}--kit-duration:\s*0s/);
   });
 
+  it('デモの本文は本文用、題は見出し用の書体を見ている（要件 §4.1）', () => {
+    const base = CSS_WITHOUT_COMMENTS.match(/\.kit-demo\s*\{[^}]+\}/)?.[0] ?? '';
+    expect(base, '.kit-demo の font-family').toContain('font-family: var(--font-family-body)');
+    expect(CSS_WITHOUT_COMMENTS).toContain('var(--font-family-heading)');
+  });
+
+  it('分ける前の --font-family が残っていない', () => {
+    expect(CSS_WITHOUT_COMMENTS).not.toMatch(/var\(--font-family\)/);
+  });
+
   it('入力ミスの赤は、テーマではなく base.css に固定で置いている（K8）', () => {
     // kit.css 側では変数を参照するだけ
     expect(CSS_WITHOUT_COMMENTS).toContain('var(--kit-danger)');

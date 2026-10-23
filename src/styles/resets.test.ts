@@ -66,3 +66,32 @@ describe('リセットが部品側の指定に勝たないこと', () => {
     });
   }
 });
+
+/**
+ * 書体を見出し用と本文用に分けたときの、書き換え漏れを止める（要件 §4.1）。
+ *
+ * 分ける前の `var(--font-family)` が1か所でも残っていると、
+ * その要素は書体の指定を失い、親から継がれた書体で描かれる。
+ * エラーにならず、見た目も「それらしく」出てしまうので気づきにくい。
+ */
+describe('書体の変数（見出し用・本文用）', () => {
+  const ALL_FILES = ['preview.css', 'kit.css', 'base.css'] as const;
+
+  it('分ける前の --font-family を参照しているファイルが無い', () => {
+    for (const name of ALL_FILES) {
+      expect(read(name), name).not.toMatch(/var\(--font-family\)/);
+    }
+  });
+
+  it('結果ページは本文用、その見出しは見出し用を見ている', () => {
+    const css = read('base.css');
+    const result = css.match(/\.screen--result\s*\{[^}]+\}/)?.[0] ?? '';
+    expect(result, '.screen--result の font-family').toContain(
+      'font-family: var(--font-family-body)',
+    );
+    // 場所の名前・節の見出し・相性の場所名
+    expect(css).toMatch(
+      /\.hero__shop,[\s\S]{0,80}\.result__heading,[\s\S]{0,80}\.affinity__shop\s*\{[^}]*var\(--font-family-heading\)/,
+    );
+  });
+});

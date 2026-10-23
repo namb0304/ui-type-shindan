@@ -85,7 +85,7 @@ describe('buildResultTheme（結果用）', () => {
     expect(theme[CSS_VAR.shadow]).toBe('none');
     expect(theme[CSS_VAR.surfaceGradient]).toBe('none');
     expect(theme[CSS_VAR.border]).toContain('solid var(--color-border)');
-    expect(theme[CSS_VAR.fontFamily]).toBe(GOTHIC_FONT);
+    expect(theme[CSS_VAR.fontFamilyHeading]).toBe(GOTHIC_FONT);
     expect(theme[CSS_VAR.colorPrimary]).toBe(COOL_PALETTE.colorPrimary);
   });
 
@@ -98,7 +98,7 @@ describe('buildResultTheme（結果用）', () => {
     expect(theme[CSS_VAR.shadow]).toContain('rgba');
     expect(theme[CSS_VAR.surfaceGradient]).toMatch(/gradient\(/);
     expect(theme[CSS_VAR.border]).toContain('transparent');
-    expect(theme[CSS_VAR.fontFamily]).toBe(MINCHO_FONT);
+    expect(theme[CSS_VAR.fontFamilyHeading]).toBe(MINCHO_FONT);
     expect(theme[CSS_VAR.colorPrimary]).toBe(POP_PALETTE.colorPrimary);
   });
 
@@ -127,19 +127,19 @@ describe('buildResultTheme（結果用）', () => {
   it('プリセットは割合50%を境に切り替わる（33%は左、67%は右）', () => {
     const left = buildResultTheme(scoresOf(2));
     expect(left[CSS_VAR.shadow]).toBe('none');
-    expect(left[CSS_VAR.fontFamily]).toBe(GOTHIC_FONT);
+    expect(left[CSS_VAR.fontFamilyHeading]).toBe(GOTHIC_FONT);
     expect(left[CSS_VAR.colorBg]).toBe(COOL_PALETTE.colorBg);
 
     const right = buildResultTheme(scoresOf(4));
     expect(right[CSS_VAR.shadow]).toContain('rgba');
-    expect(right[CSS_VAR.fontFamily]).toBe(MINCHO_FONT);
+    expect(right[CSS_VAR.fontFamilyHeading]).toBe(MINCHO_FONT);
     expect(right[CSS_VAR.colorBg]).toBe(POP_PALETTE.colorBg);
   });
 
   it('ちょうど50%なら左側のプリセットになる（タイプコードと同じ判定）', () => {
     const scores: AxisScore[] = AXIS_IDS.map((axis) => ({ axis, rightPoints: 3, rightRatio: 0.5 }));
     const theme = buildResultTheme(scores);
-    expect(theme[CSS_VAR.fontFamily]).toBe(GOTHIC_FONT);
+    expect(theme[CSS_VAR.fontFamilyHeading]).toBe(GOTHIC_FONT);
     expect(theme[CSS_VAR.shadow]).toBe('none');
     expect(theme[CSS_VAR.colorBg]).toBe(COOL_PALETTE.colorBg);
   });
@@ -157,7 +157,7 @@ describe('buildResultTheme（結果用）', () => {
 
       // 文字軸：M（明朝）なら明朝フォント、G（ゴシック）ならゴシック
       const expectsMincho = code[3] === 'M';
-      expect(theme[CSS_VAR.fontFamily], `点数 ${points} / ${code}`).toBe(
+      expect(theme[CSS_VAR.fontFamilyHeading], `点数 ${points} / ${code}`).toBe(
         expectsMincho ? MINCHO_FONT : GOTHIC_FONT,
       );
 
@@ -179,7 +179,7 @@ describe('buildResultTheme（結果用）', () => {
     expect(theme[CSS_VAR.spaceUnit]).toBe('16px');
     expect(theme[CSS_VAR.shadow]).toBe('none');
     expect(theme[CSS_VAR.colorBg]).toBe(COOL_PALETTE.colorBg);
-    expect(theme[CSS_VAR.fontFamily]).toBe(GOTHIC_FONT);
+    expect(theme[CSS_VAR.fontFamilyHeading]).toBe(GOTHIC_FONT);
   });
 
   it('スコアが足りなければエラーになる', () => {
@@ -210,7 +210,7 @@ describe('buildNeutralTheme（質問用・ニュートラル）', () => {
   it('配色はニュートラル、フォントはゴシック、グラデーションなし', () => {
     expect(theme[CSS_VAR.colorBg]).toBe(NEUTRAL_PALETTE.colorBg);
     expect(theme[CSS_VAR.colorPrimary]).toBe(NEUTRAL_PALETTE.colorPrimary);
-    expect(theme[CSS_VAR.fontFamily]).toBe(GOTHIC_FONT);
+    expect(theme[CSS_VAR.fontFamilyHeading]).toBe(GOTHIC_FONT);
     expect(theme[CSS_VAR.surfaceGradient]).toBe('none');
     expect(theme[CSS_VAR.border]).toContain('1px solid');
   });
@@ -292,12 +292,12 @@ describe('buildAxisVariantTheme（質問用・A/B比較）', () => {
     expect([left[CSS_VAR.radius], right[CSS_VAR.radius]]).toEqual(['4px', '20px']);
     // トーン以外はニュートラルのまま
     expect(left[CSS_VAR.spaceUnit]).toBe('11px');
-    expect(right[CSS_VAR.fontFamily]).toBe(GOTHIC_FONT);
+    expect(right[CSS_VAR.fontFamilyHeading]).toBe(GOTHIC_FONT);
   });
 
-  it('文字の左右はゴシック／明朝になる', () => {
-    expect(buildAxisVariantTheme('font', 'left')[CSS_VAR.fontFamily]).toBe(GOTHIC_FONT);
-    expect(buildAxisVariantTheme('font', 'right')[CSS_VAR.fontFamily]).toBe(MINCHO_FONT);
+  it('見出しの左右はゴシック／明朝になる', () => {
+    expect(buildAxisVariantTheme('font', 'left')[CSS_VAR.fontFamilyHeading]).toBe(GOTHIC_FONT);
+    expect(buildAxisVariantTheme('font', 'right')[CSS_VAR.fontFamilyHeading]).toBe(MINCHO_FONT);
   });
 });
 
@@ -438,7 +438,7 @@ describe('applyTheme（DOMへの反映）', () => {
     applyTheme(target, buildResultTheme(scoresOf(0)));
     applyTheme(target, buildResultTheme(scoresOf(6)));
     expect(target.applied.get(CSS_VAR.spaceUnit)).toBe('16px');
-    expect(target.applied.get(CSS_VAR.fontFamily)).toBe(MINCHO_FONT);
+    expect(target.applied.get(CSS_VAR.fontFamilyHeading)).toBe(MINCHO_FONT);
   });
 });
 
@@ -472,7 +472,7 @@ describe('トークン定義の整合性', () => {
       tone: AXIS_VARS.tone.length,
       font: AXIS_VARS.font.length,
     };
-    expect(counts).toEqual({ density: 3, decoration: 5, tone: 13, font: 1 });
+    expect(counts).toEqual({ density: 3, decoration: 5, tone: 13, font: 2 });
   });
 });
 

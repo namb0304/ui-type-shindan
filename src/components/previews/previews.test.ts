@@ -132,6 +132,19 @@ describe('preview.css が CSS変数だけを参照している', () => {
     }
   });
 
+  it('本文は本文用、見出しは見出し用の書体を見ている（要件 §4.1）', () => {
+    const base = CSS_WITHOUT_COMMENTS.match(/\.pv\s*\{[^}]+\}/)?.[0] ?? '';
+    expect(base, '.pv の font-family').toContain('font-family: var(--font-family-body)');
+
+    const heading =
+      CSS_WITHOUT_COMMENTS.match(/:where\(\.pv\)\s*:where\(h1[^{]+\{[^}]+\}/)?.[0] ?? '';
+    expect(heading, '見出しの font-family').toContain('var(--font-family-heading)');
+  });
+
+  it('分ける前の --font-family が残っていない（書き換え漏れは無言で効かなくなる）', () => {
+    expect(CSS_WITHOUT_COMMENTS).not.toMatch(/var\(--font-family\)/);
+  });
+
   it('余白・角丸を px で直接書いていない（1px / 2px は枠線用に許容）', () => {
     const pxValues = CSS_WITHOUT_COMMENTS.match(/\b\d+(?:\.\d+)?px\b/g) ?? [];
     const notAllowed = pxValues.filter((value: string) => value !== '1px' && value !== '2px');

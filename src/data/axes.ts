@@ -42,7 +42,7 @@ export const SIDE_THRESHOLD = 0.5;
 
 /**
  * 4つの軸の定義。この配列の順序がタイプコードの文字の並び順
- * （情報量 → 装飾 → トーン → 文字）であり、共有URLの4桁の並び順でもある。
+ * （情報量 → 装飾 → トーン → 見出し）であり、共有URLの4桁の並び順でもある。
  */
 export const AXES = [
   {
@@ -64,8 +64,13 @@ export const AXES = [
     right: { letter: 'P', name: 'ポップ', englishName: 'Pop' },
   },
   {
+    /**
+     * id は 'font' のまま変えない。共有URLの並び順・保存済みの回答・
+     * タイプコードの文字（G/M）がこのidに紐づいているため。
+     * 画面に出す名前だけを「見出し」にする（要件 §4.1）。
+     */
     id: 'font',
-    label: '文字',
+    label: '見出し',
     left: { letter: 'G', name: 'ゴシック', englishName: 'Gothic' },
     right: { letter: 'M', name: '明朝', englishName: 'Mincho' },
   },
