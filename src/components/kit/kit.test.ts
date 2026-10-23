@@ -8,6 +8,7 @@ import { KIT_CATEGORY_LABEL } from '../../data/kitTypes';
 import { CSS_VAR_NAMES } from '../../data/tokens';
 import { getKitDemo, hasKitDemo, KIT_DEMOS } from './index';
 import { createScheduler } from './scheduler';
+import { maxScrollTop, scrollSmoothly } from './scroll';
 
 const KIT_CSS = readFileSync(
   fileURLToPath(new URL('../../styles/kit.css', import.meta.url)),
@@ -25,9 +26,25 @@ const CSS_WITHOUT_COMMENTS = KIT_CSS.replace(/\/\*[\s\S]*?\*\//g, '');
 const KIT_OWN_VARS = ['--duration', '--kit-duration', '--bezel'];
 
 describe('第2部の質問データ', () => {
-  it('いまは最初の3問（K4・K5・K6）', () => {
-    expect(KIT_QUESTIONS.map((question) => question.id)).toEqual(['k4', 'k5', 'k6']);
-    expect(TOTAL_KIT_QUESTIONS).toBe(3);
+  it('いまは K1〜K6（残りは後の手順で足す）', () => {
+    expect(KIT_QUESTIONS.map((question) => question.id)).toEqual([
+      'k1',
+      'k2',
+      'k3',
+      'k4',
+      'k5',
+      'k6',
+    ]);
+    expect(TOTAL_KIT_QUESTIONS).toBe(6);
+  });
+
+  it('分類ごとにまとまって並んでいる（出題中に分類が行き来しない）', () => {
+    const order = KIT_QUESTIONS.map((question) => question.category);
+    const seen: string[] = [];
+    for (const category of order) {
+      if (seen[seen.length - 1] !== category) seen.push(category);
+    }
+    expect(new Set(seen).size).toBe(seen.length);
   });
 
   it('id が重複していない', () => {
@@ -142,6 +159,70 @@ describe('取り消せる待ち時間（scheduler）', () => {
     const scheduler = createScheduler();
     scheduler.cancel();
     await expect(scheduler.wait(100000)).resolves.toBeUndefined();
+  });
+});
+
+/**
+ * スクロールだけを取り出して確かめる（K2・K3）。
+ *
+ * 本物の要素はテストでは作れない（DOMを動かす環境を入れていない）ので、
+ * scrollSmoothly が触る3つの値だけを持つ身代わりを渡す。
+ */
+function fakeScrollTarget(scrollHeight: number, clientHeight: number): HTMLElement {
+  return { scrollTop: 0, scrollHeight, clientHeight } as unknown as HTMLElement;
+}
+
+describe('デモの中のスクロール（K2・K3）', () => {
+  it('いちばん下の位置は「中身の高さ − 見えている高さ」', () => {
+    expect(maxScrollTop(fakeScrollTarget(500, 300))).toBe(200);
+  });
+
+  it('中身が画面に収まっているときは、下まで行っても0のまま（負にしない）', () => {
+    expect(maxScrollTop(fakeScrollTarget(200, 300))).toBe(0);
+  });
+
+  it('決めた時間をかけて、目的の位置までたどり着く', async () => {
+    vi.useFakeTimers();
+    const scheduler = createScheduler();
+    const target = fakeScrollTarget(500, 300);
+
+    const scrolling = scrollSmoothly(target, 200, 480, scheduler);
+    await vi.advanceTimersByTimeAsync(240);
+    // 途中なので、まだ着いていない
+    expect(target.scrollTop).toBeGreaterThan(0);
+    expect(target.scrollTop).toBeLessThan(200);
+
+    await vi.advanceTimersByTimeAsync(240);
+    await scrolling;
+    expect(target.scrollTop).toBe(200);
+
+    vi.useRealTimers();
+  });
+
+  it('画面を離れたら、その場で止まる（動き続けない）', async () => {
+    vi.useFakeTimers();
+    const scheduler = createScheduler();
+    const target = fakeScrollTarget(500, 300);
+
+    const scrolling = scrollSmoothly(target, 200, 480, scheduler);
+    await vi.advanceTimersByTimeAsync(160);
+    const stoppedAt = target.scrollTop;
+
+    scheduler.cancel();
+    await scrolling;
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(target.scrollTop).toBe(stoppedAt);
+    expect(target.scrollTop).toBeLessThan(200);
+
+    vi.useRealTimers();
+  });
+
+  it('いまいる場所と同じなら、何もしない', async () => {
+    const scheduler = createScheduler();
+    const target = fakeScrollTarget(500, 300);
+    await expect(scrollSmoothly(target, 0, 480, scheduler)).resolves.toBeUndefined();
+    expect(target.scrollTop).toBe(0);
   });
 });
 

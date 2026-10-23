@@ -1,6 +1,9 @@
 import type { ThemeVars } from '../../data/tokens';
 import { applyTheme } from '../../logic/theme';
+import { cardDemo, listDemo } from './list';
 import { skeletonDemo, spinnerDemo } from './loading';
+import { bottomNavDemo, hamburgerDemo } from './menu';
+import { infiniteScrollDemo, loadMoreDemo } from './more';
 import { bannerDemo, toastDemo } from './notice';
 import { bottomSheetDemo, modalDemo } from './panel';
 import type { KitDemo, KitDemoInstance } from './types';
@@ -12,6 +15,12 @@ export type { KitDemo, KitDemoInstance } from './types';
  * 問題を足したらここにも足す（kit.test.ts が対応を突き合わせる）。
  */
 export const KIT_DEMOS: readonly KitDemo[] = [
+  hamburgerDemo, // K1-A
+  bottomNavDemo, // K1-B
+  listDemo, // K2-A
+  cardDemo, // K2-B
+  infiniteScrollDemo, // K3-A
+  loadMoreDemo, // K3-B
   toastDemo, // K4-A
   bannerDemo, // K4-B
   modalDemo, // K5-A

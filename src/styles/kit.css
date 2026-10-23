@@ -127,9 +127,41 @@
 }
 
 .memo__bar {
+  display: flex;
   flex-shrink: 0;
+  gap: calc(var(--space-unit) * 0.5);
+  align-items: center;
   padding: calc(var(--space-unit) * 0.5) calc(var(--space-unit) * 0.75);
   border-bottom: 1px solid var(--color-border);
+}
+
+/* 三本線（K1-A）。押すまで行き先が分からない、という性格が見た目に出る */
+.memo__burger {
+  display: grid;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  border: none;
+  place-items: center;
+}
+
+.memo__burger-lines {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 0.1875);
+}
+
+.memo__burger-lines > i {
+  display: block;
+  width: 1.05em;
+  height: 2px;
+  background-color: var(--color-text);
+  border-radius: calc(var(--radius) / 4);
+}
+
+.memo__burger:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: 1px;
 }
 
 .memo__bar-title {
@@ -256,6 +288,288 @@
 }
 
 /* ------------------------------------------------------------------
+ * K1 メニュー：ハンバーガーメニュー ／ ボトムナビ
+ * ------------------------------------------------------------------ */
+
+/* 行き先ごとの画面。切り替えは出し入れだけで、横には動かさない
+ * （横に滑るかどうかは K10 で聞くので、ここでは差を作らない） */
+.memo__page {
+  display: none;
+}
+
+.memo__page--on {
+  display: block;
+  animation: kit-page-in var(--duration) ease;
+}
+
+@keyframes kit-page-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* 検索の画面。欄の形だけ置く（文字を打つのは K8 の役目） */
+.memo__search {
+  display: flex;
+  gap: calc(var(--space-unit) * 0.5);
+  align-items: center;
+  padding: calc(var(--space-unit) * 0.5) calc(var(--space-unit) * 0.625);
+  font-size: 0.75em;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius);
+}
+
+.memo__search-icon {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  width: 0.85em;
+  aspect-ratio: 1 / 1;
+  border: 2px solid currentcolor;
+  border-radius: 50%;
+}
+
+.memo__search-icon::after {
+  position: absolute;
+  top: 70%;
+  left: 70%;
+  width: 0.4em;
+  height: 2px;
+  content: '';
+  background-color: currentcolor;
+  transform-origin: left center;
+  transform: rotate(45deg);
+}
+
+/* 引き出し（ハンバーガーメニュー）。画面の左の外に待たせておく */
+.kit-drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 0.25);
+  width: 58%;
+  padding: calc(var(--space-unit) * 0.75) calc(var(--space-unit) * 0.5);
+  background-color: var(--color-surface);
+  background-image: var(--surface-gradient);
+  box-shadow: var(--shadow);
+  transition: transform var(--duration) ease;
+  transform: translateX(-100%);
+}
+
+.kit-demo[data-drawer-open='true'] .kit-drawer {
+  transform: translateX(0);
+}
+
+.kit-drawer__item {
+  padding: calc(var(--space-unit) * 0.5) calc(var(--space-unit) * 0.5);
+  font: inherit;
+  font-size: 0.75em;
+  font-weight: 500;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: calc(var(--radius) / 2);
+}
+
+.kit-drawer__item[aria-current='page'] {
+  color: var(--color-primary-text);
+  background: var(--color-surface-alt);
+}
+
+.kit-drawer__item:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: 1px;
+}
+
+/* ボトムナビ。行き先がいつも見えている代わりに、下の場所を取る */
+.memo__nav {
+  display: flex;
+  flex-shrink: 0;
+  padding: calc(var(--space-unit) * 0.25) 0 calc(var(--space-unit) * 0.375);
+  border-top: 1px solid var(--color-border);
+}
+
+.memo__nav-item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 0.1875);
+  align-items: center;
+  padding: calc(var(--space-unit) * 0.25) 0;
+  font: inherit;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: calc(var(--radius) / 2);
+}
+
+.memo__nav-label {
+  font-size: 0.5625em;
+}
+
+/* いま開いている行き先。
+ *
+ * 色だけでは足りない。質問画面のテーマは灰色一色なので、
+ * --color-primary-text と --color-text-muted がほとんど同じ濃さになる。
+ * 本物のボトムナビと同じく、印を塗りつぶして見分けられるようにする。 */
+.memo__nav-item--on {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.memo__nav-item--on .memo__nav-icon {
+  background-color: currentcolor;
+}
+
+.memo__nav-item:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: -2px;
+}
+
+/* 行き先の印。小さくても見分けがつく形だけにする */
+.memo__nav-icon {
+  display: block;
+  width: 1.05em;
+  aspect-ratio: 1 / 1;
+}
+
+.memo__nav-icon--memo {
+  border: 2px solid currentcolor;
+  border-top-width: 0.3em;
+  border-radius: calc(var(--radius) / 4);
+}
+
+.memo__nav-icon--search {
+  position: relative;
+  width: 0.95em;
+  border: 2px solid currentcolor;
+  border-radius: 50%;
+}
+
+.memo__nav-icon--search::after {
+  position: absolute;
+  top: 70%;
+  left: 70%;
+  width: 0.4em;
+  height: 2px;
+  content: '';
+  background-color: currentcolor;
+  transform-origin: left center;
+  transform: rotate(45deg);
+}
+
+.memo__nav-icon--settings {
+  width: 0.95em;
+  border: 0.28em solid currentcolor;
+  border-radius: 50%;
+}
+
+/* ------------------------------------------------------------------
+ * K2 一覧の見せ方：リスト ／ カード
+ * K3 続きの見せ方：無限スクロール ／「もっと見る」ボタン
+ *
+ * 中身はどちらも同じメモ10件。スクロールできる場所を作り、
+ * 1画面に何件入るかの差をそのまま見せる。
+ * ------------------------------------------------------------------ */
+
+.memo__feed {
+  flex: 1;
+  min-height: 0;
+  padding: calc(var(--space-unit) * 0.75);
+  overflow-y: auto;
+
+  /* 見本の画面なので、スクロールの棒は出さない（本物のスマホに近づける） */
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.memo__feed::-webkit-scrollbar {
+  display: none;
+}
+
+/* カードは1枚ずつが面になるので、下地を一段沈めて面を浮かせる */
+.memo__feed--card {
+  background-color: var(--color-surface-alt);
+}
+
+.memo__cards {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 0.625);
+}
+
+.memo__card {
+  padding-bottom: calc(var(--space-unit) * 0.75);
+  overflow: hidden;
+  background-color: var(--color-surface);
+  background-image: var(--surface-gradient);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* 写真が入る場所。カードが「1件を大きく見せる」部品であることが、
+ * ここの面積で伝わる。写真は使わない決まりなので、色の面で置く */
+.memo__card-cover {
+  display: block;
+  height: 3.25em;
+  background-color: var(--color-primary-soft);
+}
+
+.memo__card-title {
+  padding: calc(var(--space-unit) * 0.625) calc(var(--space-unit) * 0.75) 0;
+  font-size: 0.875em;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.memo__card-note {
+  padding: calc(var(--space-unit) * 0.25) calc(var(--space-unit) * 0.75) 0;
+  font-size: 0.75em;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+/* 一覧のいちばん下。読み込みの印とボタンで同じ高さを空けてあるので、
+ * 「ボタンがあるぶん窮屈」という関係ない差が混ざらない */
+.kit-more__foot {
+  display: grid;
+  align-content: center;
+  min-height: 3.25em;
+  padding-top: calc(var(--space-unit) * 0.625);
+}
+
+.kit-more__loading {
+  display: none;
+  text-align: center;
+}
+
+.kit-demo[data-loading='true'] .kit-more__loading {
+  display: block;
+}
+
+.kit-more__loading .kit-spinner {
+  margin: 0 auto;
+}
+
+.kit-more__btn {
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------
  * K4 お知らせ：トースト ／ バナー
  * ------------------------------------------------------------------ */
 
@@ -350,7 +664,8 @@
   pointer-events: none;
 }
 
-.kit-demo[data-panel-open='true'] .kit-scrim {
+.kit-demo[data-panel-open='true'] .kit-scrim,
+.kit-demo[data-drawer-open='true'] .kit-scrim {
   opacity: 0.45;
   pointer-events: auto;
 }
@@ -555,6 +870,12 @@
 
   .kit-skeleton__bar {
     background-image: none;
+    animation: none;
+  }
+
+  /* 行き先を変えたときの出入りも止める。
+   * 行き先が隠れているかどうかは、動きが無くても分かる */
+  .memo__page--on {
     animation: none;
   }
 
