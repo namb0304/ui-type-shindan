@@ -404,16 +404,20 @@
 }
 
 /* 頭文字1字のアイコン。画像を使わずに主役を作る。
- * width は自分の font-size を基準に計算されるので、1.5em の文字に対して
- * 2.2em（= 本文の約3.3倍）を指定している。 */
+ * width は自分の font-size を基準に計算されるので、1.9em の文字に対して
+ * 2.2em（= 本文の約4.2倍）を指定している。
+ *
+ * 太さを400まで落としてあるのは、明朝を見分けるのが
+ * 細い横線とウロコだから。太いとその骨格が潰れて、
+ * ゴシックとの差が出ない（見出しの軸はこの1字がいちばん大きく出る）。 */
 .pv-profile__mark {
   display: grid;
   flex-shrink: 0;
   place-items: center;
   width: 2.2em;
   aspect-ratio: 1 / 1;
-  font-size: 1.5em;
-  font-weight: 500;
+  font-size: 1.9em;
+  font-weight: 400;
   line-height: 1;
   color: var(--color-on-primary);
   background: var(--accent-surface);
@@ -426,7 +430,7 @@
 }
 
 .pv-profile__name {
-  font-size: 1.35em;
+  font-size: 1.5em;
   font-weight: 700;
   line-height: 1.3;
 }

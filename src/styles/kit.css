@@ -22,11 +22,19 @@
 
   /* 本物のスマホと同じ縦長にする。
    * 横長だと、ボトムシートのボタンが横に伸びて一般的なUIに見えない。
-   * 高さを固定せず比率で決めるので、どの幅でも同じ形になる */
-  width: 100%;
-  max-width: 22em;
+   *
+   * 大きさは**高さ基準**で決める。質問画面が縦のflexで、
+   * 上下の要素を引いた残りがこの枠に渡ってくるため（base.css の .kit__demo）。
+   * 幅基準にすると画面の高さに関係なく同じ高さになり、下がはみ出す。
+   *
+   * 幅で頭打ちにするときは、高さ側も同じ比で止める。
+   * max-width だけ効かせると height: 100% が残り、9:11 でなくなって縦に潰れる。
+   * 親の幅はCSSから参照できないので、画面の幅から計算している。 */
+  width: auto;
+  height: 100%;
   margin: 0 auto;
   aspect-ratio: 9 / 11;
+  max-height: calc((100vw - var(--site-gutter) * 2) * 11 / 9);
   overflow: hidden;
   font-family: var(--font-family-body);
   font-size: var(--font-size-base);
@@ -37,6 +45,14 @@
   background-color: var(--color-text);
   border-radius: calc(var(--radius) + var(--radius));
   box-shadow: var(--accent-shadow);
+}
+
+/* PC：スマホの見本が大きくなりすぎると、スマホの画面に見えなくなる。
+ * 幅20emで止める（高さ側も同じ比で止める） */
+@media (min-width: 680px) {
+  .kit-demo {
+    max-height: calc(20em * 11 / 9);
+  }
 }
 
 .kit-demo,

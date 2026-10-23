@@ -95,3 +95,43 @@ describe('書体の変数（見出し用・本文用）', () => {
     );
   });
 });
+
+/**
+ * 質問画面がスクロールなしで収まる作りになっていることを、機械的に確かめる
+ * （CLAUDE.md の作業ルール）。
+ *
+ * 高さが足りるかどうかは実際に描かないと分からないが、
+ * 「残りの高さに合わせて縮む」作りが壊れていないかは、ここで止められる。
+ * 置き場の flex: 1 が外れると、デモが縮まなくなって下がはみ出す。
+ */
+describe('質問画面はスクロールなしで操作が完結する', () => {
+  const css = () => read('base.css');
+
+  function ruleOf(selector: string): string {
+    const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return css().match(new RegExp(`${escaped}[^{]*\\{[^}]+\\}`))?.[0] ?? '';
+  }
+
+  it('画面の高さを基準にした縦のflexになっている', () => {
+    const screen = ruleOf('.screen--question,');
+    expect(screen, '質問画面の指定').toContain('flex-direction: column');
+    // vh ではなく dvh。iOS Safari は上下のバーの出入りで vh が変わる
+    expect(screen, '画面の高さ').toContain('height: 100dvh');
+  });
+
+  it('伸び縮みするのは置き場だけ（他の行は縮まない）', () => {
+    expect(ruleOf('.screen--question > *,'), '行の指定').toContain('flex-shrink: 0');
+    expect(ruleOf('.q__stage'), '第1部の置き場').toContain('flex: 1');
+    expect(ruleOf('.kit__stage'), '第2部の置き場').toContain('flex: 1');
+  });
+
+  it('置き場には最小の高さがある（小さい画面で潰れきらない）', () => {
+    expect(ruleOf('.q__stage')).toMatch(/min-height:\s*\d/);
+    expect(ruleOf('.kit__stage')).toMatch(/min-height:\s*\d/);
+  });
+
+  it('第2部のデモの入れ物が、残りの高さをそのまま枠に渡している', () => {
+    expect(ruleOf('.kit__demo'), '.kit__demo').toContain('flex: 1');
+    expect(ruleOf('.kit__demo'), '.kit__demo').toContain('min-height: 0');
+  });
+});

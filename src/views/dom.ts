@@ -19,6 +19,21 @@ export function button(className: string, text: string, onClick: () => void): HT
 }
 
 /**
+ * 進捗バー。第1部と第2部で同じものを使う（通しの1本・要件 §5）。
+ *
+ * 質問画面は縦のflexなので、この行は縮まないようにしてある（base.css）。
+ */
+export function progressHead(current: number, total: number): HTMLElement {
+  const head = el('div', 'q__head');
+  const bar = el('div', 'q__bar');
+  const fill = el('span', 'q__bar-fill');
+  fill.style.width = `${(current / total) * 100}%`;
+  bar.append(fill);
+  head.append(bar, el('p', 'q__count', `${current} / ${total}`));
+  return head;
+}
+
+/**
  * 画面ひとつ。
  *
  * 第2部のデモはタイマーとイベントを持つので、画面を描き直す前に

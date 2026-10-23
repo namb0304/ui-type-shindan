@@ -244,23 +244,25 @@ const PREVIEW_WIDTH = PHONE_WIDTH - 16 * 2 - 10 * 2 - 2 * 2;
  * 2枚ぶんに使える高さ。
  *
  * iPhoneのSafariは、上下のバーのぶん実際に見える高さが画面より小さい
- * （390×844 の端末で、見えるのはおよそ700px）。そこから、
- * 選択肢より上（進捗・問い）と、選択肢の枠の余白を引いた残り。
+ * （390×844 の端末で、見えるのはおよそ700px）。
  *
- *   ふつうの問題：700 − 150 − 62 = 488
- *   1問目        ：700 − 232 − 62 = 406（案内の枠が入るぶん狭い）
+ * 質問画面は**スクロールなしで操作が完結する**決まりなので、
+ * 戻るボタンまで含めた全部が、この700pxに収まっていないといけない。
+ * 上下に必ず要る行を引いた残りが、プレビュー2枚に使える高さになる。
  *
- * 「どっちも同じに見える」と戻るボタンは、この下に来てよい。
- * 第1部はプレビューそのものを押して答えるので、ボタンまで
- * 一度に見えている必要はない。
+ *   余白(上16+下16) + 進捗21 + 問い(上16+28) + 置き場の上余白14
+ *     + 「もどる／どっちも同じに見える」の行(上10+44)  = 165
+ *   1問目は案内の枠（上10＋2行ぶん53）がさらに入る        = +63
+ *
+ * 2枚の間の余白(12)と、押せる枠の内側(8×2×2枚＋枠線)も引く。
  */
 const VISIBLE_HEIGHT = 700;
-const CHROME_ABOVE = 150;
-const CHROME_ABOVE_FIRST = 232;
-const OPTION_OVERHEAD = 62;
+const CHROME_FIXED = 165;
+const CHROME_HINT = 63;
+const OPTION_OVERHEAD = 12 + (8 * 2 + 2 * 2) * 2;
 
-const HEIGHT_BUDGET = VISIBLE_HEIGHT - CHROME_ABOVE - OPTION_OVERHEAD;
-const HEIGHT_BUDGET_FIRST = VISIBLE_HEIGHT - CHROME_ABOVE_FIRST - OPTION_OVERHEAD;
+const HEIGHT_BUDGET = VISIBLE_HEIGHT - CHROME_FIXED - OPTION_OVERHEAD;
+const HEIGHT_BUDGET_FIRST = HEIGHT_BUDGET - CHROME_HINT;
 
 interface HeightRow {
   question: (typeof QUESTIONS)[number];
@@ -299,12 +301,78 @@ function heightCheckSection(rows: HeightRow[], stage: HTMLElement): HTMLElement 
   body.append(table, stage);
 
   return section(
-    '高さの点検（スマホ幅390px）',
+    '第1部の高さの点検（スマホ幅390px）',
     `質問画面と同じ幅(${PREVIEW_WIDTH}px)で実際に描いて測っている。` +
       `iPhoneのSafariで見える高さ(${VISIBLE_HEIGHT}px)を基準に、2枚の合計が ` +
       `${HEIGHT_BUDGET}px（1問目は案内の枠があるので ${HEIGHT_BUDGET_FIRST}px）以内なら、` +
-      `スクロールなしで2枚を見比べられる`,
+      `戻るボタンまで含めてスクロールなしで収まる`,
     body,
+  );
+}
+
+/* ------------------------------------------------------------------
+ * 第2部の高さの点検（?debug=1）
+ *
+ * 第2部のデモは、残った高さに合わせて自分で縮む。
+ * だから見るのは「収まるか」ではなく、**縮んだ結果どのくらいの大きさになるか**。
+ * 小さくなりすぎると、中の文字が読めず部品の違いが分からなくなる。
+ * ------------------------------------------------------------------ */
+
+/**
+ * デモに残る高さ。
+ *
+ * 内訳は 余白(上16+下16) + 進捗21 + 問い(上16+28) + 切り替え(上12+44)
+ * + 置き場の上余白12 + 選ぶボタン(上12+52) + 下の行(上10+44)。
+ * 文字の折り返しで数pxずれるので、**実際の画面を390×700で測った値**を置く
+ * （計算だけで置くと、この表と本物の画面が食い違う）。
+ *
+ * この残りから、名前の行(44)・説明(18)・枠の上余白(8)を引いたものが
+ * スマホの枠の高さになり、幅はその 9/11。
+ */
+const KIT_CHROME = 297;
+const KIT_CHROME_HINT = 50;
+const KIT_DEMO_OVERHEAD = 44 + 18 + 8;
+
+/** これより小さいと、デモの中の文字が読めなくなる */
+const KIT_MIN_FRAME_WIDTH = 200;
+
+function kitHeightSection(): HTMLElement {
+  const table = el('div', 'heightcheck');
+
+  const head = el('div', 'heightcheck__row heightcheck__row--head');
+  for (const text of ['問', '聞くこと', 'スマホの枠', '読めるか']) {
+    head.append(el('span', 'heightcheck__cell', text));
+  }
+  table.append(head);
+
+  for (const [index, question] of KIT_QUESTIONS.entries()) {
+    const chrome = KIT_CHROME + (index === 0 ? KIT_CHROME_HINT : 0);
+    const frameHeight = VISIBLE_HEIGHT - chrome - KIT_DEMO_OVERHEAD;
+    // 枠は 9:11 の縦長。幅は高さから決まる（kit.css）
+    const frameWidth = Math.round((frameHeight * 9) / 11);
+    const ok = frameWidth >= KIT_MIN_FRAME_WIDTH;
+
+    const row = el('div', 'heightcheck__row');
+    const result = el(
+      'span',
+      `heightcheck__cell heightcheck__cell--result heightcheck__cell--${ok ? 'ok' : 'ng'}`,
+      ok ? `読める（${frameWidth - KIT_MIN_FRAME_WIDTH}px の余裕）` : '小さすぎる',
+    );
+    row.append(
+      el('span', 'heightcheck__cell', question.id.toUpperCase()),
+      el('span', 'heightcheck__cell', question.label),
+      el('span', 'heightcheck__cell heightcheck__cell--size', `${frameWidth} × ${frameHeight}px`),
+      result,
+    );
+    table.append(row);
+  }
+
+  return section(
+    '第2部の高さの点検（スマホ幅390px）',
+    `デモは残った高さに合わせて縮むので、はみ出すことはない。` +
+      `見るのは縮んだあとの大きさ。幅 ${KIT_MIN_FRAME_WIDTH}px を下回ると、` +
+      `中の文字が読めず部品の違いが分からなくなる`,
+    table,
   );
 }
 
@@ -362,6 +430,7 @@ export function renderDebug(): View {
   main.append(
     heightCheckSection(heightRows, stage),
     kitSection(players),
+    kitHeightSection(),
     photoCheckSection(),
     typeLinksSection(),
     progressSection(),

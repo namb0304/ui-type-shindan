@@ -9,7 +9,7 @@ import {
   kitProgress,
   overallProgress,
 } from '../state';
-import { button, el } from './dom';
+import { button, el, progressHead } from './dom';
 import type { View } from './dom';
 import { createKitPlayer } from './kitPlayer';
 
@@ -57,28 +57,16 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
   const screen = el('main', 'screen screen--kit');
 
   // --- 進捗 ---
-  const head = el('div', 'q__head');
-  const bar = el('div', 'q__bar');
-  const fill = el('span', 'q__bar-fill');
-  fill.style.width = `${(current / total) * 100}%`;
-  bar.append(fill);
-  head.append(bar, el('p', 'q__count', `${current} / ${total}`));
+  screen.append(progressHead(current, total));
 
   // --- 問い ---
-  const ask = el('div', 'q__ask');
-  ask.append(el('h1', 'q__title', 'どっちが好き？'), el('p', 'q__subject', question.label));
+  // 聞くことと「どっちが好き？」を1行にまとめる。
+  // 2行に分けると、そのぶんデモに使える高さが減る
+  screen.append(el('h1', 'q__ask', `${question.label}、どっちが好き？`));
 
-  // 第2部は選び方が第1部と変わる。1問目だけ手順を大きく出し、
-  // 2問目以降は一言に落とす（毎問出すとデモの邪魔になる）
+  // 第2部は選び方が第1部と変わる。案内は1問目だけに出す
   if (isFirst) {
-    const steps = el('ol', 'kit__steps');
-    steps.append(
-      el('li', 'kit__step', '2つの動きを見比べる'),
-      el('li', 'kit__step', '好きなほうを選ぶ'),
-    );
-    ask.append(steps);
-  } else {
-    ask.append(el('p', 'kit__note', '2つの動きを見比べてから選んでください'));
+    screen.append(el('p', 'q__hint', '2つの動きを見比べてから、好きなほうを選んでください。'));
   }
 
   // 動きを止めているとき、アニメーションの2問（K9・K10）だけは差が出ない
@@ -86,7 +74,7 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
   if (noDifference) {
     const note = el('p', 'kit__alert', NO_DIFFERENCE_NOTE);
     note.setAttribute('role', 'status');
-    ask.append(note);
+    screen.append(note);
   }
 
   // --- 切り替えスイッチ（スマホのみ表示） ---
@@ -102,9 +90,11 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
     switcher.append(tab);
     return tab;
   });
+  screen.append(switcher);
 
   // --- デモ ---
-  const stage = el('div', 'kit__options');
+  // ここだけが伸び縮みする。残った高さがそのままスマホの枠の高さになる
+  const stage = el('div', 'kit__stage');
   const player = createKitPlayer(stage);
   const vars = buildNeutralTheme();
 
@@ -115,21 +105,24 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
     const option: KitOption = question[choice];
     const isSelected = state.kitAnswers[question.id] === choice;
 
-    const card = el('div', 'kit__option');
+    const cell = el('div', 'kit__option');
 
-    // 名前と説明。これを読んで名前を覚えて帰ってもらう（要件 §4.2）
+    // 名前と説明。これを読んで名前を覚えて帰ってもらう（要件 §4.2）。
+    // 再生ボタンは名前と同じ行に置く。1行ぶん減らすため
     const caption = el('div', 'kit__caption');
-    caption.append(
-      el('p', 'kit__name', `${POSITION_LABEL[i]}　${option.name}`),
-      el('p', 'kit__desc', option.description),
-    );
+    const name = el('span', 'kit__name', `${POSITION_LABEL[i]}　${option.name}`);
 
     const demo = createKitDemo(option.id, vars);
     const playButton = player.add(demo, tabs[i]);
     playButton.setAttribute('aria-label', `${option.name}の動きを見る`);
 
-    card.append(caption, demo.element, playButton);
-    stage.append(card);
+    caption.append(name, playButton);
+
+    const stageBox = el('div', 'kit__demo');
+    stageBox.append(demo.element);
+
+    cell.append(caption, el('p', 'kit__desc', option.description), stageBox);
+    stage.append(cell);
 
     // 文言は選んでも「〜にする」のまま（押すと何が起きるかを書く）。
     // 選択中かどうかは、✓と色で見せる
@@ -147,11 +140,14 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
     choices.append(choose);
   }
 
-  screen.append(head, ask, switcher, stage, choices);
+  screen.append(stage, choices);
 
-  // --- どっちでもいい ---
-  // 第1部の「どっちも同じに見える」と同じ扱い。2択と同じ大きさにはしない。
-  // ただし差が出ない2問だけは、これが既定の答えなので大きく出す（要件 §4.2）
+  // --- 戻る と「どっちでもいい」 ---
+  //
+  // 1行にまとめて、縦を44pxで済ませる。
+  // 差が出ない2問（K9・K10 を動きを止めて見たとき）では、
+  // これが既定の答えになるので塗りつぶして目立たせる（要件 §4.2）。
+  // 行を増やして大きくはしない。増やすとデモが縮んで、中の文字が読めなくなる。
   const either = button(
     `q__either${noDifference ? ' q__either--primary' : ''}`,
     'どっちでもいい',
@@ -161,14 +157,13 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
     either.classList.add('q__either--selected');
     either.setAttribute('aria-pressed', 'true');
   }
-  screen.append(either);
 
-  // --- 戻る ---
-  const foot = el('div', 'q__foot');
-  const back = button('btn btn--ghost', '← 1つ前にもどる', handlers.onBack);
+  const back = button('q__back', '← もどる', handlers.onBack);
   back.disabled = !canGoBackKit(state);
-  foot.append(back);
-  screen.append(foot);
+
+  const utility = el('div', 'q__utility');
+  utility.append(back, either);
+  screen.append(utility);
 
   return {
     element: screen,

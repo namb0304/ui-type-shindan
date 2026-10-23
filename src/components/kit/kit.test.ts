@@ -36,6 +36,9 @@ const KIT_OWN_VARS = [
   '--kit-ease',
   '--kit-danger',
   '--kit-danger-bg',
+  // 画面の左右の余白（base.css の :root）。
+  // 枠の幅が画面からはみ出さないように、高さの上限を計算するのに使う
+  '--site-gutter',
 ];
 
 const BASE_CSS = readFileSync(
@@ -274,7 +277,9 @@ describe('kit.css が CSS変数だけを参照している', () => {
   });
 
   it('余白・角丸を px で直接書いていない（1px / 2px は枠線用に許容）', () => {
-    const pxValues = CSS_WITHOUT_COMMENTS.match(/\b\d+(?:\.\d+)?px\b/g) ?? [];
+    // 画面幅の分かれ目（@media ... 680px）は、部品の寸法ではないので外す
+    const withoutMediaQueries = CSS_WITHOUT_COMMENTS.replace(/@media[^{]+/g, '');
+    const pxValues = withoutMediaQueries.match(/\b\d+(?:\.\d+)?px\b/g) ?? [];
     const notAllowed = pxValues.filter((value: string) => value !== '1px' && value !== '2px');
     expect(notAllowed).toEqual([]);
   });
@@ -313,6 +318,15 @@ describe('kit.css が CSS変数だけを参照している', () => {
     const screen = CSS_WITHOUT_COMMENTS.match(/\.kit-demo__screen\s*\{[^}]+\}/)?.[0] ?? '';
     const radius = screen.match(/border-radius:\s*([^;]+);/)?.[1] ?? '';
     expect(radius, '.kit-demo__screen の border-radius').toContain('var(--bezel)');
+  });
+
+  it('枠の大きさは高さ基準で決めている（画面の高さに合わせて縮むように）', () => {
+    const frame = CSS_WITHOUT_COMMENTS.match(/\.kit-demo\s*\{[^}]+\}/)?.[0] ?? '';
+    expect(frame, '.kit-demo の height').toContain('height: 100%');
+    expect(frame, '.kit-demo の width').toContain('width: auto');
+    // 幅で頭打ちにするときは、高さ側も同じ比で止める（縦に潰れないように）
+    expect(frame, '.kit-demo の max-height').toMatch(/max-height:[^;]*11 \/ 9/);
+    expect(frame, '幅だけを止めていない').not.toMatch(/max-width:/);
   });
 
   it('スマホの枠を縦長に保っている（横長だと一般的なUIに見えない）', () => {
