@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from './motion';
 import type { Scheduler } from './scheduler';
 
 /**
@@ -15,17 +16,6 @@ import type { Scheduler } from './scheduler';
 
 /** 1コマの間隔。これより細かくしても見た目は変わらない */
 const FRAME_MS = 16;
-
-/**
- * 動きを止める設定かどうか。
- *
- * テストはブラウザの外で動かすので、window が無い場合も通るようにしておく
- * （無ければ「止めていない」として扱う）。
- */
-export function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
-}
 
 /** 行き過ぎ・戻りすぎのない、ふつうの加減速。 */
 function ease(t: number): number {

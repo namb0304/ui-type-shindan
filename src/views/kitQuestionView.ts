@@ -1,4 +1,4 @@
-import { createKitDemo } from '../components/kit';
+import { createKitDemo, prefersReducedMotion } from '../components/kit';
 import type { KitAnswerValue, KitOption } from '../data/kitTypes';
 import { buildNeutralTheme } from '../logic/theme';
 import type { DiagnosisState } from '../state';
@@ -20,6 +20,16 @@ export interface KitQuestionHandlers {
 
 /** 切り替えスイッチに付ける見出し（表示位置の順）。 */
 const POSITION_LABEL = ['A', 'B'] as const;
+
+/**
+ * 動きを止めている人に、K9・K10 で出す案内（要件 §4.2）。
+ *
+ * この2問は動きそのものが問題なので、動きを止めると本当に差が出ない。
+ * 黙って同じものを2つ並べると「壊れている」と思われるので、
+ * 違いが出ないことを先に伝えて、「どっちでもいい」を既定として勧める。
+ */
+const NO_DIFFERENCE_NOTE =
+  '端末の設定で動きが止まっているので、この問題は違いが出ません。「どっちでもいい」で進んでください。';
 
 /**
  * 第2部の質問画面（要件 §5）。
@@ -69,6 +79,14 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
     ask.append(steps);
   } else {
     ask.append(el('p', 'kit__note', '2つの動きを見比べてから選んでください'));
+  }
+
+  // 動きを止めているとき、アニメーションの2問（K9・K10）だけは差が出ない
+  const noDifference = question.category === 'motion' && prefersReducedMotion();
+  if (noDifference) {
+    const note = el('p', 'kit__alert', NO_DIFFERENCE_NOTE);
+    note.setAttribute('role', 'status');
+    ask.append(note);
   }
 
   // --- 切り替えスイッチ（スマホのみ表示） ---
@@ -132,8 +150,13 @@ export function renderKitQuestion(state: DiagnosisState, handlers: KitQuestionHa
   screen.append(head, ask, switcher, stage, choices);
 
   // --- どっちでもいい ---
-  // 第1部の「どっちも同じに見える」と同じ扱い。2択と同じ大きさにはしない
-  const either = button('q__either', 'どっちでもいい', () => handlers.onAnswer('either'));
+  // 第1部の「どっちも同じに見える」と同じ扱い。2択と同じ大きさにはしない。
+  // ただし差が出ない2問だけは、これが既定の答えなので大きく出す（要件 §4.2）
+  const either = button(
+    `q__either${noDifference ? ' q__either--primary' : ''}`,
+    'どっちでもいい',
+    () => handlers.onAnswer('either'),
+  );
   if (state.kitAnswers[question.id] === 'either') {
     either.classList.add('q__either--selected');
     either.setAttribute('aria-pressed', 'true');

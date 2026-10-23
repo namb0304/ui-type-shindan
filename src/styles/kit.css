@@ -11,6 +11,9 @@
 .kit-demo {
   --duration: var(--kit-duration, 0.25s);
 
+  /* 動き方（イージング）。ふつうは、すっと出てすっと止まる */
+  --ease: var(--kit-ease, cubic-bezier(0.33, 0, 0.2, 1));
+
   /* 筐体の縁の太さ。内側の角丸をこの値から計算するので、変数にしてある */
   --bezel: calc(var(--space-unit) * 0.5);
 
@@ -1112,6 +1115,129 @@
 }
 
 /* ------------------------------------------------------------------
+ * K9 動きの速さ ／ K10 画面の切り替わり
+ *
+ * デモの中身は2問とも同じ。変わるのは次の2つの属性だけ。
+ *   data-speed      … きびきび／ふんわり（K9）
+ *   data-transition … スライド／フェード（K10）
+ *
+ * ふんわりは、長いだけでなく「行き過ぎてから少し戻る」動き方にしてある。
+ * 0.15秒と0.35秒の差だけだと、並べて見ても見分けがつきにくいため。
+ * ------------------------------------------------------------------ */
+
+.kit-demo[data-speed='snappy'] {
+  --kit-duration: 0.15s;
+
+  /* 押した瞬間から動き出し、まっすぐ止まる */
+  --kit-ease: cubic-bezier(0, 0, 0.2, 1);
+}
+
+.kit-demo[data-speed='soft'] {
+  --kit-duration: 0.35s;
+
+  /* ゆっくり出て、行き過ぎてから戻る（弾む）。
+   *
+   * 出だしを遅らせる形（1つめの制御点 0.45, 0）にしてあるのが肝。
+   * ありがちな「ふわっと」の曲線（0.22, 1.4, …）は出だしが速く、
+   * 0.35秒かけていても、きびきびより**先に**進んで見える。
+   * 実際に並べて測って選んだ値（50ms時点 17.3px / きびきびは 12px）。 */
+  --kit-ease: cubic-bezier(0.45, 0, 0.25, 1.6);
+}
+
+/* 画面2枚の置き場。はみ出した画面はここで切り取る */
+.kit-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 1枚の画面。下地を塗ってあるので、重なると下は見えない */
+.kit-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface);
+  transition: opacity var(--duration) var(--ease), transform var(--duration) var(--ease);
+}
+
+/* 詳細は、ふだんは画面の外か、透明で待っている */
+.kit-screen--detail {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.kit-demo[data-view='detail'] .kit-screen--detail {
+  pointer-events: auto;
+}
+
+/* スライド：横から入ってくる。下の一覧も少し左へ送り出す
+ * （本物の「次の画面へ進む」動きと同じ） */
+.kit-demo[data-transition='slide'] .kit-screen--detail {
+  transform: translateX(100%);
+}
+
+.kit-demo[data-transition='slide'][data-view='detail'] .kit-screen--detail {
+  transform: translateX(0);
+}
+
+.kit-demo[data-transition='slide'][data-view='detail'] .kit-screen--list {
+  transform: translateX(-20%);
+}
+
+/* フェード：薄いところから、少し持ち上がって出てくる。
+ * 上下に動かすのは、速さと動き方の違い（K9）を目で追えるようにするため */
+.kit-demo[data-transition='fade'] .kit-screen--detail {
+  opacity: 0;
+  transform: translateY(1.5em);
+}
+
+.kit-demo[data-transition='fade'][data-view='detail'] .kit-screen--detail {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 一覧の行。この問題では押せるので、箱ではなくボタンで作る */
+.memo__row--tappable {
+  position: relative;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.memo__row--tappable:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: -2px;
+}
+
+/* 戻るボタン。バーの左に置く */
+.memo__back {
+  flex-shrink: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.6875em;
+  color: var(--color-primary-text);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.memo__back:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: 1px;
+}
+
+.memo__text--detail {
+  line-height: 1.7;
+}
+
+/* ------------------------------------------------------------------
  * 動きが苦手な人への配慮（要件 §4.2）
  *
  * 動きは止めるが、**違いは残す**。
@@ -1121,7 +1247,10 @@
  * ------------------------------------------------------------------ */
 
 @media (prefers-reduced-motion: reduce) {
-  .kit-demo {
+  /* data-speed 付きの指定（0.15s / 0.35s）にも勝てる強さで打ち消す。
+   * `.kit-demo` だけだと K9 のデモが動いてしまう */
+  .kit-demo,
+  .kit-demo[data-speed] {
     --kit-duration: 0s;
   }
 

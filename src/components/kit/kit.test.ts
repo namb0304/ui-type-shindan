@@ -20,6 +20,7 @@ const CSS_WITHOUT_COMMENTS = KIT_CSS.replace(/\/\*[\s\S]*?\*\//g, '');
 /**
  * 第2部が自前で持つ変数。
  *   --duration / --kit-duration … 動きの長さ。tokens.ts に入るまでは既定値で動かす（要件 §6）
+ *   --ease / --kit-ease          … 動き方。K9（きびきび／ふんわり）で変える
  *   --bezel                      … 筐体の縁の太さ。--space-unit から計算している
  *                                  （下の「--bezel は --space-unit から導いている」で検証）
  *   --kit-danger / --kit-danger-bg … 入力ミスの赤（K8）。16タイプのどれで見ても
@@ -31,6 +32,8 @@ const KIT_OWN_VARS = [
   '--duration',
   '--kit-duration',
   '--bezel',
+  '--ease',
+  '--kit-ease',
   '--kit-danger',
   '--kit-danger-bg',
 ];
@@ -41,7 +44,7 @@ const BASE_CSS = readFileSync(
 );
 
 describe('第2部の質問データ', () => {
-  it('いまは K1〜K8（残りは後の手順で足す）', () => {
+  it('10問（K1〜K10）そろっている', () => {
     expect(KIT_QUESTIONS.map((question) => question.id)).toEqual([
       'k1',
       'k2',
@@ -51,8 +54,10 @@ describe('第2部の質問データ', () => {
       'k6',
       'k7',
       'k8',
+      'k9',
+      'k10',
     ]);
-    expect(TOTAL_KIT_QUESTIONS).toBe(8);
+    expect(TOTAL_KIT_QUESTIONS).toBe(10);
   });
 
   it('分類ごとにまとまって並んでいる（出題中に分類が行き来しない）', () => {
@@ -327,6 +332,36 @@ describe('kit.css が CSS変数だけを参照している', () => {
       if (KIT_OWN_VARS.includes(name)) continue;
       expect(CSS_VAR_NAMES, name).toContain(name);
     }
+  });
+
+  it('K9 は速さだけでなく動き方も変えている（0.15秒と0.35秒の差だけでは見分けにくい）', () => {
+    const snappy = CSS_WITHOUT_COMMENTS.match(/\.kit-demo\[data-speed='snappy'\]\s*\{[^}]+\}/)?.[0] ?? '';
+    const soft = CSS_WITHOUT_COMMENTS.match(/\.kit-demo\[data-speed='soft'\]\s*\{[^}]+\}/)?.[0] ?? '';
+    expect(snappy, 'きびきびの指定').toContain('--kit-duration');
+    expect(soft, 'ふんわりの指定').toContain('--kit-duration');
+
+    const snappyEase = snappy.match(/--kit-ease:\s*cubic-bezier\(([^)]+)\)/)?.[1];
+    const softEase = soft.match(/--kit-ease:\s*cubic-bezier\(([^)]+)\)/)?.[1];
+    expect(snappyEase, 'きびきびの動き方').toBeTruthy();
+    expect(softEase, 'ふんわりの動き方').toBeTruthy();
+    expect(softEase).not.toBe(snappyEase);
+
+    const [softX1, softY1, , softY2] = (softEase ?? '').split(',').map(Number);
+
+    // 行き過ぎてから戻る（制御点のどちらかが1を超える＝弾む）
+    expect(Math.max(softY1, softY2), 'ふんわりは1を超えて行き過ぎる').toBeGreaterThan(1);
+
+    // 出だしを遅らせてある。ここが要で、出だしの速い曲線にすると
+    // 0.35秒かけていても、きびきび（0.15秒）より先に進んで見える
+    expect(softX1, 'ふんわりは出だしを遅らせる').toBeGreaterThanOrEqual(0.3);
+  });
+
+  it('動きを止める設定は、K9 の速さの指定にも勝てる強さで打ち消している', () => {
+    const reduced =
+      CSS_WITHOUT_COMMENTS.match(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*\}/)?.[0] ??
+      '';
+    // `.kit-demo` だけだと `.kit-demo[data-speed='soft']` に負ける
+    expect(reduced).toMatch(/\.kit-demo\[data-speed\][\s\S]{0,80}--kit-duration:\s*0s/);
   });
 
   it('入力ミスの赤は、テーマではなく base.css に固定で置いている（K8）', () => {

@@ -445,6 +445,20 @@ p {
   place-items: center;
 }
 
+/* 差が出ないときの案内（K9・K10 を、動きを止めて見たとき）。
+ * 読み飛ばされると「壊れている」と思われるので、一言より目立たせる */
+.kit__alert {
+  padding: 10px 14px;
+  margin: 12px auto 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--site-text);
+  text-align: left;
+  background-color: #fff6e5;
+  border: 1px solid #f0d8a8;
+  border-radius: 10px;
+}
+
 /* 2問目以降の控えめな一言 */
 .kit__note {
   margin-top: 6px;
@@ -1322,6 +1336,26 @@ p {
   font-weight: 700;
   color: var(--site-accent);
   text-decoration-color: var(--site-accent);
+}
+
+/* 差が出ない2問（K9・K10 を、動きを止めて見たとき）では、
+ * これが既定の答えになる。控えめなままだと、何を押せばいいのか分からない。
+ *
+ * .q__either より**あとに**書く。同じ強さ（クラス1つ）なので、
+ * 前に書くと打ち消される。 */
+.q__either--primary {
+  min-height: 52px;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--site-surface);
+  text-decoration: none;
+  background-color: var(--site-accent);
+  border-radius: 12px;
+}
+
+.q__either--primary:hover {
+  color: var(--site-surface);
 }
 
 /* --- 16タイプへの入口（?debug=1） --- */

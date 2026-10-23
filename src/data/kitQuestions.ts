@@ -3,7 +3,7 @@ import type { KitQuestion } from './kitTypes';
 /**
  * 第2部「定番UIキット」の質問（要件定義書 §4.2）。
  *
- * 最終的に10問（K1〜K10）。いまは K1〜K6 で、残りは後の手順で足す。
+ * 10問（K1〜K10）そろっている。
  * 配列に足すだけで、質問画面・進捗バー・確認ページがすべて追従する
  * （問数をどこにもベタ書きしないこと）。
  *
@@ -131,6 +131,36 @@ export const KIT_QUESTIONS = [
       id: 'summary-error',
       name: 'まとめて出す',
       description: '送るボタンを押してから、上にまとめて出る',
+    },
+  },
+  {
+    id: 'k9',
+    category: 'motion',
+    label: '動きの速さ',
+    a: {
+      id: 'snappy',
+      name: 'きびきび',
+      description: '素早く、さっと切り替わる',
+    },
+    b: {
+      id: 'soft',
+      name: 'ふんわり',
+      description: 'ゆっくり、やわらかく切り替わる',
+    },
+  },
+  {
+    id: 'k10',
+    category: 'motion',
+    label: '画面の切り替わり',
+    a: {
+      id: 'slide',
+      name: 'スライド',
+      description: '横に滑って、次の画面が入ってくる',
+    },
+    b: {
+      id: 'fade',
+      name: 'フェード',
+      description: 'すうっと薄れて、次の画面に変わる',
     },
   },
 ] as const satisfies readonly KitQuestion[];
