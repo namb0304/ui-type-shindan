@@ -801,6 +801,33 @@ p {
  * ここではレイアウトと、タイプによらない構造だけを決める。
  * ================================================================== */
 
+/* 結果ページが出てくるときの出方（K10・要件 §5）。
+ *
+ * data-transition で、スライド（横から入る）かフェード（薄れて変わる）かを変える。
+ * 入ったあとに data-entered が付いて、元の位置に戻る。
+ *
+ * 動きの長さは --duration（K9）。どちらも第2部の回答で決まる */
+.screen--result[data-transition] {
+  transition: opacity var(--duration, 0.25s) ease, transform var(--duration, 0.25s) ease;
+}
+
+.screen--result[data-transition='slide']:not([data-entered]) {
+  transform: translateX(6%);
+}
+
+.screen--result[data-transition='fade']:not([data-entered]) {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen--result[data-transition] {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .screen--result {
   max-width: none;
   min-height: 100dvh;
@@ -1600,6 +1627,309 @@ p {
   border-radius: 999px;
 }
 
+/* --- 結果が出るまでの待たせ方（K6・要件 §5） ---
+ *
+ * 発表のあいだ、本文の代わりに出す。
+ * スケルトンは出てくる中身（見出し＋4行）の形に合わせてある */
+
+.result-loading {
+  padding: 8px 0 0;
+  margin-top: 44px;
+}
+
+.result-loading__bar {
+  display: block;
+  height: 1.1em;
+  margin-bottom: 12px;
+  background-color: var(--color-surface-alt);
+  border-radius: calc(var(--radius) / 2);
+  animation: result-shimmer 1.4s linear infinite;
+}
+
+@keyframes result-shimmer {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.result-loading--spinner {
+  display: grid;
+  min-height: 140px;
+  place-items: center;
+}
+
+.result-loading__spinner {
+  display: block;
+  width: 30px;
+  aspect-ratio: 1 / 1;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: result-spin 0.7s linear infinite;
+}
+
+@keyframes result-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* --- AIに渡す文章 ／ CSSの数値 の切り替え（K7・要件 §5） ---
+ *
+ * 押す場所も中身も同じで、印の形と置き場所だけが違う。
+ * 印の位置は data-selected（0 か 1）だけで決める。 */
+
+.switcher {
+  margin-top: 14px;
+}
+
+.switcher__body {
+  margin-top: 12px;
+}
+
+/* セグメントコントロール：中身の上に置く面。面の中をつまみが滑る */
+.seg {
+  position: relative;
+  display: flex;
+  padding: 3px;
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius);
+}
+
+.seg__thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  background-color: var(--color-surface);
+  border-radius: calc(var(--radius) * 0.75);
+  box-shadow: var(--shadow);
+  transition: transform var(--duration, 0.25s) ease;
+}
+
+.seg[data-selected='1'] .seg__thumb {
+  transform: translateX(100%);
+}
+
+.seg__btn {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 6px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: calc(var(--radius) * 0.75);
+  transition: color var(--duration, 0.25s) ease;
+}
+
+.seg__btn--on {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* タブ：面を持たず、見出しの下の線だけが動く */
+.tabs2 {
+  position: relative;
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabs2__ink {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  display: block;
+  width: 50%;
+  height: 2px;
+  background-color: var(--color-primary-text);
+  transition: transform var(--duration, 0.25s) ease;
+}
+
+.tabs2[data-selected='1'] .tabs2__ink {
+  transform: translateX(100%);
+}
+
+.tabs2__btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 6px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  transition: color var(--duration, 0.25s) ease;
+}
+
+.tabs2__btn--on {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.seg__btn:focus-visible,
+.tabs2__btn:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: -2px;
+}
+
+/* --- もう一度診断するときの確認（K5・要件 §5） --- */
+
+.confirm-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background-color: var(--color-text);
+  opacity: 0;
+  transition: opacity var(--duration, 0.25s) ease;
+}
+
+.confirm-scrim[data-open='true'] {
+  opacity: 0.45;
+}
+
+.confirm {
+  position: fixed;
+  z-index: 41;
+  padding: 22px;
+  background-color: var(--color-surface);
+  background-image: var(--surface-gradient);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transition: opacity var(--duration, 0.25s) ease, transform var(--duration, 0.25s) ease;
+}
+
+/* モーダル：真ん中に浮く。四辺とも画面から離れている */
+.confirm--modal {
+  top: 50%;
+  right: 16px;
+  left: 16px;
+  max-width: 420px;
+  margin: 0 auto;
+  border-radius: var(--radius);
+  transform: translateY(-50%) scale(0.94);
+}
+
+/* ボトムシート：下の縁にくっつく。下辺は角を丸めない */
+.confirm--sheet {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  transform: translateY(100%);
+}
+
+.confirm[data-open='true'] {
+  opacity: 1;
+}
+
+.confirm--modal[data-open='true'] {
+  transform: translateY(-50%) scale(1);
+}
+
+.confirm--sheet[data-open='true'] {
+  transform: translateY(0);
+}
+
+.confirm__handle {
+  display: block;
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 14px;
+  background-color: var(--color-border);
+  border-radius: 999px;
+}
+
+.confirm__title {
+  font-family: var(--font-family-heading);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.confirm__note {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.confirm__buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+/* モーダルは横並びで「やめる → 診断しなおす」、
+ * ボトムシートは縦積みで、押したいほうを上（親指が届く位置）に置く */
+.confirm--modal .confirm__buttons {
+  justify-content: flex-end;
+}
+
+.confirm--sheet .confirm__buttons {
+  flex-direction: column;
+}
+
+.confirm__btn {
+  min-height: 48px;
+  padding: 12px 20px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: calc(var(--radius) / 1.6);
+}
+
+.confirm__btn--main {
+  color: var(--color-on-primary);
+  background: var(--accent-surface);
+  border: none;
+  box-shadow: var(--accent-shadow);
+}
+
+.confirm__btn--quiet {
+  color: var(--color-text-muted);
+  background: none;
+  border: 1px solid var(--color-border);
+}
+
+.confirm__btn:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm {
+    transition: opacity 0.01s linear;
+  }
+
+  .confirm--modal {
+    transform: translateY(-50%) scale(1);
+  }
+
+  .confirm--sheet {
+    transform: none;
+  }
+}
+
 /* --- コピーしたときのお知らせ（K4・要件 §5） ---
  *
  * 画面に固定して出す。結果ページは縦に長いので、
@@ -1651,15 +1981,20 @@ p {
   transform: translateY(0);
 }
 
-/* 画面に固定して出すので、本文の幅の制限（.screen--result > *）を外す。
- * 外さないと、PCでバナーが真ん中の680pxぶんにしか伸びない */
-.screen--result > .notice {
+/* 画面に固定して出すものは、本文の幅の制限（.screen--result > *）を外す。
+ *
+ * 外さないと、PCでバナーや幕が真ん中の680pxぶんにしか広がらない。
+ * 幕が全面を覆わないのは、押し間違いの元になるので特にまずい。 */
+.screen--result > .notice,
+.screen--result > .confirm,
+.screen--result > .confirm-scrim {
   max-width: none;
   margin: 0;
 }
 
-/* トーストだけは、広い画面で横に伸びすぎないよう中央に寄せる */
-.screen--result > .notice--toast {
+/* 真ん中に浮かせるものだけは、広い画面で横に伸びすぎないよう中央に寄せる */
+.screen--result > .notice--toast,
+.screen--result > .confirm--modal {
   right: 16px;
   left: 16px;
   max-width: 420px;

@@ -135,3 +135,47 @@ describe('質問画面はスクロールなしで操作が完結する', () => {
     expect(ruleOf('.kit__demo'), '.kit__demo').toContain('min-height: 0');
   });
 });
+
+/**
+ * 結果ページのてんこ盛り化（要件 §5）。
+ *
+ * 第2部の答えで見た目が変わる場所が増えたので、
+ * 「壊れたら必ず困る」ところだけを機械的に見ておく。
+ */
+describe('結果ページのてんこ盛り化', () => {
+  const css = () => read('base.css');
+
+  it('画面に固定して出すものは、本文の幅の制限を外している', () => {
+    // 外し忘れると、PCで幕が全面を覆わず、押し間違いの元になる
+    const rule =
+      css().match(
+        /\.screen--result > \.notice,[\s\S]{0,200}?\.screen--result > \.confirm-scrim\s*\{[^}]+\}/,
+      )?.[0] ?? '';
+    expect(rule, '固定表示の幅の指定').toContain('max-width: none');
+    expect(rule, '固定表示の余白の指定').toContain('margin: 0');
+  });
+
+  it('発表が終わるまでの時間が、CSSとTSで同じ', () => {
+    // ずれると、本文が出たあとに待たせるか、待ち時間が消える前に本文が出る
+    const delay = css().match(/\.result__after\s*\{[^}]*animation:[^;]*?([\d.]+)s both/)?.[1];
+    expect(delay, '.result__after の animation-delay').toBeTruthy();
+
+    const source = readFileSync(
+      fileURLToPath(new URL('../components/resultLoading.ts', import.meta.url)),
+      'utf8',
+    );
+    const ms = source.match(/REVEAL_DELAY_MS = (\d+)/)?.[1];
+    expect(Number(ms), 'REVEAL_DELAY_MS').toBe(Number(delay) * 1000);
+  });
+
+  it('結果ページの動きの長さが --duration を見ている（K9）', () => {
+    const rule = css().match(/\.screen--result\[data-transition\]\s*\{[^}]+\}/)?.[0] ?? '';
+    expect(rule).toContain('var(--duration');
+  });
+
+  it('動きを減らす設定では、結果ページの出入りを止めている', () => {
+    expect(css()).toMatch(
+      /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{\s*\.screen--result\[data-transition\][\s\S]{0,120}transition:\s*none/,
+    );
+  });
+});

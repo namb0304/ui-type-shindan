@@ -1,8 +1,15 @@
+import { createConfirmPanel } from '../components/confirmPanel';
+import type { ConfirmVariant } from '../components/confirmPanel';
 import { createCopyButton } from '../components/copyButton';
+import { prefersReducedMotion } from '../components/kit';
 import { createPreview, RESULT_PREVIEW_SUBJECTS } from '../components/previews';
+import { createResultLoading, REVEAL_DELAY_MS } from '../components/resultLoading';
+import type { LoadingVariant } from '../components/resultLoading';
 import { createResultNotice } from '../components/resultNotice';
 import type { NoticeVariant } from '../components/resultNotice';
 import { createShopPhoto } from '../components/shopPhoto';
+import { createSwitcher } from '../components/switcher';
+import type { SwitcherVariant } from '../components/switcher';
 import { AXES, getAxis } from '../data/axes';
 import type { KitAnswers } from '../data/kitTypes';
 import { getTrait } from '../data/traits';
@@ -10,7 +17,7 @@ import { getTypeInfo } from '../data/typeInfos';
 import type { AxisScore, DiagnosisResult, TypeInfo } from '../data/types';
 import { calcAffinity } from '../logic/affinity';
 import { kitPartId } from '../logic/kit';
-import { buildPrompt } from '../logic/prompt';
+import { buildPrompt, buildTokenBlock } from '../logic/prompt';
 import { sideOf, toPercent } from '../logic/score';
 import { buildTypeSummaryParts } from '../logic/summary';
 import { applyTheme, buildResultTheme } from '../logic/theme';
@@ -33,12 +40,40 @@ interface KitParts {
   notice: NoticeVariant;
   /** K2：定番UIキットの並べ方 */
   list: 'list' | 'card';
+  /** K7：AIに渡す文章とCSSの数値の切り替え */
+  switcher: SwitcherVariant;
+  /** K5：もう一度診断するときの確認 */
+  confirm: ConfirmVariant;
+  /** K9：ページ全体の動きの長さ */
+  duration: string;
+  /** K10：結果ページが出てくるときの出方 */
+  transition: 'slide' | 'fade';
+  /** K6：発表のあいだの待たせ方 */
+  loading: LoadingVariant;
 }
 
+/**
+ * K9（動きの速さ）の長さ。質問画面のデモと同じ値にそろえる。
+ * 「どっちでもいい」はニュートラル（0.25秒）のまま。
+ */
+const DURATIONS: Readonly<Record<string, string>> = {
+  snappy: '0.15s',
+  soft: '0.35s',
+};
+
 function resolveParts(answers: KitAnswers): KitParts {
+  // K9 だけは「どっちでもいい」をAに寄せない。
+  // 速さは好みが無いならニュートラルが正解で、Aに寄せる理由がない
+  const speed = answers.k9 === 'a' ? 'snappy' : answers.k9 === 'b' ? 'soft' : 'neutral';
+
   return {
     notice: kitPartId(answers, 'k4') === 'banner' ? 'banner' : 'toast',
     list: kitPartId(answers, 'k2') === 'card' ? 'card' : 'list',
+    switcher: kitPartId(answers, 'k7') === 'tabs' ? 'tabs' : 'segmented',
+    confirm: kitPartId(answers, 'k5') === 'bottom-sheet' ? 'sheet' : 'modal',
+    duration: DURATIONS[speed] ?? '0.25s',
+    transition: kitPartId(answers, 'k10') === 'fade' ? 'fade' : 'slide',
+    loading: kitPartId(answers, 'k6') === 'spinner' ? 'spinner' : 'skeleton',
   };
 }
 
@@ -62,30 +97,89 @@ export function renderResult(
   const screen = el('main', 'screen screen--result');
   applyTheme(screen, vars);
 
+  /*
+   * K9（動きの速さ）。ページ全体の動きの長さを決める。
+   *
+   * --kit-duration に入れる。--duration に入れると、デモの中（kit.css が
+   * --duration を自分で定義し直している）まで届かない。
+   * K9 のデモだけは data-speed で自分の速さを持つので、ここに引きずられない。
+   */
+  screen.style.setProperty('--kit-duration', parts.duration);
+  screen.style.setProperty('--duration', parts.duration);
+
+  // K10（画面の切り替わり）。結果ページが出てくるときの出方
+  screen.dataset.transition = parts.transition;
+
   // コピーしたことを知らせる相手。第2部で選んだ出し方で出す（K4・P0）
   const notice = createResultNotice(parts.notice);
   const kit = renderKitResult(kitAnswers, vars, parts.list);
 
-  screen.append(
-    renderHero(result, info),
+  // もう一度診断するときの確認（K5）。結果が消えるので1回受け止める
+  const confirm = createConfirmPanel(parts.confirm, {
+    title: 'もう一度診断しますか？',
+    note: 'いまの結果は消えます。',
+    confirmLabel: '診断しなおす',
+    cancelLabel: 'やめる',
+    onConfirm: handlers.onRestart,
+  });
+
+  // ファーストビューより下。発表が終わるまでは出さない
+  const below = [
     renderTraits(result.scores),
     renderAxes(result.scores),
     renderPreviews(result),
     kit.element,
     renderAffinity(result),
-    renderPrompt(result, kitAnswers, notice.show),
-    renderFooter(handlers),
+    renderPrompt(result, kitAnswers, notice.show, parts.switcher),
+    renderFooter({ onRestart: confirm.open, onBack: handlers.onBack }),
+  ];
+
+  /*
+   * K6（読み込み中の見せ方）。
+   *
+   * 発表のあいだ、下の本文の代わりに待たせ方を出す。
+   * 動きを減らす設定のときは発表そのものが無い（base.css）ので、
+   * 待たせずにそのまま本文を出す。
+   */
+  const reveals = !prefersReducedMotion();
+  const loading = reveals ? createResultLoading(parts.loading) : undefined;
+  if (loading) {
+    for (const section of below) section.hidden = true;
+  }
+
+  screen.append(
+    renderHero(result, info),
+    ...(loading ? [loading] : []),
+    ...below,
     notice.element,
+    ...confirm.elements,
   );
+
+  let revealTimer: number | undefined;
 
   return {
     element: screen,
+    mounted() {
+      // 入ってから付ける。付いた状態で挿すと、出入りの動きが始まらない
+      requestAnimationFrame(() => {
+        screen.dataset.entered = 'true';
+      });
+
+      if (!loading) return;
+      revealTimer = window.setTimeout(() => {
+        loading.remove();
+        for (const section of below) section.hidden = false;
+      }, REVEAL_DELAY_MS);
+    },
     destroy() {
+      window.clearTimeout(revealTimer);
       kit.destroy();
       notice.destroy();
+      confirm.destroy();
     },
   };
 }
+
 
 /**
  * 1〜3. ファーストビュー（写真・発表演出・店名・説明文・ひとこと）。
@@ -271,38 +365,71 @@ function affinityCard(title: string, code: string, note: string): HTMLElement {
   return card;
 }
 
-/** 8. AI向けプロンプト */
+/**
+ * 8. AIに渡す文章と、CSSの数値。
+ *
+ * 2つを切り替えて見せる。切り替えの部品はK7の答えで変わる（てんこ盛り化）。
+ *
+ * 「デザイントークン」とは呼ばない。開発の知識がない人に通じないので、
+ * 「CSSの数値（開発者向け）」と書いて、誰に向けたものかを先に示す。
+ */
 function renderPrompt(
   result: DiagnosisResult,
   kitAnswers: KitAnswers,
   notify: (message: string) => void,
+  switcherVariant: SwitcherVariant,
 ): HTMLElement {
   const block = el('section', 'result__after result__block');
 
   const prompt = buildPrompt(result, kitAnswers);
-  const body = el('pre', 'prompt__body', prompt);
-  body.tabIndex = 0;
+  const tokens = buildTokenBlock(result);
 
-  const head = el('div', 'result__heading-row');
-  head.append(
-    el('h2', 'result__heading result__heading--flush', 'AIに頼むための文章'),
-    createCopyButton({
-      getText: () => prompt,
-      selectTarget: body,
-      label: '文章をコピー',
-      notify,
-    }),
-  );
-
-  block.append(
-    head,
+  const promptPanel = el('div', 'prompt__panel');
+  const promptBody = el('pre', 'prompt__body', prompt);
+  promptBody.tabIndex = 0;
+  promptPanel.append(
     el(
       'p',
       'result__sub',
-      'ChatGPTなどのAIにこの文章を貼り付けると、あなた好みの見た目で画面を作ってくれます。コピーして使ってください。',
+      'ChatGPTなどのAIにこの文章を貼り付けると、あなた好みの見た目で画面を作ってくれます。',
     ),
-    body,
+    promptBody,
   );
+
+  const tokenPanel = el('div', 'prompt__panel');
+  const tokenBody = el('pre', 'prompt__body', tokens);
+  tokenBody.tabIndex = 0;
+  tokenPanel.append(
+    el('p', 'result__sub', 'CSSにそのまま貼り付けて使えます。'),
+    tokenBody,
+  );
+
+  // コピーボタンは1つにして、いま見ているほうをコピーする。
+  // 2つ置くと、どちらが何をコピーするのか分かりにくい
+  let showingTokens = false;
+  const copy = createCopyButton({
+    getText: () => (showingTokens ? tokens : prompt),
+    selectTarget: () => (showingTokens ? tokenBody : promptBody),
+    label: '文章をコピー',
+    notify,
+  });
+
+  const switcher = createSwitcher(
+    switcherVariant,
+    [
+      { label: 'AIに渡す文章', element: promptPanel },
+      { label: 'CSSの数値（開発者向け）', element: tokenPanel },
+    ],
+    (index) => {
+      showingTokens = index === 1;
+      copy.textContent = showingTokens ? '数値をコピー' : '文章をコピー';
+    },
+  );
+
+  const head = el('div', 'result__heading-row');
+  head.append(el('h2', 'result__heading result__heading--flush', 'AIに頼むための文章'), copy);
+
+  block.append(head, switcher.element);
   return block;
 }
 

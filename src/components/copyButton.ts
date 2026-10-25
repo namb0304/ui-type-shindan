@@ -10,8 +10,11 @@ import { button } from '../views/dom';
 export interface CopyButtonOptions {
   /** コピーする文字列を返す */
   getText: () => string;
-  /** コピーできないときに選択状態にする要素 */
-  selectTarget: HTMLElement;
+  /**
+   * コピーできないときに選択状態にする要素。
+   * 中身を切り替える画面（AIに渡す文章／CSSの数値）では関数で渡す。
+   */
+  selectTarget: HTMLElement | (() => HTMLElement);
   label?: string;
   /**
    * 結果を知らせる相手。
@@ -52,8 +55,10 @@ export function createCopyButton(options: CopyButtonOptions): HTMLButtonElement 
       show('コピーできません');
       return;
     }
+    const target =
+      typeof options.selectTarget === 'function' ? options.selectTarget() : options.selectTarget;
     const range = document.createRange();
-    range.selectNodeContents(options.selectTarget);
+    range.selectNodeContents(target);
     selection.removeAllRanges();
     selection.addRange(range);
     show('選択しました');
