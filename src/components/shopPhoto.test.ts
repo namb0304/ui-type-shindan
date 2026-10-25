@@ -11,7 +11,7 @@ const BASE_CSS = readFileSync(
   'utf8',
 );
 
-describe('お店の写真', () => {
+describe('場所の写真', () => {
   it('URLはタイプコードごとに1枚', () => {
     const urls = TYPE_INFOS.map((info) => photoUrl(info.code));
     expect(new Set(urls).size).toBe(TYPE_INFOS.length);

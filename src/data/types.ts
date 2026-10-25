@@ -63,7 +63,13 @@ export interface AxisScore {
 
 export interface TypeInfo {
   code: string; // 'ARCG'
-  /** お店の呼び名（例: 'スマホの旗艦店'） */
+  /**
+   * 場所の呼び名（例: 'スマホの旗艦店'）。
+   *
+   * フィールド名は shop のまま変えない。画面に出すときの呼び方だけを
+   * 「お店」から「場所」にする（要件 §1）。名前を変えると、写真のファイル名
+   * （public/images/shops/）まで直すことになり、変える意味の割に手が広がる。
+   */
   shop: string;
   /** ひとことツッコミ */
   quip: string;

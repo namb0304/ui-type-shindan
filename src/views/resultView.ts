@@ -184,7 +184,7 @@ export function renderResult(
 /**
  * 1〜3. ファーストビュー（写真・発表演出・店名・説明文・ひとこと）。
  *
- * 開いた瞬間に「どういうお店か」が伝わることを狙う、この画面の主役。
+ * 開いた瞬間に「どういう場所か」が伝わることを狙う、この画面の主役。
  *
  * 同じ写真を2回使う。
  *   背景 … 大きくぼかして画面全体に敷く。左右に空白を作らないため
@@ -328,10 +328,10 @@ function renderPreviews(result: DiagnosisResult): HTMLElement {
   return block;
 }
 
-/** 7. お店の相性 */
+/** 7. 場所の相性 */
 function renderAffinity(result: DiagnosisResult): HTMLElement {
   const block = el('section', 'result__after result__block');
-  block.append(el('h2', 'result__heading', 'お店の相性'));
+  block.append(el('h2', 'result__heading', '場所の相性'));
 
   const affinity = calcAffinity(result.code, result.scores);
   const axis = getAxis(affinity.flippedAxis);
@@ -339,12 +339,12 @@ function renderAffinity(result: DiagnosisResult): HTMLElement {
   const grid = el('div', 'affinity');
   grid.append(
     affinityCard(
-      '気が合うお店',
+      '気が合う場所',
       affinity.match,
       `いちばん迷ったのは「${axis.label}」。そこが逆なだけなので、たぶん話は合います`,
     ),
     affinityCard(
-      'たぶん落ち着かないお店',
+      'たぶん落ち着かない場所',
       affinity.clash,
       '4つの軸すべてが逆。見ているところが違うだけで、どちらが良いわけでもありません',
     ),

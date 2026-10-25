@@ -31,7 +31,7 @@ describe('寄り方の判定', () => {
 });
 
 describe('buildPrompt', () => {
-  it('タイプコードとお店の名前が入る', () => {
+  it('タイプコードと場所の名前が入る', () => {
     const prompt = buildPrompt(resultFromPoints(ALL_RIGHT));
     expect(prompt).toContain('## デザインタイプ：ARPM（老舗旅館）');
   });

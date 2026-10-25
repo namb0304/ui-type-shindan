@@ -7,7 +7,7 @@ export function renderTop(onStart: () => void): HTMLElement {
 
   const hero = el('div', 'top__hero');
   hero.append(
-    el('h1', 'top__title', 'デザインの好み、お店でいうと？'),
+    el('h1', 'top__title', 'デザインの好み、場所でいうと？'),
     el(
       'p',
       'top__lead',

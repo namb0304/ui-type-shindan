@@ -30,14 +30,14 @@ describe('16タイプの呼び名', () => {
     expect(new Set(TYPE_INFOS.map((info) => info.code))).toEqual(expected);
   });
 
-  it('お店の名前とひとことが空でない', () => {
+  it('場所の名前とひとことが空でない', () => {
     for (const info of TYPE_INFOS) {
       expect(info.shop.length, info.code).toBeGreaterThan(0);
       expect(info.quip.length, info.code).toBeGreaterThan(0);
     }
   });
 
-  it('お店の名前が重複していない', () => {
+  it('場所の名前が重複していない', () => {
     expect(new Set(TYPE_INFOS.map((info) => info.shop)).size).toBe(16);
   });
 

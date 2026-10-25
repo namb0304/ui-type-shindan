@@ -2,17 +2,17 @@ import { AXES, SIDE_THRESHOLD } from '../data/axes';
 import type { AxisScore } from '../data/types';
 
 /**
- * お店の相性（要件定義書 §5）。
+ * 場所の相性（要件定義書 §5）。
  *
  * 画面に依存しない純粋な関数。
  */
 
 export interface Affinity {
-  /** 気が合うお店：いちばん迷った軸だけを反転したタイプ */
+  /** 気が合う場所：いちばん迷った軸だけを反転したタイプ */
   match: string;
-  /** たぶん落ち着かないお店：4文字すべてを反転したタイプ */
+  /** たぶん落ち着かない場所：4文字すべてを反転したタイプ */
   clash: string;
-  /** 気が合うお店を決めるのに使った軸（画面で説明に使う） */
+  /** 気が合う場所を決めるのに使った軸（画面で説明に使う） */
   flippedAxis: AxisScore['axis'];
 }
 
@@ -32,8 +32,8 @@ export function flipAll(code: string): string {
 /**
  * 相性を求める。
  *
- * 気が合うお店は「いちばん迷った軸」＝割合が50%に最も近い軸を1つだけ反転する。
- * わずかな差で決まった軸なので、反対側のお店も気に入る可能性が高い、という考え方。
+ * 気が合う場所は「いちばん迷った軸」＝割合が50%に最も近い軸を1つだけ反転する。
+ * わずかな差で決まった軸なので、反対側の場所も気に入る可能性が高い、という考え方。
  * 同じ近さの軸が複数あるときは、軸の順（情報量 → 装飾 → トーン → 文字）で先のものを選ぶ。
  */
 export function calcAffinity(code: string, scores: readonly AxisScore[]): Affinity {

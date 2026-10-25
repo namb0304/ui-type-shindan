@@ -34,7 +34,7 @@ describe('flipAll', () => {
 });
 
 describe('calcAffinity', () => {
-  it('気が合うお店は1文字だけ違う', () => {
+  it('気が合う場所は1文字だけ違う', () => {
     for (const info of TYPE_INFOS) {
       const { affinity } = affinityOf(pointsFromCode(info.code));
       const differences = [...info.code].filter(
@@ -44,7 +44,7 @@ describe('calcAffinity', () => {
     }
   });
 
-  it('落ち着かないお店は4文字すべて違う', () => {
+  it('落ち着かない場所は4文字すべて違う', () => {
     for (const info of TYPE_INFOS) {
       const { affinity } = affinityOf(pointsFromCode(info.code));
       const same = [...info.code].filter((letter, index) => letter === affinity.clash[index]);
