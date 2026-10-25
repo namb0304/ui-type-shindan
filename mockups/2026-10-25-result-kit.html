@@ -1,0 +1,1243 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>結果ページ：定番UIキットとてんこ盛り化（2026-10-25）</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+       * モックアップの外側（本番には入らない）
+       * ================================================================== */
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0 0 80px;
+        font-family: 'Noto Sans JP', system-ui, sans-serif;
+        color: #1d2127;
+        background-color: #eceef2;
+      }
+
+      .masthead {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        align-items: center;
+        padding: 14px 24px;
+        color: #fff;
+        background-color: #1d2127;
+      }
+
+      .masthead h1 {
+        margin: 0;
+        font-size: 15px;
+      }
+
+      .group {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        padding: 4px;
+        background-color: #30353d;
+        border-radius: 10px;
+      }
+
+      .group > span {
+        padding: 0 6px;
+        font-size: 11px;
+        color: #8b93a0;
+      }
+
+      .group button {
+        padding: 6px 12px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        color: #c7ccd4;
+        cursor: pointer;
+        background: none;
+        border: none;
+        border-radius: 7px;
+      }
+
+      .group button[aria-pressed='true'] {
+        color: #1d2127;
+        background-color: #fff;
+      }
+
+      .page {
+        padding: 0 24px;
+      }
+
+      .lead {
+        max-width: 64em;
+        margin: 26px 0 0;
+        font-size: 13.5px;
+        line-height: 1.85;
+        color: #4a515c;
+      }
+
+      .band {
+        margin-top: 26px;
+      }
+
+      .band h2 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        color: #4a515c;
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+      }
+
+      figure {
+        margin: 0;
+      }
+
+      figcaption {
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #4a515c;
+      }
+
+      /* 端末の枠。結果ページはスクロールしてよいので、中はスクロールさせる */
+      .device {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #c3c8d1;
+        border-radius: 14px;
+        box-shadow: 0 6px 20px rgb(29 33 39 / 12%);
+      }
+
+      .device--sp {
+        width: 392px;
+        height: 702px;
+      }
+
+      .device--pc {
+        width: 722px;
+        height: 452px;
+      }
+
+      .device__scroll {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        scrollbar-width: thin;
+      }
+
+      .device--pc .device__scroll {
+        width: 1440px;
+        height: 900px;
+        transform: scale(0.5);
+        transform-origin: top left;
+      }
+
+      .hint {
+        padding: 10px 14px;
+        margin-top: 14px;
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: #4a515c;
+        background-color: #fff;
+        border-left: 3px solid #3b5b7a;
+        border-radius: 8px;
+      }
+
+      /* ==================================================================
+       * 本番の値（テーマはJSで差し替える）
+       * ================================================================== */
+      .result {
+        min-height: 100%;
+        padding: 28px 16px 56px;
+        font-family: var(--font-family-body);
+        font-size: 16px;
+        line-height: 1.75;
+        color: var(--color-text);
+        background-color: var(--color-bg);
+      }
+
+      .pc .result {
+        padding: 40px 16px 72px;
+      }
+
+      .result > * {
+        max-width: 680px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .result h1,
+      .result h2,
+      .result h3,
+      .result p,
+      .result ul,
+      .result li {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .result__heading {
+        padding-bottom: 10px;
+        font-family: var(--font-family-heading);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .result__block {
+        margin-top: 44px;
+      }
+
+      .result__sub {
+        margin-top: 10px;
+        font-size: 13px;
+        line-height: 1.8;
+        color: var(--color-text-muted);
+      }
+
+      /* --- 既存のセクションは、位置が分かればよいので簡略に --- */
+      .stub {
+        padding: 18px;
+        margin-top: 14px;
+        font-size: 12.5px;
+        color: var(--color-text-muted);
+        text-align: center;
+        background-color: var(--color-surface);
+        background-image: var(--surface-gradient);
+        border: var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        padding: 22px 18px 26px;
+        background-color: var(--color-surface-alt);
+        border-radius: var(--radius);
+      }
+
+      .hero__lead {
+        font-size: 12px;
+        color: var(--color-text-muted);
+        letter-spacing: 0.18em;
+      }
+
+      .hero__shop {
+        margin-top: 4px;
+        font-family: var(--font-family-heading);
+        font-size: 34px;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+
+      .hero__code {
+        display: inline-block;
+        padding: 4px 9px;
+        margin-top: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-on-primary);
+        letter-spacing: 0.16em;
+        background: var(--accent-surface);
+        border-radius: calc(var(--radius) / 2);
+        box-shadow: var(--accent-shadow);
+      }
+
+      .hero__summary {
+        margin-top: 16px;
+        font-size: 17px;
+        font-weight: 500;
+        line-height: 1.75;
+      }
+
+      /* ==================================================================
+       * ここが提案：あなたの定番UIキット
+       * ================================================================== */
+      .kitlist {
+        margin-top: 18px;
+      }
+
+      .kitlist__group + .kitlist__group {
+        margin-top: 26px;
+      }
+
+      /* 分類の見出し。レイアウト／コンポーネント／アニメーションの3つ。
+         中身の意味のまとまりなので、飾りではなく構造として出す */
+      .kitlist__category {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-primary-text);
+        letter-spacing: 0.16em;
+      }
+
+      .kitlist__category::after {
+        flex: 1;
+        height: 1px;
+        content: '';
+        background-color: var(--color-border);
+      }
+
+      .kitlist__items {
+        margin-top: 10px;
+      }
+
+      /* --- リスト（K2でリストを選んだ人） --- */
+      .kitlist--list .kitlist__item + .kitlist__item {
+        border-top: 1px solid var(--color-border);
+      }
+
+      .kitlist--list .kitlist__item {
+        padding: 14px 0;
+      }
+
+      /* --- カード（K2でカードを選んだ人） --- */
+      .kitlist--card .kitlist__items {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .kitlist--card .kitlist__item {
+        padding: 16px;
+        background-color: var(--color-surface);
+        background-image: var(--surface-gradient);
+        border: var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      .kitlist__head {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+
+      .kitlist__label {
+        font-size: 11.5px;
+        color: var(--color-text-muted);
+      }
+
+      /* 選んだ部品の名前。見出し用の書体で出す（Mなら明朝になる）。
+         名前を覚えて帰ってもらうのが第2部の目的なので、ここを主役にする */
+      .kitlist__name {
+        margin-top: 2px;
+        font-family: var(--font-family-heading);
+        font-size: 19px;
+        font-weight: 700;
+        line-height: 1.35;
+      }
+
+      .kitlist__desc {
+        margin-top: 4px;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--color-text-muted);
+      }
+
+      .kitlist__play {
+        flex-shrink: 0;
+        min-height: 36px;
+        padding: 0 14px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--color-primary-text);
+        white-space: nowrap;
+        cursor: pointer;
+        background: none;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+      }
+
+      .kitlist__play[aria-expanded='true'] {
+        color: var(--color-on-primary);
+        background: var(--accent-surface);
+        border-color: transparent;
+      }
+
+      /* 開いたときだけ見本を出す。10個を一度に並べると、
+         1つ1つが小さくなりすぎて中の文字が読めない */
+      .kitlist__demo {
+        display: none;
+        padding-top: 14px;
+      }
+
+      .kitlist__item[data-open='true'] .kitlist__demo {
+        display: flex;
+        justify-content: center;
+      }
+
+      /* 「どっちでもいい」を選んだ項目 */
+      .kitlist__item--either .kitlist__name {
+        color: var(--color-text-muted);
+      }
+
+      .kitlist__both {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        margin-top: 4px;
+        padding: 3px 9px;
+        font-size: 11.5px;
+        color: var(--color-text-muted);
+        background-color: var(--color-surface-alt);
+        border-radius: 999px;
+      }
+
+      /* ==================================================================
+       * 見本のスマホ（kit.css の抜粋・静止）
+       * ================================================================== */
+      .kit-demo {
+        --bezel: calc(var(--space-unit) * 0.5);
+
+        display: flex;
+        width: 240px;
+        aspect-ratio: 9 / 11;
+        overflow: hidden;
+        font-family: var(--font-family-body);
+        font-size: 14px;
+        line-height: var(--line-height);
+        color: var(--color-text);
+        background-color: var(--color-text);
+        border-radius: calc(var(--radius) + var(--radius));
+      }
+
+      .kit-demo__screen {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-width: 0;
+        margin: var(--bezel);
+        overflow: hidden;
+        background-color: var(--color-surface);
+        border-radius: calc(var(--radius) + var(--radius) - var(--bezel));
+      }
+
+      .kit-demo__status {
+        display: flex;
+        flex-shrink: 0;
+        justify-content: space-between;
+        padding: 4px 8px 0;
+        font-size: 0.625em;
+        color: var(--color-text-muted);
+      }
+
+      .memo__bar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 9px;
+        font-family: var(--font-family-heading);
+        font-size: 0.8125em;
+        font-weight: 700;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .memo__body {
+        flex: 1;
+        padding: 9px;
+        overflow: hidden;
+      }
+
+      .memo__row {
+        padding-bottom: 7px;
+        margin-bottom: 7px;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .memo__row-title {
+        display: block;
+        font-size: 0.8125em;
+        font-weight: 500;
+        line-height: 1.3;
+      }
+
+      .memo__row-note {
+        display: block;
+        font-size: 0.6875em;
+        line-height: 1.3;
+        color: var(--color-text-muted);
+      }
+
+      .memo__nav {
+        display: flex;
+        padding: 4px 0 6px;
+        border-top: 1px solid var(--color-border);
+      }
+
+      .memo__nav-item {
+        flex: 1;
+        font-size: 0.5625em;
+        color: var(--color-text-muted);
+        text-align: center;
+      }
+
+      .memo__nav-item--on {
+        font-weight: 700;
+        color: var(--color-text);
+      }
+
+      /* ==================================================================
+       * ここが提案：てんこ盛り化
+       * ================================================================== */
+
+      /* --- K7：設計図とトークンの切り替え --- */
+      .switcher {
+        margin-top: 14px;
+      }
+
+      .seg {
+        position: relative;
+        display: flex;
+        padding: 3px;
+        background-color: var(--color-surface-alt);
+        border-radius: var(--radius);
+      }
+
+      .seg__thumb {
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        left: 3px;
+        width: calc(50% - 3px);
+        background-color: var(--color-surface);
+        border-radius: calc(var(--radius) * 0.75);
+        box-shadow: var(--shadow);
+        transition: transform 0.25s ease;
+      }
+
+      .seg[data-selected='1'] .seg__thumb {
+        transform: translateX(100%);
+      }
+
+      .seg__btn {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        padding: 8px;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        background: none;
+        border: none;
+      }
+
+      .seg__btn--on {
+        font-weight: 700;
+        color: var(--color-text);
+      }
+
+      .tabs2 {
+        position: relative;
+        display: flex;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .tabs2__ink {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50%;
+        height: 2px;
+        background-color: var(--color-primary-text);
+        transition: transform 0.25s ease;
+      }
+
+      .tabs2[data-selected='1'] .tabs2__ink {
+        transform: translateX(100%);
+      }
+
+      .tabs2__btn {
+        flex: 1;
+        padding: 10px 8px;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        background: none;
+        border: none;
+      }
+
+      .tabs2__btn--on {
+        font-weight: 700;
+        color: var(--color-text);
+      }
+
+      .prompt__body {
+        max-height: 200px;
+        padding: 14px;
+        margin-top: 12px;
+        overflow: auto;
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 11.5px;
+        line-height: 1.7;
+        color: var(--color-text);
+        white-space: pre-wrap;
+        background-color: var(--color-surface);
+        border: var(--border);
+        border-radius: var(--radius);
+      }
+
+      .result__heading-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .btn {
+        min-height: 44px;
+        padding: 10px 18px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        border-radius: calc(var(--radius) / 1.6);
+      }
+
+      .btn--copy {
+        color: var(--color-on-primary);
+        background: var(--accent-surface);
+        border: none;
+        box-shadow: var(--accent-shadow);
+      }
+
+      .btn--primary {
+        color: var(--color-on-primary);
+        background: var(--accent-surface);
+        border: none;
+        box-shadow: var(--accent-shadow);
+      }
+
+      .btn--ghost {
+        color: var(--color-text-muted);
+        background: none;
+        border: 1px solid var(--color-border);
+      }
+
+      .result__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 14px;
+      }
+
+      /* --- K4：コピーしたときのお知らせ --- */
+      .notice {
+        position: absolute;
+        z-index: 8;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--color-on-primary);
+        background: var(--accent-surface);
+        box-shadow: var(--accent-shadow);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+
+      .notice--toast {
+        right: 16px;
+        bottom: 20px;
+        left: 16px;
+        border-radius: var(--radius);
+        transform: translateY(12px);
+      }
+
+      .notice--banner {
+        top: 0;
+        right: 0;
+        left: 0;
+        justify-content: space-between;
+        transform: translateY(-100%);
+      }
+
+      .device[data-notice='on'] .notice {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+      }
+
+      .notice__close {
+        padding: 0 4px;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        background: none;
+        border: none;
+      }
+
+      /* --- K5：もう一度診断するの確認 --- */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        z-index: 9;
+        background-color: var(--color-text);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+      }
+
+      .device[data-panel='on'] .scrim {
+        opacity: 0.45;
+        pointer-events: auto;
+      }
+
+      .panel {
+        position: absolute;
+        z-index: 10;
+        padding: 20px;
+        background-color: var(--color-surface);
+        background-image: var(--surface-gradient);
+        box-shadow: var(--shadow);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+
+      .panel--modal {
+        top: 50%;
+        right: 24px;
+        left: 24px;
+        border-radius: var(--radius);
+        transform: translateY(-50%) scale(0.94);
+      }
+
+      .panel--sheet {
+        right: 0;
+        bottom: 0;
+        left: 0;
+        border-radius: var(--radius) var(--radius) 0 0;
+        transform: translateY(100%);
+      }
+
+      .device[data-panel='on'] .panel {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .device[data-panel='on'] .panel--modal {
+        transform: translateY(-50%) scale(1);
+      }
+
+      .device[data-panel='on'] .panel--sheet {
+        transform: translateY(0);
+      }
+
+      .panel__title {
+        font-family: var(--font-family-heading);
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .panel__note {
+        margin-top: 6px;
+        font-size: 12.5px;
+        color: var(--color-text-muted);
+      }
+
+      .panel__buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .panel--modal .panel__buttons {
+        justify-content: flex-end;
+      }
+
+      .panel--sheet .panel__buttons {
+        flex-direction: column;
+      }
+
+      /* --- K6：結果が出る前の待ち時間 --- */
+      .skeleton__bar {
+        display: block;
+        height: 1.1em;
+        margin-bottom: 10px;
+        background-color: var(--color-surface-alt);
+        border-radius: calc(var(--radius) / 2);
+      }
+
+      .spinner {
+        display: block;
+        width: 28px;
+        aspect-ratio: 1;
+        margin: 40px auto;
+        border: 2px solid var(--color-border);
+        border-top-color: var(--color-primary);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(1turn);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="masthead">
+      <h1>結果ページ：定番UIキットとてんこ盛り化</h1>
+      <div class="group">
+        <span>タイプ</span>
+        <button type="button" data-set="type" data-val="ARPM" aria-pressed="true">老舗旅館 ARPM</button>
+        <button type="button" data-set="type" data-val="DFCG" aria-pressed="false">市役所の窓口 DFCG</button>
+      </div>
+      <div class="group">
+        <span>K2 一覧</span>
+        <button type="button" data-set="k2" data-val="list" aria-pressed="true">リスト</button>
+        <button type="button" data-set="k2" data-val="card" aria-pressed="false">カード</button>
+      </div>
+      <div class="group">
+        <span>K7 切り替え</span>
+        <button type="button" data-set="k7" data-val="seg" aria-pressed="true">セグメント</button>
+        <button type="button" data-set="k7" data-val="tabs" aria-pressed="false">タブ</button>
+      </div>
+      <div class="group">
+        <span>K4 お知らせ</span>
+        <button type="button" data-set="k4" data-val="toast" aria-pressed="true">トースト</button>
+        <button type="button" data-set="k4" data-val="banner" aria-pressed="false">バナー</button>
+      </div>
+      <div class="group">
+        <span>K5 確認</span>
+        <button type="button" data-set="k5" data-val="modal" aria-pressed="true">モーダル</button>
+        <button type="button" data-set="k5" data-val="sheet" aria-pressed="false">ボトムシート</button>
+      </div>
+      <div class="group">
+        <span>K6 読み込み</span>
+        <button type="button" data-set="k6" data-val="skeleton" aria-pressed="true">スケルトン</button>
+        <button type="button" data-set="k6" data-val="spinner" aria-pressed="false">スピナー</button>
+      </div>
+    </div>
+
+    <div class="page" id="page"></div>
+
+    <script>
+      // ======================================================================
+      // 本番のテーマの値（?debug=1 の結果ページから実測）
+      // ======================================================================
+      const THEMES = {
+        ARPM: {
+          '--space-unit': '16px',
+          '--font-size-base': '17px',
+          '--line-height': '1.9',
+          '--radius': '20px',
+          '--shadow':
+            'inset 0 0 0 1px rgba(255,255,255,.9), inset 0 -1px 0 rgba(17,12,8,.05), 0 1px 1px rgba(17,12,8,.05), 0 8px 18px rgba(17,12,8,.10), 0 24px 48px rgba(17,12,8,.14)',
+          '--surface-gradient':
+            'linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 42%, #FFEBDA 100%)',
+          '--border': '2px solid transparent',
+          '--font-family-heading': "'Noto Serif JP', serif",
+          '--font-family-body': "'Noto Sans JP', system-ui, sans-serif",
+          '--accent-surface':
+            'linear-gradient(135deg, #FFA052 0%, #F97316 55%, #E2630F 100%)',
+          '--accent-shadow':
+            'inset 0 1px 1px rgba(255,255,255,.45), inset 0 -2px 4px #E2630F, 0 8px 20px rgba(167,70,10,.34)',
+          '--color-bg': '#FFF7EF',
+          '--color-surface': '#FFFFFF',
+          '--color-surface-alt': '#FFEBDA',
+          '--color-text': '#2E1708',
+          '--color-text-muted': '#7A4A22',
+          '--color-primary': '#F97316',
+          '--color-on-primary': '#2E1708',
+          '--color-primary-text': '#B83C0A',
+          '--color-border': '#F5DCC6',
+          shop: '老舗旅館',
+          summary: '情報はゆったり、飾りは贅沢に、色は元気に、見出しは上品に。',
+        },
+        DFCG: {
+          '--space-unit': '6px',
+          '--font-size-base': '14px',
+          '--line-height': '1.5',
+          '--radius': '4px',
+          '--shadow': 'none',
+          '--surface-gradient': 'none',
+          '--border': '2px solid #D2DAE2',
+          '--font-family-heading': "'Noto Sans JP', system-ui, sans-serif",
+          '--font-family-body': "'Noto Sans JP', system-ui, sans-serif",
+          '--accent-surface': '#3B5B7A',
+          '--accent-shadow': 'none',
+          '--color-bg': '#F2F5F8',
+          '--color-surface': '#FFFFFF',
+          '--color-surface-alt': '#E7EDF4',
+          '--color-text': '#1B2733',
+          '--color-text-muted': '#55636F',
+          '--color-primary': '#3B5B7A',
+          '--color-on-primary': '#FFFFFF',
+          '--color-primary-text': '#335072',
+          '--color-border': '#D2DAE2',
+          shop: '市役所の窓口',
+          summary: '情報はぎっしり、飾りはシンプル、色は落ち着いて、見出しはすっきり。',
+        },
+      };
+
+      const state = {
+        type: 'ARPM',
+        k2: 'list',
+        k7: 'seg',
+        k4: 'toast',
+        k5: 'modal',
+        k6: 'skeleton',
+      };
+
+      // ======================================================================
+      // 定番UIキットの中身（本番と同じ文言）
+      // ======================================================================
+      const KIT = [
+        {
+          category: 'レイアウト',
+          items: [
+            { label: 'メニューの出し方', name: 'ボトムナビ', desc: '画面の下に、行き先がいつも並んでいる', demo: 'nav' },
+            { label: '一覧の見せ方', name: 'リスト', desc: '1行ずつ並べる。一度にたくさん見える', demo: 'list' },
+            {
+              label: '続きの見せ方',
+              either: true,
+              both: '無限スクロール ／「もっと見る」ボタン',
+            },
+          ],
+        },
+        {
+          category: 'コンポーネント',
+          items: [
+            { label: 'お知らせの出し方', name: 'トースト', desc: '数秒で自動的に消えるお知らせ', demo: 'list' },
+            { label: '確認の出し方', name: 'ボトムシート', desc: '画面の下からせり上がってくる確認画面', demo: 'list' },
+            { label: '読み込み中の見せ方', name: 'スケルトンスクリーン', desc: '読み込み中に、出てくる中身の形を先に見せる', demo: 'list' },
+            { label: '切り替えの形', name: 'セグメントコントロール', desc: '横に並んだボタンで切り替える', demo: 'list' },
+            { label: '入力ミスの伝え方', name: 'その場で出す', desc: '打った直後に、欄のすぐ下に出る', demo: 'list' },
+          ],
+        },
+        {
+          category: 'アニメーション',
+          items: [
+            { label: '動きの速さ', name: 'きびきび', desc: '素早く、さっと切り替わる', demo: 'list' },
+            { label: '画面の切り替わり', name: 'スライド', desc: '横に滑って、次の画面が入ってくる', demo: 'list' },
+          ],
+        },
+      ];
+
+      const MEMO_ROWS = [
+        ['買い物メモ', '牛乳／食パン／たまご'],
+        ['来週やること', '図書館に本を返す'],
+        ['貸したもの', '傘（青）、返ってきた'],
+      ]
+        .map(
+          ([t, n]) =>
+            `<div class="memo__row"><span class="memo__row-title">${t}</span><span class="memo__row-note">${n}</span></div>`,
+        )
+        .join('');
+
+      function phone(kind) {
+        const nav =
+          kind === 'nav'
+            ? `<div class="memo__nav"><span class="memo__nav-item memo__nav-item--on">メモ</span><span class="memo__nav-item">検索</span><span class="memo__nav-item">設定</span></div>`
+            : '';
+        return `
+          <div class="kit-demo">
+            <div class="kit-demo__screen">
+              <div class="kit-demo__status"><span>10:18</span><span>▮▮▮</span></div>
+              <div class="memo__bar">メモ</div>
+              <div class="memo__body">${MEMO_ROWS}</div>
+              ${nav}
+            </div>
+          </div>`;
+      }
+
+      // ======================================================================
+      // 画面の組み立て
+      // ======================================================================
+      function kitSection() {
+        const groups = KIT.map(
+          (g) => `
+          <div class="kitlist__group">
+            <p class="kitlist__category">${g.category}</p>
+            <div class="kitlist__items">
+              ${g.items
+                .map((it, i) =>
+                  it.either
+                    ? `<div class="kitlist__item kitlist__item--either">
+                         <div class="kitlist__head">
+                           <div>
+                             <p class="kitlist__label">${it.label}</p>
+                             <p class="kitlist__name">どちらでも</p>
+                             <span class="kitlist__both">${it.both}</span>
+                           </div>
+                         </div>
+                       </div>`
+                    : `<div class="kitlist__item" data-open="${g.category === 'レイアウト' && i === 0 ? 'true' : 'false'}">
+                         <div class="kitlist__head">
+                           <div>
+                             <p class="kitlist__label">${it.label}</p>
+                             <p class="kitlist__name">${it.name}</p>
+                             <p class="kitlist__desc">${it.desc}</p>
+                           </div>
+                           <button type="button" class="kitlist__play" aria-expanded="${g.category === 'レイアウト' && i === 0 ? 'true' : 'false'}">▶ 動きを見る</button>
+                         </div>
+                         <div class="kitlist__demo">${phone(it.demo)}</div>
+                       </div>`,
+                )
+                .join('')}
+            </div>
+          </div>`,
+        ).join('');
+
+        return `
+          <section class="result__block">
+            <h2 class="result__heading">あなたの定番UIキット</h2>
+            <p class="result__sub">22問であなたが選んだ部品です。名前を覚えて帰ってください。AIにも、人にも、この名前で頼めます。</p>
+            <div class="kitlist kitlist--${state.k2}">${groups}</div>
+          </section>`;
+      }
+
+      function promptSection() {
+        const sel = state.k7 === 'seg' ? 0 : 0;
+        const switcher =
+          state.k7 === 'seg'
+            ? `<div class="seg" data-selected="0">
+                 <span class="seg__thumb"></span>
+                 <button type="button" class="seg__btn seg__btn--on">設計図</button>
+                 <button type="button" class="seg__btn">デザイントークン</button>
+               </div>`
+            : `<div class="tabs2" data-selected="0">
+                 <span class="tabs2__ink"></span>
+                 <button type="button" class="tabs2__btn tabs2__btn--on">設計図</button>
+                 <button type="button" class="tabs2__btn">デザイントークン</button>
+               </div>`;
+
+        const body = `以下のデザイン方針でUIを作成してください。
+
+## デザインタイプ：${state.type}（${THEMES[state.type].shop}）
+- 情報量：はっきりユッタリ（100%）。余白を広く取り…
+- 見出し：はっきり明朝（100%）。見出しだけ明朝体…
+
+## デザイントークン（CSS変数）
+:root { … }
+
+## 使いたいUI部品・動き
+- メニュー：ボトムナビ（画面の下に、行き先がいつも並んでいる）
+- 一覧：リスト（1行ずつ並べる。一度にたくさん見える）
+- お知らせ：トースト（数秒で自動的に消えるお知らせ）
+- 確認：ボトムシート（画面の下からせり上がってくる確認画面）
+- 読み込み中：スケルトンスクリーン（…）
+- 切り替え：セグメントコントロール（…）
+- 入力ミス：その場で出す（打った直後に、欄のすぐ下に出る）
+- 動きの速さ：きびきび（素早く、さっと切り替わる）
+- 画面の切り替わり：スライド（横に滑って、次の画面が入ってくる）
+
+## 守ってほしいこと
+- 上記のトークン以外の色・フォントを追加しない
+- 同じ役割の部品を2種類混ぜない
+- アクセシビリティ（コントラスト比4.5:1以上、タップ領域44px以上）は好みより優先する`;
+
+        return `
+          <section class="result__block">
+            <div class="result__heading-row">
+              <h2 class="result__heading" style="border:none;padding:0">AIに頼むための文章</h2>
+              <button type="button" class="btn btn--copy" data-act="copy">文章をコピー</button>
+            </div>
+            <p class="result__sub">ChatGPTなどに貼り付けると、あなた好みの見た目で画面を作ってくれます。</p>
+            <div class="switcher">${switcher}</div>
+            <pre class="prompt__body">${body}</pre>
+          </section>`;
+      }
+
+      function loadingSection() {
+        const inner =
+          state.k6 === 'skeleton'
+            ? `<span class="skeleton__bar" style="width:40%"></span>
+               <span class="skeleton__bar" style="width:100%"></span>
+               <span class="skeleton__bar" style="width:86%"></span>
+               <span class="skeleton__bar" style="width:64%"></span>`
+            : `<span class="spinner"></span>`;
+        return `<section class="result__block"><h2 class="result__heading">結果が出るまでの待ち時間（K6）</h2><div class="stub" style="text-align:left">${inner}</div></section>`;
+      }
+
+      function resultPage() {
+        const t = THEMES[state.type];
+        return `
+          <div class="result">
+            <header class="hero">
+              <p class="hero__lead">あなたのデザインの好みは……</p>
+              <h1 class="hero__shop">『${t.shop}』</h1>
+              <p><span class="hero__code">${state.type}</span></p>
+              <p class="hero__summary">${t.summary}</p>
+            </header>
+
+            <section class="result__block">
+              <h2 class="result__heading">あなたのデザインあるある</h2>
+              <div class="stub">既存：4つのあるある</div>
+            </section>
+
+            <section class="result__block">
+              <h2 class="result__heading">4つの好みの傾向</h2>
+              <div class="stub">既存：割合バー4本</div>
+            </section>
+
+            <section class="result__block">
+              <h2 class="result__heading">あなた好みのデザイン見本</h2>
+              <div class="stub">既存：プレビュー3つ</div>
+            </section>
+
+            ${kitSection()}
+
+            <section class="result__block">
+              <h2 class="result__heading">場所の相性</h2>
+              <div class="stub">既存：気が合う／落ち着かない</div>
+            </section>
+
+            ${promptSection()}
+
+            <section class="result__block">
+              <div class="result__actions">
+                <button type="button" class="btn btn--primary" data-act="restart">もう一度診断する</button>
+                <button type="button" class="btn btn--ghost">← 最後の問題にもどる</button>
+              </div>
+            </section>
+          </div>`;
+      }
+
+      function overlays() {
+        const notice =
+          state.k4 === 'toast'
+            ? `<div class="notice notice--toast">コピーしました</div>`
+            : `<div class="notice notice--banner"><span>コピーしました</span><button type="button" class="notice__close" data-act="close-notice">✕</button></div>`;
+        const panel = `
+          <div class="scrim" data-act="close-panel"></div>
+          <div class="panel panel--${state.k5 === 'modal' ? 'modal' : 'sheet'}">
+            <p class="panel__title">もう一度診断しますか？</p>
+            <p class="panel__note">いまの結果は消えます。</p>
+            <div class="panel__buttons">
+              ${
+                state.k5 === 'modal'
+                  ? `<button type="button" class="btn btn--ghost" data-act="close-panel">やめる</button><button type="button" class="btn btn--primary">診断しなおす</button>`
+                  : `<button type="button" class="btn btn--primary">診断しなおす</button><button type="button" class="btn btn--ghost" data-act="close-panel">やめる</button>`
+              }
+            </div>
+          </div>`;
+        return notice + panel;
+      }
+
+      function frame(kind) {
+        return `
+          <figure>
+            <figcaption>${kind === 'sp' ? 'スマホ 390×700（中はスクロールします）' : 'PC 1440×900（50%に縮小）'}</figcaption>
+            <div class="device device--${kind}" data-notice="off" data-panel="off">
+              <div class="device__scroll${kind === 'pc' ? ' pc' : ''}">${resultPage()}</div>
+              ${overlays()}
+            </div>
+          </figure>`;
+      }
+
+      function render() {
+        const t = THEMES[state.type];
+        const vars = Object.entries(t)
+          .filter(([k]) => k.startsWith('--'))
+          .map(([k, v]) => `${k}:${v}`)
+          .join(';');
+
+        document.getElementById('page').innerHTML = `
+          <p class="lead">
+            新しいのは「あなたの定番UIキット」の節と、AIに頼むための文章の中の「使いたいUI部品・動き」。
+            上のボタンで、第2部の答えによって結果ページ自体がどう変わるか（てんこ盛り化）を切り替えられます。
+          </p>
+          <div class="band">
+            <div class="row" style="--x:0;${vars}">
+              ${frame('sp')}
+              ${frame('pc')}
+            </div>
+          </div>
+          <p class="hint">
+            枠の中の［文章をコピー］を押すと K4 のお知らせが、［もう一度診断する］を押すと K5 の確認が出ます。
+            「動きを見る」はキットの各項目を開きます。
+          </p>
+          <div class="band">
+            <h2>結果が出るまでの待ち時間（K6）</h2>
+            <div class="row" style="${vars}">
+              <figure>
+                <figcaption>ファーストビューが出るあいだ、下の節をこの形で待たせる</figcaption>
+                <div class="device device--sp" style="height:360px">
+                  <div class="device__scroll"><div class="result">${loadingSection()}</div></div>
+                </div>
+              </figure>
+            </div>
+          </div>`;
+
+        for (const el of document.querySelectorAll('.device')) {
+          el.style.cssText += vars;
+        }
+      }
+
+      // --- 操作 ---
+      document.addEventListener('click', (e) => {
+        const set = e.target.closest('[data-set]');
+        if (set) {
+          state[set.dataset.set] = set.dataset.val;
+          for (const b of document.querySelectorAll(`[data-set="${set.dataset.set}"]`)) {
+            b.setAttribute('aria-pressed', String(b.dataset.val === set.dataset.val));
+          }
+          render();
+          return;
+        }
+
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        const device = e.target.closest('.device');
+        if (act === 'copy' && device) {
+          device.dataset.notice = 'on';
+          if (state.k4 === 'toast') setTimeout(() => (device.dataset.notice = 'off'), 2000);
+        }
+        if (act === 'close-notice' && device) device.dataset.notice = 'off';
+        if (act === 'restart' && device) device.dataset.panel = 'on';
+        if (act === 'close-panel' && device) device.dataset.panel = 'off';
+
+        const play = e.target.closest('.kitlist__play');
+        if (play) {
+          const item = play.closest('.kitlist__item');
+          const open = item.dataset.open !== 'true';
+          for (const other of item.closest('.kitlist').querySelectorAll('.kitlist__item')) {
+            other.dataset.open = 'false';
+            other.querySelector('.kitlist__play')?.setAttribute('aria-expanded', 'false');
+          }
+          item.dataset.open = String(open);
+          play.setAttribute('aria-expanded', String(open));
+        }
+      });
+
+      render();
+    </script>
+  </body>
+</html>
