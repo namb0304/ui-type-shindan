@@ -133,7 +133,7 @@ function screenMotionBase(variant: MotionVariant): KitDemoInstance {
      */
     async play(): Promise<void> {
       reset();
-      await scheduler.wait(PLAY_LEAD_MS);
+      await scheduler.hold(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
 
       const firstRow = rows[0];
@@ -142,12 +142,12 @@ function screenMotionBase(variant: MotionVariant): KitDemoInstance {
       for (let round = 0; round < 2; round += 1) {
         await tap(firstRow, openDetail);
         if (scheduler.cancelled) return;
-        await scheduler.wait(DETAIL_HOLD_MS);
+        await scheduler.hold(DETAIL_HOLD_MS);
         if (scheduler.cancelled) return;
 
         await tap(backButton, closeDetail);
         if (scheduler.cancelled) return;
-        await scheduler.wait(round === 0 ? BETWEEN_MS : 300);
+        await scheduler.hold(round === 0 ? BETWEEN_MS : 300);
         if (scheduler.cancelled) return;
       }
     },

@@ -212,7 +212,7 @@ function menuBase(variant: 'drawer' | 'nav'): KitDemoInstance {
      */
     async play(): Promise<void> {
       reset();
-      await scheduler.wait(PLAY_LEAD_MS);
+      await scheduler.hold(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
 
       const settings = destinationButtons.get('settings');
@@ -222,11 +222,11 @@ function menuBase(variant: 'drawer' | 'nav'): KitDemoInstance {
       if (variant === 'nav') {
         await tap(settings, () => goTo('settings'));
         if (scheduler.cancelled) return;
-        await scheduler.wait(PAGE_HOLD_MS);
+        await scheduler.hold(PAGE_HOLD_MS);
         if (scheduler.cancelled) return;
 
         await tap(memo, () => goTo('memo'));
-        await scheduler.wait(300);
+        await scheduler.hold(300);
         return;
       }
 
@@ -235,7 +235,7 @@ function menuBase(variant: 'drawer' | 'nav'): KitDemoInstance {
       // 1回目：開いて、設定へ
       await tap(burger, openDrawer);
       if (scheduler.cancelled) return;
-      await scheduler.wait(DRAWER_HOLD_MS);
+      await scheduler.hold(DRAWER_HOLD_MS);
       if (scheduler.cancelled) return;
 
       await tap(settings, () => {
@@ -243,20 +243,20 @@ function menuBase(variant: 'drawer' | 'nav'): KitDemoInstance {
         goTo('settings');
       });
       if (scheduler.cancelled) return;
-      await scheduler.wait(PAGE_HOLD_MS);
+      await scheduler.hold(PAGE_HOLD_MS);
       if (scheduler.cancelled) return;
 
       // 2回目：戻るときも、もう一度開く必要がある
       await tap(burger, openDrawer);
       if (scheduler.cancelled) return;
-      await scheduler.wait(600);
+      await scheduler.hold(600);
       if (scheduler.cancelled) return;
 
       await tap(memo, () => {
         closeDrawer();
         goTo('memo');
       });
-      await scheduler.wait(300);
+      await scheduler.hold(300);
     },
 
     destroy(): void {

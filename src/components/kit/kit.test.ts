@@ -7,7 +7,7 @@ import { KIT_QUESTIONS, TOTAL_KIT_QUESTIONS } from '../../data/kitQuestions';
 import { KIT_CATEGORY_LABEL } from '../../data/kitTypes';
 import { CSS_VAR_NAMES } from '../../data/tokens';
 import { getKitDemo, hasKitDemo, KIT_DEMOS } from './index';
-import { createScheduler } from './scheduler';
+import { createScheduler, HOLD_SCALE } from './scheduler';
 import { maxScrollTop, scrollSmoothly } from './scroll';
 
 const KIT_CSS = readFileSync(
@@ -248,6 +248,70 @@ describe('デモの中のスクロール（K2・K3）', () => {
     const target = fakeScrollTarget(500, 300);
     await expect(scrollSmoothly(target, 0, 480, scheduler)).resolves.toBeUndefined();
     expect(target.scrollTop).toBe(0);
+  });
+});
+
+describe('見せるための間（HOLD_SCALE）', () => {
+  it('hold には倍率が掛かる', async () => {
+    vi.useFakeTimers();
+    const scheduler = createScheduler();
+
+    let done = false;
+    const waiting = scheduler.hold(1000).then(() => {
+      done = true;
+    });
+
+    await vi.advanceTimersByTimeAsync(1000 * HOLD_SCALE - 1);
+    expect(done, '倍率を掛けた時間の直前では、まだ終わっていない').toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await waiting;
+    expect(done).toBe(true);
+
+    vi.useRealTimers();
+  });
+
+  it('wait には倍率が掛からない（動きの長さは変えない）', async () => {
+    vi.useFakeTimers();
+    const scheduler = createScheduler();
+
+    let done = false;
+    const waiting = scheduler.wait(1000).then(() => {
+      done = true;
+    });
+
+    await vi.advanceTimersByTimeAsync(999);
+    expect(done).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await waiting;
+    expect(done).toBe(true);
+
+    vi.useRealTimers();
+  });
+
+  it('倍率は1か所で持っている（0より大きく、速くする向き）', () => {
+    expect(HOLD_SCALE).toBeGreaterThan(0);
+    expect(HOLD_SCALE).toBeLessThanOrEqual(1);
+  });
+
+  it('動きに合わせて待つところは wait のまま（倍率を掛けない）', () => {
+    // 波紋・文字を打つ速さ・スクロールの1コマは「動き」。
+    // ここに倍率が掛かると、K9（動きの速さ）で比べているものが変わる
+    const files = ['memoApp.ts', 'formError.ts', 'scroll.ts'] as const;
+    const motionWaits: Record<string, string[]> = {
+      'memoApp.ts': ['TAP_MS * 0.5'],
+      'formError.ts': ['TYPE_MS'],
+      'scroll.ts': ['FRAME_MS'],
+    };
+
+    for (const name of files) {
+      const source = readFileSync(fileURLToPath(new URL(`./${name}`, import.meta.url)), 'utf8');
+      for (const arg of motionWaits[name]) {
+        expect(source, `${name} の ${arg}`).toContain(`scheduler.wait(${arg})`);
+        expect(source, `${name} の ${arg}`).not.toContain(`scheduler.hold(${arg})`);
+      }
+    }
   });
 });
 

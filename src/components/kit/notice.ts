@@ -85,7 +85,7 @@ function noticeBase(variant: 'toast' | 'banner'): KitDemoInstance {
     // 連打されたとき、古いタイマーで消さないように世代を持つ
     hideToken += 1;
     const token = hideToken;
-    void scheduler.wait(TOAST_LIFETIME_MS).then(() => {
+    void scheduler.hold(TOAST_LIFETIME_MS).then(() => {
       if (scheduler.cancelled || token !== hideToken) return;
       delete frame.dataset.noticeOpen;
     });
@@ -114,7 +114,7 @@ function noticeBase(variant: 'toast' | 'banner'): KitDemoInstance {
      */
     async play(): Promise<void> {
       reset();
-      await scheduler.wait(PLAY_LEAD_MS);
+      await scheduler.hold(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
 
       await tap(saveButton, show);
@@ -122,15 +122,15 @@ function noticeBase(variant: 'toast' | 'banner'): KitDemoInstance {
 
       if (variant === 'toast') {
         // 自分で消えるまでを見せきる。ここで最初の状態に戻る
-        await scheduler.wait(TOAST_LIFETIME_MS + 500);
+        await scheduler.hold(TOAST_LIFETIME_MS + 500);
         return;
       }
 
       // バナーは押すまで消えない。そのことを見せてから、✕を押して閉じる
-      await scheduler.wait(BANNER_HOLD_MS);
+      await scheduler.hold(BANNER_HOLD_MS);
       if (scheduler.cancelled || !closeButton) return;
       await tap(closeButton, hide);
-      await scheduler.wait(300);
+      await scheduler.hold(300);
     },
 
     destroy(): void {

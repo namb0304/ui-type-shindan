@@ -106,7 +106,7 @@ function moreBase(variant: 'infinite' | 'button'): KitDemoInstance {
     // ボタンのほうは押した手応えがあるので、印は出さずにすぐ増やす
     if (variant === 'infinite') {
       frame.dataset.loading = 'true';
-      await scheduler.wait(LOADING_MS);
+      await scheduler.hold(LOADING_MS);
       delete frame.dataset.loading;
       if (scheduler.cancelled) {
         loading = false;
@@ -161,7 +161,7 @@ function moreBase(variant: 'infinite' | 'button'): KitDemoInstance {
       playing = true;
       try {
         reset();
-        await scheduler.wait(PLAY_LEAD_MS);
+        await scheduler.hold(PLAY_LEAD_MS);
         if (scheduler.cancelled) return;
 
         await scrollToBottom(feed, SCROLL_DOWN_MS, scheduler);
@@ -169,23 +169,23 @@ function moreBase(variant: 'infinite' | 'button'): KitDemoInstance {
 
         if (variant === 'infinite') {
           // 押していないのに増えるところを見せる
-          await scheduler.wait(300);
+          await scheduler.hold(300);
           if (scheduler.cancelled) return;
           await load();
         } else {
-          await scheduler.wait(BUTTON_HOLD_MS);
+          await scheduler.hold(BUTTON_HOLD_MS);
           if (scheduler.cancelled || !moreButton) return;
           await tap(moreButton, () => void load());
         }
         if (scheduler.cancelled) return;
 
-        await scheduler.wait(LOADED_HOLD_MS);
+        await scheduler.hold(LOADED_HOLD_MS);
         if (scheduler.cancelled) return;
 
         // 増えた3件を見にいく
         await scrollToBottom(feed, SCROLL_MORE_MS, scheduler);
         if (scheduler.cancelled) return;
-        await scheduler.wait(LOADED_HOLD_MS);
+        await scheduler.hold(LOADED_HOLD_MS);
         if (scheduler.cancelled) return;
 
         await scrollToTop(feed, SCROLL_UP_MS, scheduler);

@@ -106,17 +106,17 @@ function panelBase(variant: 'modal' | 'sheet'): KitDemoInstance {
     /** [削除] → 開く → 2.1秒そのまま → [やめる] → 閉じる */
     async play(): Promise<void> {
       close();
-      await scheduler.wait(PLAY_LEAD_MS);
+      await scheduler.hold(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
 
       await tap(deleteButton, open);
       if (scheduler.cancelled) return;
 
-      await scheduler.wait(PANEL_HOLD_MS);
+      await scheduler.hold(PANEL_HOLD_MS);
       if (scheduler.cancelled) return;
 
       await tap(cancel, close);
-      await scheduler.wait(300);
+      await scheduler.hold(300);
     },
 
     destroy(): void {

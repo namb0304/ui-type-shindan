@@ -84,7 +84,7 @@ function loadingBase(variant: 'skeleton' | 'spinner'): KitDemoInstance {
     loadToken += 1;
     const token = loadToken;
 
-    return scheduler.wait(LOADING_MS).then(() => {
+    return scheduler.hold(LOADING_MS).then(() => {
       if (scheduler.cancelled || token !== loadToken) return;
       delete frame.dataset.loading;
     });
@@ -113,7 +113,7 @@ function loadingBase(variant: 'skeleton' | 'spinner'): KitDemoInstance {
     /** [もう一度読み込む] → 読み込み中 → 一覧が出る（＝最初の状態に戻る） */
     async play(): Promise<void> {
       reset();
-      await scheduler.wait(PLAY_LEAD_MS);
+      await scheduler.hold(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
 
       let loading: Promise<void> = Promise.resolve();
@@ -123,7 +123,7 @@ function loadingBase(variant: 'skeleton' | 'spinner'): KitDemoInstance {
       await loading;
 
       // 中身が出たところを見せてから次へ
-      await scheduler.wait(600);
+      await scheduler.hold(600);
     },
 
     destroy(): void {

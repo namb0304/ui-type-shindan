@@ -210,7 +210,7 @@ function formBase(variant: 'inline' | 'summary'): KitDemoInstance {
      */
     async play(): Promise<void> {
       reset();
-      await scheduler.wait(PLAY_LEAD_MS);
+      await scheduler.hold(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
 
       await tap(addressInput, focusField);
@@ -221,29 +221,29 @@ function formBase(variant: 'inline' | 'summary'): KitDemoInstance {
 
       if (variant === 'inline') {
         // もう出ている。読む間をとってから直す
-        await scheduler.wait(ERROR_HOLD_MS);
+        await scheduler.hold(ERROR_HOLD_MS);
         if (scheduler.cancelled) return;
       } else {
         // 間違えたまま、何も言われない時間
-        await scheduler.wait(800);
+        await scheduler.hold(800);
         if (scheduler.cancelled) return;
 
         // 押してはじめて、上にまとめて出る
         await tap(sendButton, send);
         if (scheduler.cancelled) return;
-        await scheduler.wait(ERROR_HOLD_MS);
+        await scheduler.hold(ERROR_HOLD_MS);
         if (scheduler.cancelled) return;
       }
 
       await type(FIXED_PART);
       if (scheduler.cancelled) return;
-      await scheduler.wait(400);
+      await scheduler.hold(400);
       if (scheduler.cancelled) return;
 
       await tap(sendButton, send);
       if (scheduler.cancelled) return;
 
-      await scheduler.wait(SENT_HOLD_MS);
+      await scheduler.hold(SENT_HOLD_MS);
       reset();
     },
 

@@ -64,17 +64,17 @@ function listBase(variant: 'list' | 'card'): KitDemoInstance {
     /** 先頭で少し止まる → 下までスクロール → 少し止まる → 先頭に戻る */
     async play(): Promise<void> {
       reset();
-      await scheduler.wait(PLAY_LEAD_MS);
+      await scheduler.hold(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
 
       await scrollToBottom(feed, SCROLL_DOWN_MS, scheduler);
       if (scheduler.cancelled) return;
 
-      await scheduler.wait(BOTTOM_HOLD_MS);
+      await scheduler.hold(BOTTOM_HOLD_MS);
       if (scheduler.cancelled) return;
 
       await scrollToTop(feed, SCROLL_UP_MS, scheduler);
-      await scheduler.wait(200);
+      await scheduler.hold(200);
     },
 
     destroy(): void {

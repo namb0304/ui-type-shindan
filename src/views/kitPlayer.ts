@@ -121,7 +121,7 @@ export function createKitPlayer(stage: HTMLElement): KitPlayer {
         if (scheduler.cancelled) return;
         await play(i);
         if (scheduler.cancelled) return;
-        await scheduler.wait(GAP_BETWEEN_DEMOS_MS);
+        await scheduler.hold(GAP_BETWEEN_DEMOS_MS);
       }
       // 見比べ終わったら、最初のデモに戻しておく。
       // スマホでは「2つめが出たまま」になり、1つめを見失うため

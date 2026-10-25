@@ -137,23 +137,23 @@ function switcherBase(variant: 'segmented' | 'tabs'): KitDemoInstance {
     /** [お気に入り] → 印が動いて2件になる → [すべて] → 4件に戻る（最初の状態） */
     async play(): Promise<void> {
       reset();
-      await scheduler.wait(PLAY_LEAD_MS);
+      await scheduler.hold(PLAY_LEAD_MS);
       if (scheduler.cancelled) return;
 
       const favorite = buttons.get('favorite');
       const all = buttons.get('all');
       if (!favorite || !all) return;
 
-      await scheduler.wait(FIRST_HOLD_MS);
+      await scheduler.hold(FIRST_HOLD_MS);
       if (scheduler.cancelled) return;
 
       await tap(favorite, () => select('favorite'));
       if (scheduler.cancelled) return;
-      await scheduler.wait(SWITCHED_HOLD_MS);
+      await scheduler.hold(SWITCHED_HOLD_MS);
       if (scheduler.cancelled) return;
 
       await tap(all, () => select('all'));
-      await scheduler.wait(300);
+      await scheduler.hold(300);
     },
 
     destroy(): void {
