@@ -1,20 +1,45 @@
 import { createCopyButton } from '../components/copyButton';
 import { createPreview, RESULT_PREVIEW_SUBJECTS } from '../components/previews';
+import { createResultNotice } from '../components/resultNotice';
+import type { NoticeVariant } from '../components/resultNotice';
 import { createShopPhoto } from '../components/shopPhoto';
 import { AXES, getAxis } from '../data/axes';
+import type { KitAnswers } from '../data/kitTypes';
 import { getTrait } from '../data/traits';
 import { getTypeInfo } from '../data/typeInfos';
 import type { AxisScore, DiagnosisResult, TypeInfo } from '../data/types';
 import { calcAffinity } from '../logic/affinity';
+import { kitPartId } from '../logic/kit';
 import { buildPrompt } from '../logic/prompt';
 import { sideOf, toPercent } from '../logic/score';
 import { buildTypeSummaryParts } from '../logic/summary';
 import { applyTheme, buildResultTheme } from '../logic/theme';
 import { button, el } from './dom';
+import type { View } from './dom';
+import { renderKitResult } from './kitResult';
 
 export interface ResultHandlers {
   onRestart: () => void;
   onBack: () => void;
+}
+
+/**
+ * 結果ページのてんこ盛り化で使う部品（要件 §5）。
+ *
+ * 第2部の回答から決める。「どっちでもいい」はAが既定（logic/kit.ts）。
+ */
+interface KitParts {
+  /** K4：コピーしたときのお知らせ */
+  notice: NoticeVariant;
+  /** K2：定番UIキットの並べ方 */
+  list: 'list' | 'card';
+}
+
+function resolveParts(answers: KitAnswers): KitParts {
+  return {
+    notice: kitPartId(answers, 'k4') === 'banner' ? 'banner' : 'toast',
+    list: kitPartId(answers, 'k2') === 'card' ? 'card' : 'list',
+  };
 }
 
 /**
@@ -25,24 +50,41 @@ export interface ResultHandlers {
  * CSS変数は画面のルート要素に適用する。画面を作り直せば消えるので、
  * 他の画面にテーマが残らない。
  */
-export function renderResult(result: DiagnosisResult, handlers: ResultHandlers): HTMLElement {
+export function renderResult(
+  result: DiagnosisResult,
+  handlers: ResultHandlers,
+  kitAnswers: KitAnswers = {},
+): View {
   const info = getTypeInfo(result.code);
   const vars = buildResultTheme(result.scores);
+  const parts = resolveParts(kitAnswers);
 
   const screen = el('main', 'screen screen--result');
   applyTheme(screen, vars);
+
+  // コピーしたことを知らせる相手。第2部で選んだ出し方で出す（K4・P0）
+  const notice = createResultNotice(parts.notice);
+  const kit = renderKitResult(kitAnswers, vars, parts.list);
 
   screen.append(
     renderHero(result, info),
     renderTraits(result.scores),
     renderAxes(result.scores),
     renderPreviews(result),
+    kit.element,
     renderAffinity(result),
-    renderPrompt(result),
+    renderPrompt(result, kitAnswers, notice.show),
     renderFooter(handlers),
+    notice.element,
   );
 
-  return screen;
+  return {
+    element: screen,
+    destroy() {
+      kit.destroy();
+      notice.destroy();
+    },
+  };
 }
 
 /**
@@ -230,17 +272,26 @@ function affinityCard(title: string, code: string, note: string): HTMLElement {
 }
 
 /** 8. AI向けプロンプト */
-function renderPrompt(result: DiagnosisResult): HTMLElement {
+function renderPrompt(
+  result: DiagnosisResult,
+  kitAnswers: KitAnswers,
+  notify: (message: string) => void,
+): HTMLElement {
   const block = el('section', 'result__after result__block');
 
-  const prompt = buildPrompt(result);
+  const prompt = buildPrompt(result, kitAnswers);
   const body = el('pre', 'prompt__body', prompt);
   body.tabIndex = 0;
 
   const head = el('div', 'result__heading-row');
   head.append(
     el('h2', 'result__heading result__heading--flush', 'AIに頼むための文章'),
-    createCopyButton({ getText: () => prompt, selectTarget: body, label: '文章をコピー' }),
+    createCopyButton({
+      getText: () => prompt,
+      selectTarget: body,
+      label: '文章をコピー',
+      notify,
+    }),
   );
 
   block.append(

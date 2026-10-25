@@ -69,11 +69,13 @@ function currentView(): View {
         onBack: () => update(goBackKit(state)),
       });
     case 'result':
-      return staticView(
-        renderResult(calcResult(state.answers), {
+      return renderResult(
+        calcResult(state.answers),
+        {
           onRestart: () => update(restart()),
           onBack: () => update(backFromResult(state)),
-        }),
+        },
+        state.kitAnswers,
       );
   }
 }
@@ -97,17 +99,17 @@ function params(): URLSearchParams {
 /** ?debug=1&type=ARCM で、そのタイプの結果ページを開く（確認用）。 */
 function renderDebugType(code: string): void {
   const result = resultFromPoints(pointsFromCode(code));
+  // 第2部の回答は無いので、全項目「どちらでも」として描く。
+  // 16タイプの見た目を確かめるのが目的なので、これで足りる
   mount(
-    staticView(
-      renderResult(result, {
-        onRestart: () => {
-          window.location.search = '?debug=1';
-        },
-        onBack: () => {
-          window.location.search = '?debug=1';
-        },
-      }),
-    ),
+    renderResult(result, {
+      onRestart: () => {
+        window.location.search = '?debug=1';
+      },
+      onBack: () => {
+        window.location.search = '?debug=1';
+      },
+    }),
   );
 }
 

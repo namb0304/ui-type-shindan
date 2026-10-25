@@ -13,6 +13,13 @@ export interface CopyButtonOptions {
   /** コピーできないときに選択状態にする要素 */
   selectTarget: HTMLElement;
   label?: string;
+  /**
+   * 結果を知らせる相手。
+   *
+   * 結果ページでは、第2部で選んだ出し方（トースト／バナー）に渡す。
+   * 渡さなければ、これまでどおりボタンの文字を書き換える。
+   */
+  notify?: (message: string) => void;
 }
 
 const RESET_DELAY = 2000;
@@ -27,6 +34,10 @@ export function createCopyButton(options: CopyButtonOptions): HTMLButtonElement 
   let resetTimer: number | undefined;
 
   function show(message: string): void {
+    if (options.notify) {
+      options.notify(message);
+      return;
+    }
     node.textContent = message;
     window.clearTimeout(resetTimer);
     resetTimer = window.setTimeout(() => {

@@ -1435,6 +1435,263 @@ p {
   outline-color: var(--color-primary-text);
 }
 
+/* --- あなたの定番UIキット（第2部の結果・要件 §5） ---
+ *
+ * 部品の名前が主役。名前を覚えて帰ってもらうのが第2部の目的なので、
+ * 見出し用の書体で大きく出す（Mタイプなら明朝になる）。
+ * 「聞くこと」は小さく上に、説明は小さく下に添える。
+ */
+
+.kitlist {
+  margin-top: 18px;
+}
+
+.kitlist__group + .kitlist__group {
+  margin-top: 26px;
+}
+
+/* 分類（レイアウト／コンポーネント／アニメーション）。
+ * 中身の意味のまとまりなので、飾りではなく構造として出す */
+.kitlist__category {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary-text);
+  letter-spacing: 0.16em;
+}
+
+.kitlist__category::after {
+  flex: 1;
+  height: 1px;
+  content: '';
+  background-color: var(--color-border);
+}
+
+.kitlist__items {
+  margin-top: 10px;
+}
+
+/* --- リスト（K2でリストを選んだ人） --- */
+
+.kitlist--list .kitlist__item {
+  padding: 14px 0;
+}
+
+.kitlist--list .kitlist__item + .kitlist__item {
+  border-top: 1px solid var(--color-border);
+}
+
+/* --- カード（K2でカードを選んだ人） --- */
+
+.kitlist--card .kitlist__items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kitlist--card .kitlist__item {
+  padding: 16px;
+  background-color: var(--color-surface);
+  background-image: var(--surface-gradient);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.kitlist__head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.kitlist__text {
+  min-width: 0;
+}
+
+.kitlist__label {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.kitlist__name {
+  margin-top: 2px;
+  font-family: var(--font-family-heading);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.kitlist__desc {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+/* 見本を開くボタン。押したときだけ開く（10個並べると小さくなりすぎる） */
+.kitlist__play {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary-text);
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.kitlist__play:hover {
+  border-color: var(--color-primary-text);
+}
+
+.kitlist__play[aria-expanded='true'] {
+  color: var(--color-on-primary);
+  background: var(--accent-surface);
+  border-color: transparent;
+  box-shadow: var(--accent-shadow);
+}
+
+.kitlist__play:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: 2px;
+}
+
+.kitlist__demo {
+  display: none;
+  justify-content: center;
+  padding-top: 14px;
+}
+
+.kitlist__item[data-open='true'] .kitlist__demo {
+  display: flex;
+}
+
+/* 見本の大きさ。質問画面と違って、ここは残りの高さではなく
+ * 読める幅で決める（下限は質問画面と同じ200px） */
+.kitlist__demo .kit-demo {
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  max-height: none;
+}
+
+/* 「どっちでもいい」を選んだ項目。
+ * 選ばなかった人にも、両方の名前は持って帰ってもらう */
+.kitlist__item--either .kitlist__name {
+  color: var(--color-text-muted);
+}
+
+.kitlist__both {
+  display: inline-block;
+  padding: 3px 10px;
+  margin-top: 5px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface-alt);
+  border-radius: 999px;
+}
+
+/* --- コピーしたときのお知らせ（K4・要件 §5） ---
+ *
+ * 画面に固定して出す。結果ページは縦に長いので、
+ * ページの中に置くと、スクロール位置によっては見えない */
+
+.notice {
+  position: fixed;
+  z-index: 30;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-on-primary);
+  background: var(--accent-surface);
+  opacity: 0;
+  transition: opacity var(--duration, 0.25s) ease, transform var(--duration, 0.25s) ease;
+}
+
+.notice__text {
+  flex: 1;
+}
+
+/* トースト：下に浮いて、数秒で自分で消える */
+.notice--toast {
+  right: 16px;
+  bottom: 20px;
+  left: 16px;
+  max-width: 420px;
+  padding: 13px 18px;
+  margin: 0 auto;
+  border-radius: var(--radius);
+  box-shadow: var(--accent-shadow);
+  transform: translateY(14px);
+}
+
+/* バナー：上に居座り、✕を押すまで消えない */
+.notice--banner {
+  top: 0;
+  right: 0;
+  left: 0;
+  padding: 13px 16px;
+  box-shadow: var(--accent-shadow);
+  transform: translateY(-100%);
+}
+
+.notice[data-open='true'] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 画面に固定して出すので、本文の幅の制限（.screen--result > *）を外す。
+ * 外さないと、PCでバナーが真ん中の680pxぶんにしか伸びない */
+.screen--result > .notice {
+  max-width: none;
+  margin: 0;
+}
+
+/* トーストだけは、広い画面で横に伸びすぎないよう中央に寄せる */
+.screen--result > .notice--toast {
+  right: 16px;
+  left: 16px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.notice__close {
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.notice__close:focus-visible {
+  outline: 2px solid var(--color-on-primary);
+  outline-offset: -4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice {
+    transition: none;
+    transform: none;
+  }
+}
+
 /* --- 16タイプへの入口（?debug=1） --- */
 
 .gallery__types {

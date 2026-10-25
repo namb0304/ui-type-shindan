@@ -5,6 +5,8 @@ import { CSS_VAR_NAMES } from '../data/tokens';
 import { getPromptAdvice } from '../data/traits';
 import { TYPE_INFOS } from '../data/typeInfos';
 import type { RightPoints } from '../data/types';
+import { KIT_QUESTIONS } from '../data/kitQuestions';
+import type { KitAnswers } from '../data/kitTypes';
 import { buildPrompt, strengthOf } from './prompt';
 import { resultFromPoints, sideOf } from './score';
 
@@ -120,6 +122,58 @@ describe('buildPrompt', () => {
     }
   });
 
+  it('第2部で選んだ部品が「使いたいUI部品・動き」に並ぶ（要件 §7）', () => {
+    const answers: KitAnswers = Object.fromEntries(KIT_QUESTIONS.map((q) => [q.id, 'a']));
+    const prompt = buildPrompt(resultFromPoints(ALL_RIGHT), answers);
+
+    expect(prompt).toContain('## 使いたいUI部品・動き');
+    for (const question of KIT_QUESTIONS) {
+      // 名前と説明は kitQuestions.ts のものがそのまま出る（ベタ書きしない）
+      expect(prompt, question.id).toContain(
+        `- ${question.label}：${question.a.name}（${question.a.description}）`,
+      );
+    }
+  });
+
+  it('「どっちでもいい」の項目は、行ごと書かない（要件 §4.2）', () => {
+    const answers: KitAnswers = Object.fromEntries(
+      KIT_QUESTIONS.map((q, i) => [q.id, i === 0 ? 'a' : 'either']),
+    );
+    const prompt = buildPrompt(resultFromPoints(ALL_RIGHT), answers);
+
+    expect(prompt).toContain(KIT_QUESTIONS[0].a.name);
+    for (const question of KIT_QUESTIONS.slice(1)) {
+      expect(prompt, question.id).not.toContain(`- ${question.label}：`);
+    }
+    expect(prompt).not.toContain('どちらでも');
+  });
+
+  it('10問すべて「どっちでもいい」なら、この節ごと出さない（要件 §7）', () => {
+    const answers: KitAnswers = Object.fromEntries(KIT_QUESTIONS.map((q) => [q.id, 'either']));
+    expect(buildPrompt(resultFromPoints(ALL_RIGHT), answers)).not.toContain(
+      '## 使いたいUI部品・動き',
+    );
+  });
+
+  it('第2部の回答を渡さなくても組み立てられる（?debug=1 から開いたとき）', () => {
+    const prompt = buildPrompt(resultFromPoints(ALL_RIGHT));
+    expect(prompt).toContain('## デザイントークン（CSS変数）');
+    expect(prompt).not.toContain('## 使いたいUI部品・動き');
+  });
+
+  it('同じ役割の部品を混ぜない、の一文が必ず入る（第2部の趣旨そのもの）', () => {
+    expect(buildPrompt(resultFromPoints(ALL_RIGHT))).toContain(
+      '- 上記以外のUI部品を使う場合は、同じ役割の部品を2種類混ぜない',
+    );
+  });
+
+  it('第2部の回答を変えても、タイプコードと軸の行は変わらない（判定に混ざっていない）', () => {
+    const result = resultFromPoints({ density: 6, decoration: 4, tone: 3, font: 0 });
+    const a: KitAnswers = Object.fromEntries(KIT_QUESTIONS.map((q) => [q.id, 'a']));
+    const b: KitAnswers = Object.fromEntries(KIT_QUESTIONS.map((q) => [q.id, 'b']));
+    expect(axisLinesOf(buildPrompt(result, a))).toEqual(axisLinesOf(buildPrompt(result, b)));
+  });
+
   it('同じ結果なら毎回同じ文字列になる（純粋関数）', () => {
     const result = resultFromPoints({ density: 1, decoration: 5, tone: 3, font: 6 });
     expect(buildPrompt(result)).toBe(buildPrompt(result));
@@ -127,10 +181,24 @@ describe('buildPrompt', () => {
 });
 
 /** 軸の説明行だけを取り出す（「守ってほしいこと」の箇条書きと区別する）。 */
+/**
+ * 軸の4行だけを取り出す。
+ *
+ * 「## デザインタイプ」の見出しから、次の空行までを見る。
+ * 行の形（`- ○○：`）だけで拾うと、「使いたいUI部品・動き」の行も
+ * 同じ形なので混ざってしまう。
+ */
 function axisLinesOf(prompt: string): string[] {
-  return prompt
-    .split('\n')
-    .filter((line) => line.startsWith('- ') && line.includes('：'));
+  const lines = prompt.split('\n');
+  const start = lines.findIndex((line) => line.startsWith('## デザインタイプ'));
+  if (start < 0) return [];
+
+  const out: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    if (!line.startsWith('- ')) break;
+    out.push(line);
+  }
+  return out;
 }
 
 /** コードから点数を作る（テスト用）。 */
