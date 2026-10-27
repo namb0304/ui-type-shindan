@@ -2005,6 +2005,7 @@ p {
   outline-offset: 2px;
 }
 
+/* スマホは押したときだけ開く。縦に10個並べると延々スクロールすることになる */
 .kitlist__demo {
   display: none;
   justify-content: center;
@@ -2013,6 +2014,43 @@ p {
 
 .kitlist__item[data-open='true'] .kitlist__demo {
   display: flex;
+}
+
+/* PCは最初から2列で並べる。幅があるので、押す手間のほうが邪魔になる。
+ *
+ * 出し分けはCSSだけでやる。JSで作り分けると、
+ * 途中で幅が変わったとき（画面を回したとき）に食い違う。 */
+@media (min-width: 900px) {
+  .kitlist__items {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+
+    /* 「どちらでも」は見本が無いぶん低い。上をそろえて、下は伸ばさない */
+    align-items: start;
+  }
+
+  .kitlist__demo {
+    display: flex;
+    padding-top: 12px;
+  }
+
+  /* 並べ方の違い（K2）はPCでも残す。
+   * リストは区切り線だけ、カードは面。
+   * ただし「+」では視覚的な行とずれるので、PCでは全部の上に線を引く */
+  .kitlist--list .kitlist__item {
+    padding: 14px 0 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .kitlist--card .kitlist__items {
+    display: grid;
+  }
+
+  .kitlist__play {
+    min-height: 40px;
+    font-size: 11.5px;
+  }
 }
 
 /* 見本の大きさ。質問画面と違って、ここは残りの高さではなく
