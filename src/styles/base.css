@@ -2016,23 +2016,52 @@ p {
   display: flex;
 }
 
-/* PCは最初から2列で並べる。幅があるので、押す手間のほうが邪魔になる。
+/* PCでは、この節だけページの幅いっぱいに広げて3列に並べる。
  *
- * 出し分けはCSSだけでやる。JSで作り分けると、
- * 途中で幅が変わったとき（画面を回したとき）に食い違う。 */
+ * 結果ページの他の節は本文として 680px で読ませるが、
+ * ここは一覧なので、横に並べたほうが全体を見渡せる。
+ * 680px のままだと、PCで左右に大きな余白が空いてしまう。 */
 @media (min-width: 900px) {
+  .screen--result > .result__block--wide {
+    max-width: 1072px;
+  }
+
+  /* 説明文だけは本文なので、横に伸ばさず読める幅で折り返す */
+  .result__block--wide .result__sub {
+    max-width: 44em;
+  }
+
   .kitlist__items {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px 20px;
 
     /* 「どちらでも」は見本が無いぶん低い。上をそろえて、下は伸ばさない */
     align-items: start;
+
+    /* 開いた項目が2列ぶんに広がるので、空いた1列に後ろの項目を詰める */
+    grid-auto-flow: dense;
   }
 
-  .kitlist__demo {
+  /* 開いた項目は3列のうち2列を使い、左に名前と説明、右に見本を置く。
+   *
+   * 1行まるごと（1 / -1）にすると、名前と説明だけでは左が大きく空く。
+   * 2列ぶんにして見本を引き寄せ、残りの1列には次の項目を入れる。 */
+  .kitlist__item[data-open='true'] {
     display: flex;
-    padding-top: 12px;
+    grid-column: span 2;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .kitlist__item[data-open='true'] .kitlist__head {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .kitlist__item[data-open='true'] .kitlist__demo {
+    flex-shrink: 0;
+    padding-top: 0;
   }
 
   /* 並べ方の違い（K2）はPCでも残す。
@@ -2045,11 +2074,6 @@ p {
 
   .kitlist--card .kitlist__items {
     display: grid;
-  }
-
-  .kitlist__play {
-    min-height: 40px;
-    font-size: 11.5px;
   }
 }
 

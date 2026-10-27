@@ -15,14 +15,16 @@ import { button, el } from './dom';
  * 第2部の目的なので、見出し用の書体で大きく出す（Mタイプなら明朝になる）。
  * 「聞くこと」は小さく上に、説明は小さく下に添える。
  *
- * 見本の出し方は画面の幅で変える。
- *   スマホ … 押したときだけ開く。縦に10個並べると延々スクロールすることになる
- *   PC    … 最初から2列に並べて出す。幅があるので、押す手間のほうが邪魔になる
+ * 見本は**押したときだけ開く**（スマホもPCも同じ）。10個を一度に出すと、
+ * 1つ1つが小さくなるか、延々スクロールすることになる。
+ * **動くのは押したものだけ**。10個が同時に動くと、どれを見ればいいか分からない。
  *
- * どちらでも**動くのは押したものだけ**。10個が同時に動くと、
- * どれを見ればいいか分からなくなる。
+ * PCでは、この節だけページの幅いっぱい（1072px）に広げて3列に並べる。
+ * 結果ページの他の節は本文として680pxで読ませるが、ここは一覧なので、
+ * 横に並べたほうが全体を見渡せる。
+ * 開いた項目は1行まるごと使い、左に名前と説明、右に見本を置く。
  *
- * デモは画面の幅にかかわらず最初から全部作っておき、出し分けはCSSに任せる。
+ * デモは最初から全部作っておき、見せ方はCSSに任せる。
  * JSで作り分けると、途中で幅が変わったとき（画面を回したとき）に食い違う。
  * 作っただけでは動かないので、置いておくこと自体は重くない。
  *
@@ -35,13 +37,6 @@ export interface KitResultSection {
   element: HTMLElement;
   /** デモの後片付け。結果ページを離れるときに呼ぶ */
   destroy: () => void;
-}
-
-/** PCとみなす幅。これ以上なら、見本を最初から2列で並べる */
-const WIDE_QUERY = '(min-width: 900px)';
-
-function isWide(): boolean {
-  return window.matchMedia?.(WIDE_QUERY).matches === true;
 }
 
 /** 1項目ぶんの持ち物。再生のたびに作り直すので、材料を覚えておく */
@@ -62,7 +57,8 @@ export function renderKitResult(
   vars: ThemeVars,
   listStyle: 'list' | 'card',
 ): KitResultSection {
-  const block = el('section', 'result__after result__block');
+  // --wide は、PCでこの節だけページいっぱいに広げる印（base.css）
+  const block = el('section', 'result__after result__block result__block--wide');
   block.append(
     el('h2', 'result__heading', 'あなたの定番UIキット'),
     el(
@@ -93,9 +89,8 @@ export function renderKitResult(
     slot.toggle.textContent = labelOf(slot);
   }
 
-  /** ボタンの文字。PCは開閉しないので、いつも「動きを見る」 */
+  /** ボタンの文字。開いていれば「閉じる」 */
   function labelOf(slot: Slot): string {
-    if (isWide()) return PLAY_LABEL;
     return slot.item.dataset.open === 'true' ? CLOSE_LABEL : PLAY_LABEL;
   }
 
@@ -115,12 +110,6 @@ export function renderKitResult(
   }
 
   function onToggle(slot: Slot): void {
-    // PCは最初から出ているので、押すのは「もう一度動かす」だけ
-    if (isWide()) {
-      void play(slot);
-      return;
-    }
-
     const willOpen = slot.item.dataset.open !== 'true';
     // 開くのは常に1つだけ。2つ開くと、どちらを見ればいいか分からない
     for (const other of slots) {
