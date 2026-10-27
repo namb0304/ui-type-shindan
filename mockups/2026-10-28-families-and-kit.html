@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>16タイプの系統分け／PCの定番UIキット（2026-10-28）</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ============ モックアップの外側（本番には入らない） ============ */
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 0 0 80px;
+        font-family: 'Noto Sans JP', system-ui, sans-serif;
+        color: #1d2127;
+        background-color: #eceef2;
+      }
+
+      .masthead {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        align-items: center;
+        padding: 14px 24px;
+        color: #fff;
+        background-color: #1d2127;
+      }
+
+      .masthead h1 { margin: 0; font-size: 15px; }
+      .masthead__note { font-size: 12px; color: #a8aeb8; }
+      .masthead__spacer { flex: 1; }
+
+      .tabs { display: flex; gap: 4px; padding: 4px; background-color: #30353d; border-radius: 10px; }
+
+      .tabs button, .toggle {
+        padding: 7px 14px;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #c7ccd4;
+        cursor: pointer;
+        background: none;
+        border: none;
+        border-radius: 7px;
+      }
+
+      .tabs button[aria-selected='true'] { color: #1d2127; background-color: #fff; }
+      .toggle { background-color: #30353d; }
+      .toggle[aria-pressed='true'] { color: #1d2127; background-color: #ffd37a; }
+
+      .page { padding: 0 24px; }
+      .section { display: none; }
+      .section[data-on='true'] { display: block; }
+
+      .lead { max-width: 64em; margin: 26px 0 0; font-size: 13.5px; line-height: 1.85; color: #4a515c; }
+      .band { margin-top: 26px; }
+      .band h2 { margin: 0 0 10px; font-size: 12px; color: #4a515c; }
+      .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+      figure { margin: 0; }
+      figcaption { margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #4a515c; }
+
+      .device {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #c3c8d1;
+        border-radius: 14px;
+        box-shadow: 0 6px 20px rgb(29 33 39 / 12%);
+      }
+
+      .device--sp { width: 392px; height: 702px; }
+      .device--pc { width: 722px; height: 502px; }
+      .device__scroll { width: 100%; height: 100%; overflow-y: auto; scrollbar-width: thin; }
+
+      .device--pc .device__scroll {
+        width: 1440px;
+        height: 1000px;
+        transform: scale(0.5);
+        transform-origin: top left;
+      }
+
+      /* ============ ここから本番の値 ============ */
+      .app {
+        --site-bg: #f6f7f9;
+        --site-surface: #fdfdfe;
+        --site-text: #1d2127;
+        --site-muted: #656d78;
+        --site-hairline: #e2e5ea;
+        --site-accent: #3b5b7a;
+        --site-gutter: 16px;
+
+        min-height: 100%;
+        padding: 28px var(--site-gutter) 56px;
+        font-size: 16px;
+        line-height: 1.75;
+        color: var(--site-text);
+        background-color: var(--site-bg);
+      }
+
+      .app h2, .app h3, .app p, .app ul, .app li { margin: 0; padding: 0; list-style: none; }
+      .inner { max-width: 760px; margin: 0 auto; }
+      .pc .inner { max-width: 1072px; }
+
+      .section-title { font-size: 19px; font-weight: 700; text-align: center; }
+      .pc .section-title { font-size: 24px; }
+      .section-note { margin-top: 8px; font-size: 13px; line-height: 1.8; color: var(--site-muted); text-align: center; }
+
+      /* ------------------------------------------------------------------
+       * 【1】16タイプを4つの系統に分ける
+       *
+       * 系統の色は、見出しの文字と細い帯だけに使う。
+       * 面を塗りつぶすと、サイト全体の「白〜薄いグレー」が崩れて、
+       * 結果ページでテーマが変わる落差が弱くなる。
+       * ------------------------------------------------------------------ */
+      .families { margin-top: 26px; }
+      .pc .families { margin-top: 34px; }
+      .family + .family { margin-top: 30px; }
+      .pc .family + .family { margin-top: 40px; }
+
+      /* 系統の見出し。左の太い縦線が、その系統の色 */
+      .family__head {
+        padding-left: 12px;
+        border-left: 4px solid var(--family-color);
+      }
+
+      .family__name {
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.4;
+        color: var(--family-color);
+      }
+
+      .pc .family__name { font-size: 19px; }
+
+      .family__note { margin-top: 2px; font-size: 12.5px; line-height: 1.6; color: var(--site-muted); }
+      .pc .family__note { font-size: 14px; }
+
+      .family__items {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .pc .family__items { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+
+      .type {
+        overflow: hidden;
+        background-color: var(--site-surface);
+        border: 1px solid var(--site-hairline);
+        border-top: 3px solid var(--family-color);
+        border-radius: 12px;
+      }
+
+      .type__img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
+
+      .type__body { padding: 8px 9px 10px; }
+
+      .type__name { font-size: 12.5px; font-weight: 700; line-height: 1.35; }
+      .pc .type__name { font-size: 14px; }
+
+      /* 残りの2軸（装飾・見出し）を小さく添える */
+      /* スマホでは2行に折り返すものと1行で済むものが混ざる。
+         2行ぶんの高さを確保して、カードの下端をそろえる */
+      .type__tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        min-height: calc((1.6em + 2px) * 2 + 4px);
+        margin-top: 6px;
+      }
+
+      .pc .type__tags { min-height: 0; }
+
+      .type__tag {
+        padding: 1px 7px;
+        font-size: 10px;
+        line-height: 1.6;
+        color: var(--site-muted);
+        white-space: nowrap;
+        background-color: #eef0f4;
+        border-radius: 999px;
+      }
+
+      .pc .type__tag { font-size: 11px; padding: 2px 8px; }
+
+      /* ------------------------------------------------------------------
+       * 【2】PCの定番UIキット：最初から見本付きで横に並べる
+       * ------------------------------------------------------------------ */
+      .kit-demo-theme {
+        --color-surface: #fff;
+        --color-surface-alt: #eef1f5;
+        --color-text: #1f2023;
+        --color-text-muted: #5c5f66;
+        --color-border: #dcdde1;
+        --color-primary-text: #3b5b7a;
+        --radius: 12px;
+        --space-unit: 11px;
+      }
+
+      .kitlist__group + .kitlist__group { margin-top: 26px; }
+
+      .kitlist__category {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-primary-text);
+        letter-spacing: 0.16em;
+      }
+
+      .kitlist__category::after { flex: 1; height: 1px; content: ''; background-color: var(--color-border); }
+      .kitlist__items { margin-top: 10px; }
+
+      /* スマホ：いままでどおり1列、押したら開く */
+      .kitlist--list .kitlist__item { padding: 14px 0; }
+      .kitlist--list .kitlist__item + .kitlist__item { border-top: 1px solid var(--color-border); }
+
+      .kitlist--card .kitlist__items { display: flex; flex-direction: column; gap: 12px; }
+
+      .kitlist--card .kitlist__item {
+        padding: 16px;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+      }
+
+      .kitlist__head { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+      .kitlist__label { font-size: 11.5px; color: var(--color-text-muted); }
+      .kitlist__name { margin-top: 2px; font-size: 19px; font-weight: 700; line-height: 1.35; }
+      .kitlist__desc { margin-top: 4px; font-size: 12.5px; line-height: 1.6; color: var(--color-text-muted); }
+
+      .kitlist__play {
+        flex-shrink: 0;
+        min-height: 44px;
+        padding: 0 14px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--color-primary-text);
+        white-space: nowrap;
+        cursor: pointer;
+        background: none;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+      }
+
+      .kitlist__demo { display: none; justify-content: center; padding-top: 14px; }
+      .kitlist__item[data-open='true'] .kitlist__demo { display: flex; }
+
+      .kitlist__both {
+        display: inline-block;
+        padding: 3px 10px;
+        margin-top: 5px;
+        font-size: 11.5px;
+        color: var(--color-text-muted);
+        background-color: var(--color-surface-alt);
+        border-radius: 999px;
+      }
+
+      .kitlist__item--either .kitlist__name { color: var(--color-text-muted); }
+
+      /* --- PC（900px以上を想定）：見本を最初から出して横に並べる --- */
+      .pc .kitlist__items {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        align-items: start;
+      }
+
+      .pc .kitlist--list .kitlist__item { padding: 0 0 16px; border-top: none; }
+      .pc .kitlist--list .kitlist__item + .kitlist__item { border-top: none; }
+
+      /* リストは区切り線、カードは面。PCでも並べ方の違いは残す */
+      .pc .kitlist--list .kitlist__item {
+        padding: 14px 0 0;
+        border-top: 1px solid var(--color-border);
+      }
+
+      .pc .kitlist__demo { display: flex; padding-top: 12px; }
+
+      /* 押していないあいだは、再生ボタンだけ控えめに置く */
+      .pc .kitlist__play { min-height: 36px; font-size: 11.5px; }
+
+      /* 「どちらでも」は見本が無いので、場所を空けずに小さく収める */
+      .pc .kitlist__item--either { align-self: start; }
+
+      /* --- 見本のスマホ（静止） --- */
+      .kit-demo {
+        display: flex;
+        width: 200px;
+        aspect-ratio: 9 / 11;
+        overflow: hidden;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--color-text);
+        background-color: var(--color-text);
+        border-radius: 22px;
+      }
+
+      .pc .kit-demo { width: 230px; }
+
+      .kit-demo__screen {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        margin: 5px;
+        overflow: hidden;
+        background-color: var(--color-surface);
+        border-radius: 18px;
+      }
+
+      .kit-demo__status { display: flex; justify-content: space-between; padding: 4px 8px 0; font-size: 0.62em; color: var(--color-text-muted); }
+      .memo__bar { padding: 6px 9px; font-size: 0.82em; font-weight: 700; border-bottom: 1px solid var(--color-border); }
+      .memo__body { flex: 1; padding: 9px; overflow: hidden; }
+      .memo__row { padding-bottom: 7px; margin-bottom: 7px; border-bottom: 1px solid var(--color-border); }
+      .memo__row-title { display: block; font-size: 0.82em; font-weight: 500; line-height: 1.3; }
+      .memo__row-note { display: block; font-size: 0.68em; line-height: 1.3; color: var(--color-text-muted); }
+      .memo__nav { display: flex; padding: 4px 0 6px; border-top: 1px solid var(--color-border); }
+      .memo__nav-item { flex: 1; font-size: 0.56em; color: var(--color-text-muted); text-align: center; }
+      .memo__nav-item--on { font-weight: 700; color: var(--color-text); }
+    </style>
+  </head>
+
+  <body>
+    <div class="masthead">
+      <h1>16タイプの系統分け／PCの定番UIキット</h1>
+      <span class="masthead__note">枠の中はスクロールします</span>
+      <span class="masthead__spacer"></span>
+      <div class="tabs" id="tabs">
+        <button type="button" data-tab="families" aria-selected="true">【1】16タイプの系統分け</button>
+        <button type="button" data-tab="kit" aria-selected="false">【2】PCの定番UIキット</button>
+      </div>
+      <button type="button" class="toggle" id="styleToggle" aria-pressed="false">
+        キットの並べ方：リスト
+      </button>
+    </div>
+
+    <div class="page" id="page"></div>
+
+    <script>
+      const BASE = '/images/shops/thumbs';
+
+      // ===================================================================
+      // 軸の定義（src/data/axes.ts に shortName を足す想定）
+      // ===================================================================
+      const AXES = {
+        density: { label: '情報量', left: { letter: 'D', short: 'ぎっしり' }, right: { letter: 'A', short: 'ゆったり' } },
+        decoration: { label: '装飾', left: { letter: 'F', short: 'シンプル' }, right: { letter: 'R', short: '贅沢' } },
+        tone: { label: 'トーン', left: { letter: 'C', short: '落ち着き' }, right: { letter: 'P', short: '元気' } },
+        font: { label: '見出し', left: { letter: 'G', short: 'すっきり' }, right: { letter: 'M', short: '上品' } },
+      };
+
+      // 系統＝情報量（1文字目）×トーン（3文字目）。所属タイプは計算で出す
+      const FAMILIES = [
+        { density: 'D', tone: 'C', name: 'きっちり派', note: '情報がそろっていて、落ち着いた色', color: '#3B5B7A' },
+        { density: 'D', tone: 'P', name: 'にぎやか派', note: '情報が多くて、元気な色', color: '#B4541C' },
+        { density: 'A', tone: 'C', name: 'しずか派', note: '余白が広くて、落ち着いた色', color: '#3C6B64' },
+        { density: 'A', tone: 'P', name: 'のんびり派', note: '余白が広くて、あたたかい色', color: '#9C4572' },
+      ];
+
+      const TYPES = [
+        ['DFCG', '市役所の窓口'], ['DFCM', '古本屋'], ['DFPG', '激安スーパー'], ['DFPM', '町中華'],
+        ['DRCG', '空港の出発ロビー'], ['DRCM', 'アンティーク時計店'], ['DRPG', 'ゲームセンター'], ['DRPM', 'お祭りの屋台通り'],
+        ['AFCG', '北欧の家具屋'], ['AFCM', '美術館'], ['AFPG', 'おしゃれなジェラート屋'], ['AFPM', '街角の花屋'],
+        ['ARCG', 'スマホの旗艦店'], ['ARCM', '高級ホテルのロビー'], ['ARPG', 'テーマパークの入口'], ['ARPM', '老舗旅館'],
+      ];
+
+      /** 残りの2軸（装飾・見出し）のタグ。軸の定義から組み立てる */
+      function tagsOf(code) {
+        return [
+          [AXES.decoration, code[1]],
+          [AXES.font, code[3]],
+        ].map(([axis, letter]) => {
+          const side = axis.left.letter === letter ? axis.left : axis.right;
+          return `${axis.label}：${side.short}`;
+        });
+      }
+
+      function familiesSection() {
+        const groups = FAMILIES.map((f) => {
+          const items = TYPES.filter(([code]) => code[0] === f.density && code[2] === f.tone);
+          return `
+            <section class="family" style="--family-color:${f.color}">
+              <div class="family__head">
+                <h3 class="family__name">${f.name}</h3>
+                <p class="family__note">${f.note}</p>
+              </div>
+              <ul class="family__items">
+                ${items.map(([code, name]) => `
+                  <li class="type">
+                    <img class="type__img" src="${BASE}/${code}.webp" alt="" loading="lazy" />
+                    <div class="type__body">
+                      <p class="type__name">${name}</p>
+                      <p class="type__tags">${tagsOf(code).map((t) => `<span class="type__tag">${t}</span>`).join('')}</p>
+                    </div>
+                  </li>`).join('')}
+              </ul>
+            </section>`;
+        }).join('');
+
+        return `
+          <div class="inner">
+            <h2 class="section-title">16タイプの場所</h2>
+            <p class="section-note">好みは4つの系統に分かれます。この中のどれかが、あなたのタイプです。</p>
+            <div class="families">${groups}</div>
+          </div>`;
+      }
+
+      // ===================================================================
+      // 【2】定番UIキット
+      // ===================================================================
+      const MEMO_ROWS = [
+        ['買い物メモ', '牛乳／食パン／たまご'],
+        ['来週やること', '図書館に本を返す'],
+        ['貸したもの', '傘（青）、返ってきた'],
+      ].map(([t, n]) => `<div class="memo__row"><span class="memo__row-title">${t}</span><span class="memo__row-note">${n}</span></div>`).join('');
+
+      function phone(nav) {
+        return `
+          <div class="kit-demo">
+            <div class="kit-demo__screen">
+              <div class="kit-demo__status"><span>10:18</span><span>▮▮▮</span></div>
+              <div class="memo__bar">メモ</div>
+              <div class="memo__body">${MEMO_ROWS}</div>
+              ${nav ? `<div class="memo__nav"><span class="memo__nav-item memo__nav-item--on">メモ</span><span class="memo__nav-item">検索</span><span class="memo__nav-item">設定</span></div>` : ''}
+            </div>
+          </div>`;
+      }
+
+      const KIT = [
+        { cat: 'レイアウト', items: [
+          { label: 'メニューの出し方', name: 'ボトムナビ', desc: '画面の下に、行き先がいつも並んでいる', nav: true },
+          { label: '一覧の見せ方', name: 'リスト', desc: '1行ずつ並べる。一度にたくさん見える' },
+          { label: '続きの見せ方', either: true, both: '無限スクロール ／「もっと見る」ボタン' },
+        ]},
+        { cat: 'コンポーネント', items: [
+          { label: 'お知らせの出し方', name: 'トースト', desc: '数秒で自動的に消えるお知らせ' },
+          { label: '確認の出し方', name: 'ボトムシート', desc: '画面の下からせり上がってくる確認画面' },
+        ]},
+      ];
+
+      function kitSection(style) {
+        const groups = KIT.map((g) => `
+          <div class="kitlist__group">
+            <p class="kitlist__category">${g.cat}</p>
+            <div class="kitlist__items">
+              ${g.items.map((it) => it.either
+                ? `<div class="kitlist__item kitlist__item--either">
+                     <div class="kitlist__head"><div>
+                       <p class="kitlist__label">${it.label}</p>
+                       <p class="kitlist__name">どちらでも</p>
+                       <span class="kitlist__both">${it.both}</span>
+                     </div></div>
+                   </div>`
+                : `<div class="kitlist__item" data-open="false">
+                     <div class="kitlist__head">
+                       <div>
+                         <p class="kitlist__label">${it.label}</p>
+                         <p class="kitlist__name">${it.name}</p>
+                         <p class="kitlist__desc">${it.desc}</p>
+                       </div>
+                       <button type="button" class="kitlist__play">▶ 動きを見る</button>
+                     </div>
+                     <div class="kitlist__demo">${phone(it.nav)}</div>
+                   </div>`).join('')}
+            </div>
+          </div>`).join('');
+
+        return `
+          <div class="inner kit-demo-theme">
+            <h2 class="section-title">あなたの定番UIキット</h2>
+            <p class="section-note">後半の質問で、あなたが選んだUIです。</p>
+            <div class="kitlist kitlist--${style}" style="margin-top:18px">${groups}</div>
+          </div>`;
+      }
+
+      // ===================================================================
+      let style = 'list';
+
+      function frame(kind, html) {
+        const app = `<div class="app${kind === 'pc' ? ' pc' : ''}">${html}</div>`;
+        return `
+          <figure>
+            <figcaption>${kind === 'sp' ? 'スマホ 390×700' : 'PC 1440×1000（50%に縮小）'}</figcaption>
+            <div class="device device--${kind}"><div class="device__scroll${kind === 'pc' ? ' pc' : ''}">${app}</div></div>
+          </figure>`;
+      }
+
+      function render() {
+        document.getElementById('page').innerHTML = `
+          <section class="section" data-section="families" data-on="true">
+            <p class="lead">
+              16タイプを「情報量 × トーン」の4系統に分け、系統ごとに色を付けました。
+              色は見出しの文字・左の縦線・カードの上辺だけに使い、面は塗りません
+              （サイト全体の白〜薄いグレーを保って、結果ページでテーマが変わる落差を残すため）。
+              各カードには残りの2軸（装飾・見出し）をタグで添えています。
+            </p>
+            <div class="band"><div class="row">
+              ${frame('sp', familiesSection())}
+              ${frame('pc', familiesSection())}
+            </div></div>
+          </section>
+
+          <section class="section" data-section="kit" data-on="false">
+            <p class="lead">
+              PCでは見本を最初から出し、2列に並べてスクロールを減らします。
+              ▶を押したものだけが動きます（全部が同時に動かない）。
+              「どちらでも」の項目は見本なしで小さく収めます。スマホは今のまま、押したら開きます。
+              右上のボタンで、第2部の答え（リスト／カード）による並べ方の違いを切り替えられます。
+            </p>
+            <div class="band"><div class="row">
+              ${frame('sp', kitSection(style))}
+              ${frame('pc', kitSection(style))}
+            </div></div>
+          </section>`;
+      }
+
+      const tabs = document.getElementById('tabs');
+      tabs.addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        for (const x of tabs.querySelectorAll('button')) x.setAttribute('aria-selected', String(x === b));
+        for (const s of document.querySelectorAll('.section')) s.dataset.on = String(s.dataset.section === b.dataset.tab);
+      });
+
+      const styleToggle = document.getElementById('styleToggle');
+      styleToggle.addEventListener('click', () => {
+        style = style === 'list' ? 'card' : 'list';
+        styleToggle.setAttribute('aria-pressed', String(style === 'card'));
+        styleToggle.textContent = `キットの並べ方：${style === 'list' ? 'リスト' : 'カード'}`;
+        const on = document.querySelector('.section[data-on="true"]')?.dataset.section ?? 'families';
+        render();
+        for (const s of document.querySelectorAll('.section')) s.dataset.on = String(s.dataset.section === on);
+        for (const x of tabs.querySelectorAll('button')) x.setAttribute('aria-selected', String(x.dataset.tab === on));
+      });
+
+      // スマホ側だけ、押したら開く
+      document.addEventListener('click', (e) => {
+        const play = e.target.closest('.kitlist__play');
+        if (!play) return;
+        const item = play.closest('.kitlist__item');
+        const inPc = !!play.closest('.pc');
+        if (inPc) return; // PCは最初から出ている
+        item.dataset.open = item.dataset.open === 'true' ? 'false' : 'true';
+      });
+
+      render();
+    </script>
+  </body>
+</html>
