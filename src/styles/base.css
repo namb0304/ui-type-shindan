@@ -419,12 +419,48 @@ p {
 
 /* --- 3. 16タイプの場所 --- */
 
+/* 4つの系統（情報量 × トーン）。
+ *
+ * 系統の色は、見出しの文字・左の縦線・カードの上辺だけに使い、面は塗らない。
+ * 面を塗ると、サイト全体の「白〜薄いグレー」が崩れて、
+ * 結果ページでテーマが変わる落差が弱くなる。
+ *
+ * 色は --family-color で渡ってくる（topView.ts）。
+ * ここは変数を見るだけなので、系統を足しても直さなくてよい。 */
+
+.top__families {
+  margin-top: 26px;
+}
+
+.top__family + .top__family {
+  margin-top: 30px;
+}
+
+.top__family-head {
+  padding-left: 12px;
+  border-left: 4px solid var(--family-color);
+}
+
+.top__family-name {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--family-color);
+}
+
+.top__family-note {
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--site-muted);
+}
+
 .top__types {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   padding: 0;
-  margin: 22px 0 0;
+  margin: 12px 0 0;
   list-style: none;
 }
 
@@ -432,16 +468,44 @@ p {
   overflow: hidden;
   background-color: var(--site-surface);
   border: 1px solid var(--site-hairline);
+  border-top: 3px solid var(--family-color);
   border-radius: 12px;
 }
 
+.top__type-body {
+  padding: 8px 9px 10px;
+}
+
 .top__type-name {
-  /* 1行の名前と2行の名前が混ざる。2行ぶん確保して行の下端をそろえる */
-  min-height: calc(1.35em * 2 + 14px);
-  padding: 6px 7px 8px;
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   line-height: 1.35;
+}
+
+/* 残りの2軸（装飾・見出し）。
+ * スマホでは2行に折り返すものと1行で済むものが混ざるので、
+ * 2行ぶん確保してカードの下端をそろえる */
+.top__type-tags {
+  display: flex;
+  flex-wrap: wrap;
+
+  /* 2行ぶんの高さを確保すると、タグが縦に引き伸ばされて
+     空の楕円のように見える。上に寄せて本来の高さに戻す */
+  align-content: flex-start;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: calc((1.6em + 2px) * 2 + 4px);
+  margin-top: 6px;
+}
+
+.top__type-tag {
+  padding: 1px 7px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--site-muted);
+  white-space: nowrap;
+  background-color: #eef0f4;
+  border-radius: 999px;
 }
 
 /* 一覧とチラ見せで共通の写真。縦横比を先に決めて、
@@ -581,16 +645,41 @@ p {
     font-size: 14px;
   }
 
+  .top__families {
+    margin-top: 34px;
+  }
+
+  .top__family + .top__family {
+    margin-top: 40px;
+  }
+
+  .top__family-name {
+    font-size: 19px;
+  }
+
+  .top__family-note {
+    font-size: 14px;
+  }
+
+  /* 系統ごとに4つなので、PCは1行に収まる */
   .top__types {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
-    margin-top: 30px;
+    margin-top: 16px;
   }
 
   .top__type-name {
-    min-height: calc(1.35em * 2 + 20px);
-    padding: 9px 10px 11px;
     font-size: 14px;
+  }
+
+  /* PCは幅があるのでタグが1行に収まる。高さの確保は要らない */
+  .top__type-tags {
+    min-height: 0;
+  }
+
+  .top__type-tag {
+    padding: 2px 8px;
+    font-size: 11px;
   }
 
   .top__steps {

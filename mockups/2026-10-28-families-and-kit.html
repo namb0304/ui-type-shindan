@@ -172,9 +172,14 @@
          2行ぶんの高さを確保して、カードの下端をそろえる */
       .type__tags {
         display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        min-height: calc((1.6em + 2px) * 2 + 4px);
+              flex-wrap: wrap;
+
+              /* 2行ぶんの高さを確保すると、タグが縦に引き伸ばされて
+                 空の楕円のように見える。上に寄せて本来の高さに戻す */
+              align-content: flex-start;
+              align-items: flex-start;
+              gap: 4px;
+              min-height: calc((1.6em + 2px) * 2 + 4px);
         margin-top: 6px;
       }
 

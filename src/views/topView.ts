@@ -1,4 +1,5 @@
 import { createShopThumb } from '../components/shopThumb';
+import { tagsOfType, TYPE_FAMILIES, typesOfFamily } from '../data/families';
 import { estimatedMinutes, TOTAL_ALL_QUESTIONS } from '../data/quiz';
 import { TYPE_INFOS } from '../data/typeInfos';
 import { button, el } from './dom';
@@ -153,22 +154,59 @@ function sampleSpec(): HTMLElement {
   return box;
 }
 
-/** 3. 16タイプの場所 */
+/**
+ * 3. 16タイプの場所。
+ *
+ * 写真と名前だけ16個並べても、初めての人には何のタイプか分からない。
+ * 情報量 × トーンの4系統に分け、系統ごとに見出し・一言・色を付ける。
+ * 残りの2軸（装飾・見出し）は、各カードに小さなタグで添える。
+ *
+ * 系統も所属タイプもタグも data/ から組み立てる（ここにベタ書きしない）。
+ */
 function renderTypes(): HTMLElement {
   const section = el('section', 'top__section');
   section.append(
     el('h2', 'top__section-title', '16タイプの場所'),
-    el('p', 'top__section-note', 'この中のどれかが、あなたのタイプです。'),
+    el(
+      'p',
+      'top__section-note',
+      '好みは4つの系統に分かれます。この中のどれかが、あなたのタイプです。',
+    ),
   );
 
-  const grid = el('ul', 'top__types');
-  for (const info of TYPE_INFOS) {
-    const item = el('li', 'top__type');
-    item.append(createShopThumb(info.code, { lazy: true }), el('p', 'top__type-name', info.shop));
-    grid.append(item);
+  const families = el('div', 'top__families');
+  for (const family of TYPE_FAMILIES) {
+    const group = el('section', 'top__family');
+    // 色はこの1か所から渡す。CSSは変数を見るだけにして、系統を足しても直さない
+    group.style.setProperty('--family-color', family.color);
+
+    const head = el('div', 'top__family-head');
+    head.append(
+      el('h3', 'top__family-name', family.name),
+      el('p', 'top__family-note', family.note),
+    );
+
+    const grid = el('ul', 'top__types');
+    for (const info of typesOfFamily(family)) {
+      const item = el('li', 'top__type');
+      const body = el('div', 'top__type-body');
+      body.append(el('p', 'top__type-name', info.shop));
+
+      const tags = el('p', 'top__type-tags');
+      for (const text of tagsOfType(info.code)) {
+        tags.append(el('span', 'top__type-tag', text));
+      }
+      body.append(tags);
+
+      item.append(createShopThumb(info.code, { lazy: true }), body);
+      grid.append(item);
+    }
+
+    group.append(head, grid);
+    families.append(group);
   }
 
-  section.append(grid);
+  section.append(families);
   return section;
 }
 

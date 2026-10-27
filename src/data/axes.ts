@@ -8,6 +8,15 @@ export interface AxisSideDefinition {
   name: string;
   /** 英語の呼び名（例: 'Airy'） */
   englishName: string;
+  /**
+   * 短い言い方（例: 'ゆったり'）。
+   *
+   * トップページの16タイプ一覧で、小さなタグに出す
+   * （「装飾：シンプル」「見出し：すっきり」）。
+   * 呼び名（name）は診断の用語なので、初めての人には通じない。
+   * タグは説明を読まずに意味が分かる言葉にする。
+   */
+  shortName: string;
 }
 
 export interface AxisDefinition {
@@ -48,20 +57,20 @@ export const AXES = [
   {
     id: 'density',
     label: '情報量',
-    left: { letter: 'D', name: 'ギッシリ', englishName: 'Dense' },
-    right: { letter: 'A', name: 'ユッタリ', englishName: 'Airy' },
+    left: { letter: 'D', name: 'ギッシリ', englishName: 'Dense', shortName: 'ぎっしり' },
+    right: { letter: 'A', name: 'ユッタリ', englishName: 'Airy', shortName: 'ゆったり' },
   },
   {
     id: 'decoration',
     label: '装飾',
-    left: { letter: 'F', name: 'フラット', englishName: 'Flat' },
-    right: { letter: 'R', name: 'リッチ', englishName: 'Rich' },
+    left: { letter: 'F', name: 'フラット', englishName: 'Flat', shortName: 'シンプル' },
+    right: { letter: 'R', name: 'リッチ', englishName: 'Rich', shortName: '贅沢' },
   },
   {
     id: 'tone',
     label: 'トーン',
-    left: { letter: 'C', name: 'クール', englishName: 'Cool' },
-    right: { letter: 'P', name: 'ポップ', englishName: 'Pop' },
+    left: { letter: 'C', name: 'クール', englishName: 'Cool', shortName: '落ち着き' },
+    right: { letter: 'P', name: 'ポップ', englishName: 'Pop', shortName: '元気' },
   },
   {
     /**
@@ -71,13 +80,26 @@ export const AXES = [
      */
     id: 'font',
     label: '見出し',
-    left: { letter: 'G', name: 'ゴシック', englishName: 'Gothic' },
-    right: { letter: 'M', name: '明朝', englishName: 'Mincho' },
+    left: { letter: 'G', name: 'ゴシック', englishName: 'Gothic', shortName: 'すっきり' },
+    right: { letter: 'M', name: '明朝', englishName: 'Mincho', shortName: '上品' },
   },
 ] as const satisfies readonly AxisDefinition[];
 
 /** 軸のID一覧（タイプコードの順）。 */
 export const AXIS_IDS = AXES.map((axis) => axis.id) as readonly AxisId[];
+
+/**
+ * タイプコードの1文字から、その軸のどちら側かを引く。
+ *
+ * 例：sideOfLetter('decoration', 'R') → リッチ側の定義。
+ * トップページのタグ（「装飾：贅沢」）を、コードから組み立てるのに使う。
+ */
+export function sideOfLetter(id: AxisId, letter: string): AxisSideDefinition {
+  const axis = getAxis(id);
+  if (axis.left.letter === letter) return axis.left;
+  if (axis.right.letter === letter) return axis.right;
+  throw new Error(`軸 ${id} に文字 ${letter} はありません`);
+}
 
 /** IDから軸の定義を引く。 */
 export function getAxis(id: AxisId): AxisDefinition {
